@@ -27,6 +27,14 @@ const footerLinks = {
   Documentation: [
     { name: "Docs", href: "#" },
   ],
+  "Legal & Info": [
+    { name: "Privacy Policy", href: "/privacy" },
+    { name: "Terms of Service", href: "/terms" },
+    { name: "Accessibility", href: "/accessibility" },
+    { name: "About", href: "/about" },
+    { name: "Contact", href: "/contact" },
+  ],
+  // TODO: Update these pages based on company policy and legal requirements
 };
 
 const socialLinks = [
@@ -51,7 +59,6 @@ export function FooterSection() {
             <div className="col-span-2">
               <a href="#" className="inline-flex items-center gap-2 mb-6">
                 <span className="text-2xl font-display">Buildings.com</span>
-                <span className="text-xs text-muted-foreground font-mono">BL</span>
               </a>
 
               <p className="text-muted-foreground leading-relaxed mb-8 max-w-xs">
@@ -60,16 +67,18 @@ export function FooterSection() {
 
               {/* Social Links */}
               <div className="flex gap-6">
-                {socialLinks.map((link) => (
-                  <a
-                    key={link.name}
-                    href={link.href}
-                    className="text-sm text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1 group"
-                  >
-                    {link.name}
-                    <ArrowUpRight className="w-3 h-3 opacity-0 -translate-x-1 group-hover:opacity-100 group-hover:translate-x-0 transition-all" />
-                  </a>
-                ))}
+                <a href="#" className="text-sm text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1 group">
+                  Twitter
+                  <ArrowUpRight className="w-3 h-3 opacity-0 -translate-x-1 group-hover:opacity-100 group-hover:translate-x-0 transition-all" />
+                </a>
+                <a href="#" className="text-sm text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1 group">
+                  GitHub
+                  <ArrowUpRight className="w-3 h-3 opacity-0 -translate-x-1 group-hover:opacity-100 group-hover:translate-x-0 transition-all" />
+                </a>
+                <a href="#" className="text-sm text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1 group">
+                  LinkedIn
+                  <ArrowUpRight className="w-3 h-3 opacity-0 -translate-x-1 group-hover:opacity-100 group-hover:translate-x-0 transition-all" />
+                </a>
               </div>
             </div>
 
@@ -102,7 +111,7 @@ export function FooterSection() {
         {/* Bottom Bar */}
         <div className="py-8 border-t border-foreground/10 flex flex-col md:flex-row items-center justify-between gap-4">
           <p className="text-sm text-muted-foreground">
-            2025 Optimus. All rights reserved.
+            © 2026 Buildings.com. All rights reserved.
           </p>
 
           <div className="flex items-center gap-4 text-sm text-muted-foreground">

@@ -46,28 +46,22 @@ function AnimatedCounter({ end, suffix = "", prefix = "" }: { end: number; suffi
 
 const metrics = [
   {
-    value: 2800000,
-    suffix: " sq ft",
-    prefix: "",
-    label: "Square Feet Managed",
-  },
-  {
-    value: 99.999,
-    suffix: "%",
-    prefix: "",
-    label: "Operational Reliability",
-  },
-  {
-    value: 23,
-    suffix: "ms",
-    prefix: "",
-    label: "IoT Response Time",
-  },
-  {
-    value: 184,
+    value: 17,
     suffix: "",
     prefix: "",
-    label: "Edge Nodes to Control",
+    label: "Data centers (air-gapped)",
+  },
+  {
+    value: 99.99,
+    suffix: "%",
+    prefix: "",
+    label: "Uptime SLA",
+  },
+  {
+    value: 50,
+    suffix: "ms",
+    prefix: "<",
+    label: "Global latency (local AI)",
   },
 ];
 
