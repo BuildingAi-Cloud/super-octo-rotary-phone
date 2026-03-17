@@ -6,25 +6,25 @@ const features = [
   {
     number: "01",
     title: "Instant Asset Digitization",
-    description: "Onboard properties in minutes. Our AI engine ingests blueprints and leases to create a live digital twin of your physical assets.",
+    description: "Onboard any building in minutes. Local AI creates a digital twin—no cloud, no data sharing.",
     visual: "deploy",
   },
   {
     number: "02",
     title: "Autonomous Operations",
-    description: "Automate the mundane. From AI-driven resident communication to predictive maintenance triggers that fix issues before they break.",
+    description: "Automate building tasks with local AI. No external access, no client data exposure.",
     visual: "ai",
   },
   {
     number: "03",
-    title: "Resident Experience Hub",
-    description: "A unified portal for requests, amenity bookings, and community engagement. Foster a connected environment that residents love.",
+    title: "Developer Plugin Ready",
+    description: "Integrate as a plugin in your own product. Extend, customize, and deploy privately.",
     visual: "collab",
   },
   {
     number: "04",
     title: "Institutional Security",
-    description: "Biometric key tracking, visitor screening, and encrypted incident reporting. Keep your community safe with bank-grade security protocols.",
+    description: "Air-gapped by design. All operations, logs, and analytics stay on-premises.",
     visual: "security",
   },
 ];

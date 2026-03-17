@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { ArrowRight } from "lucide-react";
 import { AnimatedSphere } from "./animated-sphere";
 
-const words = ["secure", "manage", "scale your portfolio"];
+const words = ["secure", "automate", "plugin-ready"];
 
 export function HeroSection() {
   const [isVisible, setIsVisible] = useState(false);
@@ -64,7 +64,7 @@ export function HeroSection() {
         >
           <span className="inline-flex items-center gap-3 text-sm font-mono text-muted-foreground">
             <span className="w-8 h-px bg-foreground/30" />
-            The Intelligence to Scale.
+            Air-gapped. Plugin-ready. Local AI.
           </span>
         </div>
         
@@ -75,7 +75,8 @@ export function HeroSection() {
               isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
             }`}
           >
-              The Intelligence to Scale.
+              Premium Building Management<br />
+              <span className="text-muted-foreground">No client data. No cloud.</span>
           </h1>
         </div>
         

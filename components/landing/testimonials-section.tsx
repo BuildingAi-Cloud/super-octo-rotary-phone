@@ -4,10 +4,10 @@ import { useEffect, useState } from "react";
 
 const testimonials = [
   {
-    quote: "Buildings.com transformed how we manage our 1.2M sq ft portfolio. Reactive maintenance is down by 70%, and tenant satisfaction is at an all-time high.",
-    author: "Head of Asset Management",
-    company: "Global RE Firm",
-    metric: "1.2M sq ft managed, 70% less reactive maintenance, record tenant satisfaction",
+    quote: "This platform enabled seamless, secure, and automated building operations—without exposing any sensitive data.",
+    author: "Lead Facilities Engineer",
+    company: "Confidential",
+    metric: "Zero data leaks, 100% local AI, fully air-gapped",
   },
 ];
 
@@ -69,7 +69,7 @@ export function TestimonialsSection() {
               <div>
                 <p className="text-lg font-medium text-foreground">{activeTestimonial.author}</p>
                 <p className="text-muted-foreground">
-                  {activeTestimonial.role}, {activeTestimonial.company}
+                  {activeTestimonial.company}
                 </p>
               </div>
             </div>
@@ -116,30 +116,11 @@ export function TestimonialsSection() {
         {/* Company Logos Marquee Label */}
         <div className="mt-24 pt-12 border-t border-foreground/10">
           <p className="font-mono text-xs tracking-widest text-muted-foreground uppercase mb-8 text-center">
-            Trusted by forward-thinking teams
+            Privacy-first, plugin-ready, air-gapped
           </p>
         </div>
       </div>
-      
-      {/* Full-width marquee outside container */}
-      <div className="w-full">
-        <div className="flex gap-16 items-center marquee">
-          {[...Array(2)].map((_, setIdx) => (
-            <div key={setIdx} className="flex gap-16 items-center shrink-0">
-              {["Meridian Labs", "Flux Systems", "Beacon AI", "Prism Analytics", "Nova Tech", "Quantum Corp", "Atlas Digital", "Vertex Labs"].map(
-                (company) => (
-                  <span
-                    key={`${setIdx}-${company}`}
-                    className="font-display text-xl md:text-2xl text-foreground/30 whitespace-nowrap hover:text-foreground transition-colors duration-300"
-                  >
-                    {company}
-                  </span>
-                )
-              )}
-            </div>
-          ))}
-        </div>
-      </div>
+      {/* No client/company logos shown for privacy */}
     </section>
   );
 }
