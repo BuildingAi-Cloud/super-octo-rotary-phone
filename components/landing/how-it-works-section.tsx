@@ -39,13 +39,6 @@ export function HowItWorksSection() {
     return () => observer.disconnect();
   }, []);
 
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setActiveStep((prev) => (prev + 1) % steps.length);
-    }, 5000);
-    return () => clearInterval(interval);
-  }, []);
-
   return (
     <section
       id="how-it-works"
@@ -67,19 +60,17 @@ export function HowItWorksSection() {
 
       <div className="relative z-10 max-w-[1400px] mx-auto px-6 lg:px-12">
         {/* Header */}
-        <div className="mb-16 lg:mb-24">
-          <span className="inline-flex items-center gap-3 text-lg font-bold text-background mb-6">
-            <span className="w-8 h-px bg-background/30" />
-            From Onboarding to Optimized.
-          </span>
-          <h2
-            className={`text-5xl lg:text-7xl font-display font-bold tracking-tight text-left transition-all duration-700 ${
-              isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"
-            }`}
-          >
-            From Onboarding to Optimized.
-          </h2>
-        </div>
+        <span className="inline-flex items-center gap-3 text-lg font-bold text-background mb-6">
+          <span className="w-8 h-px bg-background/30" />
+          From Onboarding to Optimized.
+        </span>
+        <h2
+          className={`text-5xl lg:text-7xl font-display font-bold tracking-tight text-left transition-all duration-700 ${
+            isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"
+          }`}
+        >
+          From Onboarding to Optimized.
+        </h2>
 
         {/* Main content */}
         <div className="grid lg:grid-cols-2 gap-16 lg:gap-24">
@@ -103,7 +94,6 @@ export function HowItWorksSection() {
                     <p className="text-background/60 leading-relaxed">
                       {step.description}
                     </p>
-                    
                     {/* Progress indicator */}
                     {activeStep === index && (
                       <div className="mt-4 h-px bg-background/20 overflow-hidden">
@@ -119,18 +109,15 @@ export function HowItWorksSection() {
                 </div>
               </button>
             ))}
-              </div>
+          </div>
 
-              {/* Status */}
-              <div className="px-6 py-4 border-t border-background/10 flex items-center gap-3">
-                <span className="w-2 h-2 rounded-full bg-green-400 animate-pulse" />
-                <span className="text-xs font-mono text-background/40">Ready</span>
-              </div>
-            </div>
+          {/* Status */}
+          <div className="px-6 py-4 border-t border-background/10 flex items-center gap-3">
+            <span className="w-2 h-2 rounded-full bg-green-400 animate-pulse" />
+            <span className="text-xs font-mono text-background/40">Ready</span>
           </div>
         </div>
       </div>
-
       <style jsx>{`
         @keyframes progress {
           from { width: 0%; }
