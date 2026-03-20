@@ -1,52 +1,46 @@
 "use client"
 
 import { useState } from "react"
+import { amenityStore, addBooking, getBookingsForUser } from "@/lib/amenity-store"
 import { type User } from "@/lib/auth-context"
 import { DashboardHeader } from "./dashboard-header"
 import { AnimatedNoise } from "@/components/animated-noise"
 import { ScrambleText } from "@/components/scramble-text"
 
+
 interface ResidentDashboardProps {
   user: User
 }
 
-const announcements = [
-  { id: 1, title: "Pool Maintenance Schedule", content: "The pool will be closed March 20-22 for annual maintenance.", date: "Today", priority: "info" },
-  { id: 2, title: "Fire Drill Scheduled", content: "Building-wide fire drill on March 25th at 10:00 AM.", date: "Yesterday", priority: "important" },
-  { id: 3, title: "New Gym Equipment", content: "New cardio equipment has been installed in the fitness center.", date: "Mar 15", priority: "info" },
-]
+export default function ResidentDashboard({ user }: ResidentDashboardProps) {
+  const announcements = [
+    { id: 1, title: "Pool Maintenance Schedule", content: "The pool will be closed March 20-22 for annual maintenance.", date: "Today", priority: "info" },
+    { id: 2, title: "Fire Drill Scheduled", content: "Building-wide fire drill on March 25th at 10:00 AM.", date: "Yesterday", priority: "important" },
+    { id: 3, title: "New Gym Equipment", content: "New cardio equipment has been installed in the fitness center.", date: "Mar 15", priority: "info" },
+  ]
 
-const amenities = [
-  { name: "Rooftop Lounge", status: "available", nextSlot: "Today 6PM", icon: "lounge" },
-  { name: "Fitness Center", status: "open", capacity: "12/30", icon: "gym" },
-  { name: "Pool & Spa", status: "maintenance", reopens: "Mar 22", icon: "pool" },
-  { name: "Party Room", status: "available", nextSlot: "Sat 2PM", icon: "party" },
-  { name: "BBQ Area", status: "available", nextSlot: "Sun 12PM", icon: "bbq" },
-  { name: "Conference Room", status: "booked", nextSlot: "Tomorrow 9AM", icon: "meeting" },
-]
+  const maintenanceRequests = [
+    { id: 1, issue: "Dishwasher not draining properly", status: "in_progress", submitted: "Mar 16", eta: "Mar 19" },
+    { id: 2, issue: "Bathroom exhaust fan noisy", status: "scheduled", submitted: "Mar 10", eta: "Mar 21" },
+  ]
 
-const myBookings = [
-  { amenity: "Rooftop Lounge", date: "Mar 20", time: "7:00 PM - 10:00 PM", status: "confirmed" },
-  { amenity: "Party Room", date: "Mar 28", time: "2:00 PM - 6:00 PM", status: "pending" },
-]
+  const packages = [
+    { id: 1, carrier: "Amazon", trackingEnd: "...4829", delivered: "Today 2:30 PM", status: "ready", locker: "Locker 12" },
+    { id: 2, carrier: "FedEx", trackingEnd: "...7821", delivered: "Yesterday", status: "ready", locker: "Locker 5" },
+  ]
 
-const maintenanceRequests = [
-  { id: 1, issue: "Dishwasher not draining properly", status: "in_progress", submitted: "Mar 16", eta: "Mar 19" },
-  { id: 2, issue: "Bathroom exhaust fan noisy", status: "scheduled", submitted: "Mar 10", eta: "Mar 21" },
-]
+  const bulletinPosts = [
+    { author: "Sarah M.", unit: "Unit 503", content: "Anyone interested in forming a book club? Looking for 5-10 people.", time: "3h ago", replies: 8 },
+    { author: "Mike R.", unit: "Unit 812", content: "Found a set of keys near the mailroom. Contact front desk.", time: "1d ago", replies: 2 },
+  ]
 
-const packages = [
-  { id: 1, carrier: "Amazon", trackingEnd: "...4829", delivered: "Today 2:30 PM", status: "ready", locker: "Locker 12" },
-  { id: 2, carrier: "FedEx", trackingEnd: "...7821", delivered: "Yesterday", status: "ready", locker: "Locker 5" },
-]
-
-const bulletinPosts = [
-  { author: "Sarah M.", unit: "Unit 503", content: "Anyone interested in forming a book club? Looking for 5-10 people.", time: "3h ago", replies: 8 },
-  { author: "Mike R.", unit: "Unit 812", content: "Found a set of keys near the mailroom. Contact front desk.", time: "1d ago", replies: 2 },
-]
-
-export function ResidentDashboard({ user }: ResidentDashboardProps) {
   const [activeTab, setActiveTab] = useState<"home" | "amenities" | "maintenance" | "community">("home")
+  const [bookingDate, setBookingDate] = useState("")
+  const [bookingTime, setBookingTime] = useState("")
+  const [bookingAmenity, setBookingAmenity] = useState("")
+  const [bookingStatus, setBookingStatus] = useState("")
+  const amenities = amenityStore
+  const myBookings = getBookingsForUser(user.id)
 
   return (
     <main className="relative min-h-screen bg-background">
@@ -156,21 +150,21 @@ export function ResidentDashboard({ user }: ResidentDashboardProps) {
 
               {/* My Bookings */}
               <div className="mt-6 border border-border/40 bg-card/30 p-6">
-                <div className="flex items-center justify-between mb-4">
-                  <h2 className="font-[var(--font-bebas)] text-xl tracking-wide">UPCOMING BOOKINGS</h2>
-                  <button className="px-3 py-1 border border-accent bg-accent/10 font-mono text-[10px] uppercase tracking-widest text-accent hover:bg-accent/20 transition-colors">
-                    + Book Amenity
-                  </button>
-                </div>
+                <h2 className="font-[var(--font-bebas)] text-xl tracking-wide mb-4">MY AMENITY BOOKINGS</h2>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {myBookings.length === 0 && (
+                    <p className="font-mono text-xs text-muted-foreground">No bookings yet.</p>
+                  )}
                   {myBookings.map((booking, index) => (
                     <div key={index} className="flex items-center justify-between border border-border/30 p-4">
                       <div>
-                        <p className="font-mono text-xs text-foreground">{booking.amenity}</p>
+                        <p className="font-mono text-xs text-foreground">Amenity: {booking.amenityId}</p>
                         <p className="font-mono text-[10px] text-muted-foreground">{booking.date} • {booking.time}</p>
                       </div>
                       <span className={`px-2 py-1 font-mono text-[10px] uppercase ${
-                        booking.status === "confirmed" ? "bg-green-500/20 text-green-400" : "bg-yellow-500/20 text-yellow-400"
+                        booking.status === "approved" ? "bg-green-500/20 text-green-400" :
+                        booking.status === "pending" ? "bg-yellow-500/20 text-yellow-400" :
+                        "bg-red-500/20 text-red-400"
                       }`}>
                         {booking.status}
                       </span>
@@ -182,30 +176,66 @@ export function ResidentDashboard({ user }: ResidentDashboardProps) {
           )}
 
           {activeTab === "amenities" && (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {amenities.map((amenity, index) => (
-                <div key={index} className="border border-border/40 bg-card/30 p-6">
-                  <div className="flex items-center justify-between mb-4">
-                    <h3 className="font-[var(--font-bebas)] text-lg tracking-wide">{amenity.name}</h3>
-                    <span className={`h-2 w-2 rounded-full ${
-                      amenity.status === "available" || amenity.status === "open" ? "bg-green-500" :
-                      amenity.status === "maintenance" ? "bg-yellow-500" : "bg-red-500"
-                    }`} />
+            <div>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
+                {amenities.map((amenity) => (
+                  <div key={amenity.id} className="border border-border/40 bg-card/30 p-6">
+                    <div className="flex items-center justify-between mb-4">
+                      <h3 className="font-[var(--font-bebas)] text-lg tracking-wide">{amenity.name}</h3>
+                      <span className={`h-2 w-2 rounded-full ${
+                        amenity.status === "available" ? "bg-green-500" :
+                        amenity.status === "maintenance" ? "bg-yellow-500" : "bg-red-500"
+                      }`} />
+                    </div>
+                    <button
+                      disabled={amenity.status !== "available"}
+                      className="w-full py-2 border border-accent bg-accent/10 font-mono text-[10px] uppercase tracking-widest text-accent hover:bg-accent/20 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                      onClick={() => setBookingAmenity(amenity.id)}
+                    >
+                      {amenity.status === "maintenance" ? "Unavailable" : "Book Now"}
+                    </button>
                   </div>
-                  <p className="font-mono text-[10px] text-muted-foreground mb-4">
-                    {amenity.status === "open" && `Capacity: ${amenity.capacity}`}
-                    {amenity.status === "available" && `Next available: ${amenity.nextSlot}`}
-                    {amenity.status === "maintenance" && `Reopens: ${amenity.reopens}`}
-                    {amenity.status === "booked" && `Next slot: ${amenity.nextSlot}`}
-                  </p>
-                  <button
-                    disabled={amenity.status === "maintenance"}
-                    className="w-full py-2 border border-accent bg-accent/10 font-mono text-[10px] uppercase tracking-widest text-accent hover:bg-accent/20 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    {amenity.status === "maintenance" ? "Unavailable" : "Book Now"}
-                  </button>
-                </div>
-              ))}
+                ))}
+              </div>
+              {bookingAmenity && (
+                <form
+                  onSubmit={e => {
+                    e.preventDefault()
+                    addBooking({
+                      id: crypto.randomUUID(),
+                      amenityId: bookingAmenity,
+                      userId: user.id,
+                      date: bookingDate,
+                      time: bookingTime,
+                      status: "pending"
+                    })
+                    setBookingStatus("Booking submitted and pending approval.")
+                    setBookingAmenity("")
+                    setBookingDate("")
+                    setBookingTime("")
+                  }}
+                  className="border border-accent/30 bg-accent/5 p-4 mb-4"
+                >
+                  <h4 className="font-mono text-xs mb-2">Book Amenity</h4>
+                  <input
+                    type="date"
+                    value={bookingDate}
+                    onChange={e => setBookingDate(e.target.value)}
+                    required
+                    className="border border-border px-2 py-1 mb-2 font-mono text-xs"
+                  />
+                  <input
+                    type="text"
+                    value={bookingTime}
+                    onChange={e => setBookingTime(e.target.value)}
+                    placeholder="Time slot (e.g. 7:00 PM - 10:00 PM)"
+                    required
+                    className="border border-border px-2 py-1 mb-2 font-mono text-xs"
+                  />
+                  <button type="submit" className="bg-accent px-4 py-2 text-accent-foreground font-mono text-xs uppercase tracking-widest">Submit</button>
+                  {bookingStatus && <p className="mt-2 font-mono text-xs text-accent">{bookingStatus}</p>}
+                </form>
+              )}
             </div>
           )}
 

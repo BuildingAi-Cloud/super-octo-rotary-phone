@@ -4,6 +4,7 @@ import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { useAuth, getRoleDisplayName, type User } from "@/lib/auth-context"
 import { ScrambleTextOnHover } from "@/components/scramble-text"
+import { ThemeToggle } from "@/components/theme-toggle"
 
 interface DashboardHeaderProps {
   user: User
@@ -34,6 +35,7 @@ export function DashboardHeader({ user }: DashboardHeaderProps) {
 
         {/* User info & actions */}
         <div className="flex items-center gap-6">
+          <ThemeToggle />
           <div className="hidden md:block text-right">
             <p className="font-mono text-xs text-foreground">{user.name}</p>
             <p className="font-mono text-[10px] text-muted-foreground">{user.email}</p>

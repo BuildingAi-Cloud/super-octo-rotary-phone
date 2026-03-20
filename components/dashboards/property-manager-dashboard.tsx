@@ -4,6 +4,7 @@ import { type User } from "@/lib/auth-context"
 import { DashboardHeader } from "./dashboard-header"
 import { AnimatedNoise } from "@/components/animated-noise"
 import { ScrambleText } from "@/components/scramble-text"
+import { AmenityManagement } from "@/components/amenity-management"
 
 interface PropertyManagerDashboardProps {
   user: User
@@ -48,6 +49,12 @@ const shiftNotes = [
 ]
 
 export function PropertyManagerDashboard({ user }: PropertyManagerDashboardProps) {
+  // Example initial amenities
+  const initialAmenities = [
+    { id: "1", name: "Party Room", status: "available" },
+    { id: "2", name: "Conference Room", status: "booked" },
+    { id: "3", name: "BBQ Area", status: "maintenance" }
+  ]
   return (
     <main className="relative min-h-screen bg-background">
       <AnimatedNoise opacity={0.02} />
@@ -55,6 +62,7 @@ export function PropertyManagerDashboard({ user }: PropertyManagerDashboardProps
 
       <div className="relative z-10">
         <DashboardHeader user={user} />
+        <AmenityManagement initialAmenities={initialAmenities} />
 
         <div className="p-6 md:p-8">
           {/* Welcome section */}

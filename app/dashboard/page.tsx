@@ -6,7 +6,7 @@ import { useAuth } from "@/lib/auth-context"
 import { FacilityManagerDashboard } from "@/components/dashboards/facility-manager-dashboard"
 import { BuildingOwnerDashboard } from "@/components/dashboards/building-owner-dashboard"
 import { PropertyManagerDashboard } from "@/components/dashboards/property-manager-dashboard"
-import { ResidentDashboard } from "@/components/dashboards/resident-dashboard"
+import ResidentDashboard from "@/components/dashboards/resident-dashboard"
 import { TenantDashboard } from "@/components/dashboards/tenant-dashboard"
 import { AnimatedNoise } from "@/components/animated-noise"
 
