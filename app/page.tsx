@@ -1,33 +1,27 @@
-import { Navigation } from "@/components/landing/navigation";
-import { HeroSection } from "@/components/landing/hero-section";
-import { FeaturesSection } from "@/components/landing/features-section";
-import { HowItWorksSection } from "@/components/landing/how-it-works-section";
-import { InfrastructureSection } from "@/components/landing/infrastructure-section";
-import { MetricsSection } from "@/components/landing/metrics-section";
-import { IntegrationsSection } from "@/components/landing/integrations-section";
-import { SecuritySection } from "@/components/landing/security-section";
-import { DevelopersSection } from "@/components/landing/developers-section";
-import { TestimonialsSection } from "@/components/landing/testimonials-section";
-import { PricingSection } from "@/components/landing/pricing-section";
-import { CtaSection } from "@/components/landing/cta-section";
-import { FooterSection } from "@/components/landing/footer-section";
+import { HeroSection } from "@/components/hero-section"
+import { SignalsSection } from "@/components/signals-section"
+import { WorkSection } from "@/components/work-section"
+import { PrinciplesSection } from "@/components/principles-section"
+import { ColophonSection } from "@/components/colophon-section"
+import { PricingSection } from "@/components/pricing-section"
+import { SideNav } from "@/components/side-nav"
+import { Header } from "@/components/header"
 
-export default function Home() {
+export default function Page() {
   return (
-    <main className="relative min-h-screen overflow-x-hidden noise-overlay">
-      <Navigation />
-      <HeroSection />
-      <FeaturesSection />
-      <HowItWorksSection />
-      <InfrastructureSection />
-      <MetricsSection />
-      <IntegrationsSection />
-      <SecuritySection />
-      <DevelopersSection />
-      <TestimonialsSection />
-      <PricingSection />
-      <CtaSection />
-      <FooterSection />
+    <main className="relative min-h-screen">
+      <Header />
+      <SideNav />
+      <div className="grid-bg fixed inset-0 opacity-30" aria-hidden="true" />
+
+      <div className="relative z-10">
+        <HeroSection />
+        <SignalsSection />
+        <WorkSection />
+        <PrinciplesSection />
+        <PricingSection />
+        <ColophonSection />
+      </div>
     </main>
-  );
+  )
 }
