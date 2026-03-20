@@ -4,6 +4,7 @@ import { type User } from "@/lib/auth-context"
 import { DashboardHeader } from "./dashboard-header"
 import { AnimatedNoise } from "@/components/animated-noise"
 import { ScrambleText } from "@/components/scramble-text"
+import { AmenityManagement } from "@/components/amenity-management"
 
 interface FacilityManagerDashboardProps {
   user: User
@@ -37,6 +38,12 @@ const assetInventory = [
 ]
 
 export function FacilityManagerDashboard({ user }: FacilityManagerDashboardProps) {
+  // Example initial amenities
+  const initialAmenities = [
+    { id: "1", name: "Rooftop Lounge", status: "available" },
+    { id: "2", name: "Fitness Center", status: "maintenance" },
+    { id: "3", name: "Pool & Spa", status: "booked" }
+  ]
   return (
     <main className="relative min-h-screen bg-background">
       <AnimatedNoise opacity={0.02} />
@@ -44,6 +51,7 @@ export function FacilityManagerDashboard({ user }: FacilityManagerDashboardProps
 
       <div className="relative z-10">
         <DashboardHeader user={user} />
+        <AmenityManagement initialAmenities={initialAmenities} />
 
         <div className="p-6 md:p-8">
           {/* Welcome section */}
