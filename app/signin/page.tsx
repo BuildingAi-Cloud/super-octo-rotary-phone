@@ -36,12 +36,39 @@ export default function SignInPage() {
 
 
 
+  // Helper to create test user
+  const createTestUser = () => {
+    const users = JSON.parse(localStorage.getItem("buildsync_users") || "[]");
+    if (!users.some((u: any) => u.email === "test@test.com")) {
+      users.push({
+        id: "test-id",
+        email: "test@test.com",
+        password: "123456",
+        name: "Test User",
+        role: "facility_manager"
+      });
+      localStorage.setItem("buildsync_users", JSON.stringify(users));
+      alert("Test user created!\nEmail: test@test.com\nPassword: 123456");
+    } else {
+      alert("Test user already exists.\nEmail: test@test.com\nPassword: 123456");
+    }
+  };
+
   return (
     <main className="relative min-h-screen flex items-center justify-center p-6">
       <AnimatedNoise opacity={0.03} />
       <div className="grid-bg fixed inset-0 opacity-30" aria-hidden="true" />
       <div className="absolute top-4 right-4 z-20">
         <AccessibilityToggle />
+      </div>
+      <div className="absolute top-4 left-4 z-20">
+        <button
+          type="button"
+          onClick={createTestUser}
+          className="px-3 py-1 bg-accent text-accent-foreground rounded text-xs font-mono shadow hover:bg-accent/80"
+        >
+          Create Test User
+        </button>
       </div>
       <div className="relative z-10 w-full max-w-md">
         <form onSubmit={handleSubmit} className="space-y-6 bg-card/80 p-8 rounded-lg shadow-lg">

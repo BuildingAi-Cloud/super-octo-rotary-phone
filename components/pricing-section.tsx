@@ -24,7 +24,7 @@ const plans = [
       "Email & chat support",
     ],
     highlight: false,
-    cta: "Start Free Trial",
+    cta: "Subscribe Now",
   },
   {
     name: "Professional",
@@ -42,7 +42,7 @@ const plans = [
       "Priority support",
     ],
     highlight: true,
-    cta: "Start Free Trial",
+    cta: "Subscribe Now",
   },
   {
     name: "Enterprise",
@@ -108,18 +108,23 @@ export function PricingSection() {
   }, [])
 
   return (
-    <section id="pricing" ref={sectionRef} className="relative py-32 pl-6 md:pl-28 pr-6 md:pr-12">
+    <section id="pricing" ref={sectionRef} className="relative py-32 pl-6 md:pl-28 pr-6 md:pr-12 border-4 border-red-500">
       {/* Section header */}
       <div ref={headerRef} className="mb-16">
         <span className="font-mono text-[10px] uppercase tracking-[0.3em] text-accent">05 / Pricing</span>
         <h2 className="mt-4 font-[var(--font-bebas)] text-5xl md:text-7xl tracking-tight">CHOOSE YOUR PLAN</h2>
         <p className="mt-4 max-w-lg font-mono text-sm text-muted-foreground leading-relaxed">
-          Scalable pricing for facilities of all sizes. All plans include core security features and compliance tools.
+          All plans are paid. No free trials. Scalable pricing for facilities of all sizes. All plans include core security features and compliance tools.
         </p>
       </div>
 
       {/* Pricing cards */}
       <div ref={cardsRef} className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        {plans.length === 0 && (
+          <div className="col-span-3 text-center text-red-600 font-bold text-xl py-12">
+            No pricing plans available. Please check the PricingSection component.
+          </div>
+        )}
         {plans.map((plan, index) => (
           <div
             key={index}
@@ -175,11 +180,11 @@ export function PricingSection() {
       <div className="mt-16 flex flex-wrap items-center justify-center gap-8 border-t border-border/20 pt-16">
         <div className="flex items-center gap-2">
           <span className="h-2 w-2 bg-accent" />
-          <span className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">14-day free trial</span>
+          <span className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">Paid plans only</span>
         </div>
         <div className="flex items-center gap-2">
           <span className="h-2 w-2 bg-accent" />
-          <span className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">No credit card required</span>
+          <span className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">No free trial</span>
         </div>
         <div className="flex items-center gap-2">
           <span className="h-2 w-2 bg-accent" />

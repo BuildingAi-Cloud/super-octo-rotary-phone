@@ -24,16 +24,6 @@ const roleOptions: { value: UserRole; label: string; description: string }[] = [
     label: "Property Manager",
     description: "Tenant relations, leasing, and property administration",
   },
-  {
-    value: "resident",
-    label: "Resident",
-    description: "Amenity booking, maintenance requests, and community updates",
-  },
-  {
-    value: "tenant",
-    label: "Tenant",
-    description: "Lease management, rent payments, and service requests",
-  },
 ]
 
 export default function SignUpPage() {
