@@ -1,29 +1,46 @@
-import React from "react"
-import type { Metadata } from 'next'
-import { Instrument_Sans, Instrument_Serif, JetBrains_Mono } from 'next/font/google'
-import { Analytics } from '@vercel/analytics/next'
-import './globals.css'
+import type React from "react"
+import type { Metadata } from "next"
+import { IBM_Plex_Sans, IBM_Plex_Mono, Bebas_Neue } from "next/font/google"
+import { Analytics } from "@vercel/analytics/next"
+import { SmoothScroll } from "@/components/smooth-scroll"
+import { AuthProvider } from "@/lib/auth-context"
+import { ThemeProvider } from "@/lib/theme-context"
+import "./globals.css"
 
-const instrumentSans = Instrument_Sans({ 
+const ibmPlexSans = IBM_Plex_Sans({
+  weight: ["400", "500", "600", "700"],
   subsets: ["latin"],
-  variable: '--font-instrument'
-});
-
-const instrumentSerif = Instrument_Serif({ 
+  variable: "--font-ibm-plex-sans",
+})
+const ibmPlexMono = IBM_Plex_Mono({
+  weight: ["400", "500"],
   subsets: ["latin"],
-  weight: "400",
-  variable: '--font-instrument-serif'
-});
-
-const jetbrainsMono = JetBrains_Mono({ 
-  subsets: ["latin"],
-  variable: '--font-jetbrains'
-});
+  variable: "--font-ibm-plex-mono",
+})
+const bebasNeue = Bebas_Neue({ weight: "400", subsets: ["latin"], variable: "--font-bebas" })
 
 export const metadata: Metadata = {
-  title: 'Buildings.com - Property Management Platform',
-  description: 'Buildings.com is the platform for property management, communication, and services. Manage, connect, and scale your building operations efficiently.',
-  generator: 'Buildings.com',
+  title: "BUILDSYNC — Intelligent Facility Management Platform",
+  description:
+    "The trusted platform for facility managers, building owners, and property managers. Operational excellence, security, sustainability, and smart building technology.",
+  generator: "v0.app",
+  icons: {
+    icon: [
+      {
+        url: "/icon-light-32x32.png",
+        media: "(prefers-color-scheme: light)",
+      },
+      {
+        url: "/icon-dark-32x32.png",
+        media: "(prefers-color-scheme: dark)",
+      },
+      {
+        url: "/icon.svg",
+        type: "image/svg+xml",
+      },
+    ],
+    apple: "/apple-icon.png",
+  },
 }
 
 export default function RootLayout({
@@ -32,9 +49,16 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="en">
-      <body className={`${instrumentSans.variable} ${instrumentSerif.variable} ${jetbrainsMono.variable} font-sans antialiased`}>
-        {children}
+    <html lang="en" className="dark" suppressHydrationWarning>
+      <body
+        className={`${ibmPlexSans.variable} ${bebasNeue.variable} ${ibmPlexMono.variable} font-sans antialiased overflow-x-hidden`}
+      >
+        <div className="noise-overlay" aria-hidden="true" />
+        <ThemeProvider>
+          <AuthProvider>
+            <SmoothScroll>{children}</SmoothScroll>
+          </AuthProvider>
+        </ThemeProvider>
         <Analytics />
       </body>
     </html>
