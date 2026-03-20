@@ -36,3 +36,9 @@ jobs:
       # Uncomment after Tauri CLI is installed and configured
       #- name: Build Linux (Tauri)
       #  run: tauri build
+      - name: Update API Reference
+        run: pnpm run update-api-reference
+      - name: Bump minor version and tag release
+        run: |
+          npm version minor -m "chore: bump minor version to %s [skip ci]"
+          git push --follow-tags

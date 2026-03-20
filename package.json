@@ -7,7 +7,8 @@
     "dev": "next dev",
     "lint": "eslint .",
     "start": "next start",
-    "test": "jest"
+    "test": "jest",
+    "update-api-reference": "node update-api-reference.js"
   },
   "dependencies": {
     "@capacitor/cli": "^8.2.0",

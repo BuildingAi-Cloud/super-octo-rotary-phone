@@ -85,8 +85,12 @@ export function ColophonSection() {
         <div className="col-span-1">
           <h4 className="font-mono text-[9px] uppercase tracking-[0.3em] text-muted-foreground mb-4">Resources</h4>
           <ul className="space-y-2">
-            <li className="font-mono text-xs text-foreground/80">Documentation</li>
-            <li className="font-mono text-xs text-foreground/80">API Reference</li>
+            <li className="font-mono text-xs text-foreground/80">
+              <a href="/docs/overview" className="hover:underline">Documentation</a>
+            </li>
+            <li className="font-mono text-xs text-foreground/80">
+              <a href="/docs/api-reference" className="hover:underline">API Reference</a>
+            </li>
           </ul>
         </div>
 

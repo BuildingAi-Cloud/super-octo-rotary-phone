@@ -44,11 +44,14 @@ export default function DashboardPage() {
       return <BuildingOwnerDashboard user={user} />
     case "property_manager":
       return <PropertyManagerDashboard user={user} />
-    case "resident":
-      return <ResidentDashboard user={user} />
-    case "tenant":
-      return <TenantDashboard user={user} />
     default:
-      return <ResidentDashboard user={user} />
+      return (
+        <main className="flex items-center justify-center min-h-screen">
+          <div className="text-center">
+            <h1 className="text-2xl font-bold mb-4">Access Restricted</h1>
+            <p className="text-muted-foreground">This platform is only available for Facility Managers, Building Owners, and Property Managers.</p>
+          </div>
+        </main>
+      );
   }
 }
