@@ -82,9 +82,37 @@ export function PricingSection() {
   }, []);
 
   return (
-    <section ref={sectionRef}>
-      <div ref={headerRef}>Pricing Section Placeholder</div>
-      {/* TODO: Restore original pricing cards and UI */}
+    <section ref={sectionRef} className="py-12">
+      <div ref={headerRef} className="mb-6 text-2xl font-bold text-center">Pricing Plans</div>
+      <div className="overflow-x-auto">
+        <table className="min-w-full border border-border rounded bg-background/80">
+          <thead>
+            <tr>
+              <th className="px-4 py-2 border-b">Plan</th>
+              <th className="px-4 py-2 border-b">Price</th>
+              <th className="px-4 py-2 border-b">Description</th>
+              <th className="px-4 py-2 border-b">Key Features</th>
+            </tr>
+          </thead>
+          <tbody>
+            {plans.map((plan) => (
+              <tr key={plan.name} className={plan.highlight ? "bg-accent/10" : ""}>
+                <td className="px-4 py-2 font-semibold">{plan.name}</td>
+                <td className="px-4 py-2">{plan.price} <span className="text-xs">{plan.period}</span></td>
+                <td className="px-4 py-2">{plan.description}</td>
+                <td className="px-4 py-2">
+                  <ul className="list-disc ml-4">
+                    {plan.features.slice(0, 3).map((f, i) => (
+                      <li key={i}>{f}</li>
+                    ))}
+                    {plan.features.length > 3 && <li>...and more</li>}
+                  </ul>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
     </section>
   );
 }
