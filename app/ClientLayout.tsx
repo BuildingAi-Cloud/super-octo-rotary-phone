@@ -8,16 +8,15 @@ import { ThemeToggle } from "@/components/theme-toggle"
 import { LanguageSelector } from "@/components/language-selector"
 import "./globals.css"
 
+import { Header } from "@/components/header"
+import { SideNav } from "@/components/side-nav"
+
 export default function ClientLayout({ children }: { children: React.ReactNode }) {
   return (
     <>
       <div className="noise-overlay" aria-hidden="true" />
-      {/* TopBar: Accessibility, Theme, Language (Property Manager only) */}
-      <div className="fixed top-0 left-0 w-full z-50 flex flex-row-reverse items-center gap-3 p-3 md:p-4 bg-background/80 backdrop-blur border-b border-border">
-        <LanguageSelector />
-        <ThemeToggle />
-        <AccessibilityToggle />
-      </div>
+      <Header />
+      <SideNav />
       <div className="pt-[80px] md:pt-[96px]">
         <ThemeProvider>
           <AuthProvider>
@@ -25,6 +24,9 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
           </AuthProvider>
         </ThemeProvider>
       </div>
+      <footer className="w-full text-center py-6 text-xs text-muted-foreground bg-background/80 border-t border-border mt-12">
+        &copy; {new Date().getFullYear()} BuildSync. All rights reserved.
+      </footer>
     </>
   )
 }

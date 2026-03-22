@@ -212,17 +212,13 @@ export default function SignUpPage() {
               {step === 3 && (
                 <div className="flex flex-col items-center gap-8 p-8 border border-accent/30 bg-accent/5 rounded-lg">
                   <div className="text-center">
-                    <h2 className="font-[var(--font-bebas)] text-2xl mb-2">Payment (Optional/Sandbox)</h2>
-                    <p className="font-mono text-xs text-muted-foreground mb-4">You can skip payment for now. Payment will be required after launch.</p>
-                    <div className="mb-4">
-                      {/* Placeholder for Stripe/Wise sandbox UI */}
-                      <span className="inline-block px-4 py-2 bg-muted text-muted-foreground rounded">[Stripe/Wise Sandbox Payment UI Here]</span>
-                    </div>
+                    <h2 className="font-[var(--font-bebas)] text-2xl mb-2">Payment</h2>
+                    <p className="font-mono text-xs text-muted-foreground mb-4">Payments are currently disabled. You can skip payment and continue using the app.</p>
                     <button
                       className="mt-2 px-6 py-3 bg-accent text-accent-foreground rounded font-mono text-xs uppercase tracking-widest hover:bg-accent/90 transition-all"
                       onClick={() => router.push("/dashboard")}
                     >
-                      Skip for now
+                      Continue
                     </button>
                   </div>
                 </div>

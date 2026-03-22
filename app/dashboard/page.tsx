@@ -3,17 +3,12 @@
 import { useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { useAuth } from "@/lib/auth-context"
-import { FacilityManagerDashboard } from "@/components/dashboards/facility-manager-dashboard"
-import { BuildingOwnerDashboard } from "@/components/dashboards/building-owner-dashboard"
-import { PropertyManagerDashboard } from "@/components/dashboards/property-manager-dashboard"
-import ResidentDashboard from "@/components/dashboards/resident-dashboard"
-import { TenantDashboard } from "@/components/dashboards/tenant-dashboard"
-// Add stubs for other roles
-// import ConciergeDashboard from "@/components/dashboards/concierge-dashboard"
-// import StaffDashboard from "@/components/dashboards/staff-dashboard"
-// import SecurityDashboard from "@/components/dashboards/security-dashboard"
-// import VendorDashboard from "@/components/dashboards/vendor-dashboard"
-// import AdminDashboard from "@/components/dashboards/admin-dashboard"
+import ConciergeDashboard from "@/components/dashboards/concierge-dashboard"
+import StaffDashboard from "@/components/dashboards/staff-dashboard"
+import SecurityDashboard from "@/components/dashboards/security-dashboard"
+import VendorDashboard from "@/components/dashboards/vendor-dashboard"
+import AdminDashboard from "@/components/dashboards/admin-dashboard"
+import GuestDashboard from "@/components/dashboards/guest-dashboard"
 import { AnimatedNoise } from "@/components/animated-noise"
 
 export default function DashboardPage() {
@@ -54,17 +49,18 @@ export default function DashboardPage() {
       return <ResidentDashboard user={user} />
     case "tenant":
       return <TenantDashboard user={user} />
-    // Uncomment and implement these as needed
-    // case "concierge":
-    //   return <ConciergeDashboard user={user} />
-    // case "staff":
-    //   return <StaffDashboard user={user} />
-    // case "security":
-    //   return <SecurityDashboard user={user} />
-    // case "vendor":
-    //   return <VendorDashboard user={user} />
-    // case "admin":
-    //   return <AdminDashboard user={user} />
+    case "concierge":
+      return <ConciergeDashboard user={user} />
+    case "staff":
+      return <StaffDashboard user={user} />
+    case "security":
+      return <SecurityDashboard user={user} />
+    case "vendor":
+      return <VendorDashboard user={user} />
+    case "admin":
+      return <AdminDashboard user={user} />
+    case "guest":
+      return <GuestDashboard user={user} />
     default:
       return (
         <main className="flex items-center justify-center min-h-screen">
@@ -74,5 +70,16 @@ export default function DashboardPage() {
           </div>
         </main>
       );
+  }
+    // New layout for clearer separation
+    return (
+      <div className="dashboard-layout">
+        {/* Additional layout components can be added here */}
+        <div className="dashboard-content">
+          {/* Render dashboard based on user role */}
+          {renderDashboard(user)}
+        </div>
+      </div>
+    );
   }
 }
