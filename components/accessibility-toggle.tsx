@@ -20,7 +20,7 @@ export function AccessibilityToggle() {
       aria-pressed={enabled}
       aria-label={enabled ? "Disable accessibility features" : "Enable accessibility features"}
       onClick={() => setEnabled((v) => !v)}
-      className={`group relative flex items-center justify-center w-9 h-9 border border-border hover:border-accent transition-colors duration-200 ${enabled ? "bg-accent/20" : ""}`}
+      className={`group relative flex items-center justify-center w-9 h-9 border border-border hover:border-accent focus-visible:ring-2 focus-visible:ring-accent transition-colors duration-200 ${enabled ? "bg-accent/20" : ""}`}
       type="button"
     >
       <span className="sr-only">Toggle accessibility features</span>
@@ -35,6 +35,9 @@ export function AccessibilityToggle() {
         <circle cx="12" cy="12" r="10" />
         <path d="M12 8v8M8 12h8" />
       </svg>
+      <span aria-live="polite" className="sr-only">
+        {enabled ? "Accessibility mode enabled" : "Accessibility mode disabled"}
+      </span>
     </button>
   )
 }

@@ -1,0 +1,18 @@
+<svg width="180" height="48" viewBox="0 0 180 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="180" height="48" rx="8" fill="#111"/>
+  <text x="16" y="34" font-family="monospace, Bebas Neue, IBM Plex Sans" font-size="32" font-weight="bold" fill="#fff">BUI</text>
+  <g>
+    <rect x="72" y="8" width="24" height="32" rx="4" fill="#FF7A1A"/>
+    <text x="80" y="34" font-family="monospace, Bebas Neue, IBM Plex Sans" font-size="32" font-weight="bold" fill="#fff">A</text>
+    <rect x="96" y="8" width="24" height="32" rx="4" fill="#FF7A1A"/>
+    <text x="104" y="34" font-family="monospace, Bebas Neue, IBM Plex Sans" font-size="32" font-weight="bold" fill="#fff">7</text>
+    <rect x="120" y="8" width="24" height="32" rx="4" fill="#FF7A1A"/>
+    <text x="128" y="34" font-family="monospace, Bebas Neue, IBM Plex Sans" font-size="32" font-weight="bold" fill="#fff">7</text>
+    <rect x="144" y="8" width="24" height="32" rx="4" fill="#FF7A1A"/>
+    <text x="152" y="34" font-family="monospace, Bebas Neue, IBM Plex Sans" font-size="32" font-weight="bold" fill="#fff">M</text>
+    <rect x="168" y="8" width="24" height="32" rx="4" fill="#FF7A1A"/>
+    <text x="176" y="34" font-family="monospace, Bebas Neue, IBM Plex Sans" font-size="32" font-weight="bold" fill="#fff">9</text>
+    <rect x="192" y="8" width="24" height="32" rx="4" fill="#FF7A1A"/>
+    <text x="200" y="34" font-family="monospace, Bebas Neue, IBM Plex Sans" font-size="32" font-weight="bold" fill="#fff">S</text>
+  </g>
+</svg>

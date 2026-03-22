@@ -1,8 +1,20 @@
 "use client"
 
 import { createContext, useContext, useState, useEffect, type ReactNode } from "react"
+import { logAudit } from "@/lib/audit"
 
-export type UserRole = "facility_manager" | "building_owner" | "property_manager" | "resident" | "tenant"
+export type UserRole =
+  | "facility_manager"
+  | "building_owner"
+  | "property_manager"
+  | "resident"
+  | "tenant"
+  | "concierge"
+  | "staff"
+  | "security"
+  | "vendor"
+  | "admin"
+  | "guest"
 
 export interface User {
   id: string
@@ -34,13 +46,40 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
   const [isLoading, setIsLoading] = useState(true)
 
+  // Pre-populate dummy users for all roles (MVP style, no UI button)
   useEffect(() => {
-    // Check for existing session
-    const storedUser = localStorage.getItem("buildsync_user")
-    if (storedUser) {
-      setUser(JSON.parse(storedUser))
+    const storedUsers = JSON.parse(localStorage.getItem("buildsync_users") || "[]")
+    const roles: UserRole[] = [
+      "facility_manager",
+      "building_owner",
+      "property_manager",
+      "resident",
+      "tenant",
+      "concierge",
+      "staff",
+      "security",
+      "vendor",
+      "admin",
+      "guest",
+    ]
+    let changed = false
+    roles.forEach((role) => {
+      const email = `test_${role}@example.com`
+      if (!storedUsers.some((u: User) => u.email === email)) {
+        storedUsers.push({
+          id: crypto.randomUUID(),
+          email,
+          password: "12345678",
+          name: `${role.charAt(0).toUpperCase() + role.slice(1)}`,
+          role,
+          company: "TestCo"
+        })
+        changed = true
+      }
+    })
+    if (changed) {
+      localStorage.setItem("buildsync_users", JSON.stringify(storedUsers))
     }
-    setIsLoading(false)
   }, [])
 
   const signIn = async (email: string, password: string): Promise<{ success: boolean; error?: string }> => {
@@ -52,9 +91,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const { password: _, ...userWithoutPassword } = foundUser
       setUser(userWithoutPassword)
       localStorage.setItem("buildsync_user", JSON.stringify(userWithoutPassword))
+      logAudit("signIn", { email }, email)
       return { success: true }
     }
-    
+    logAudit("signInFailed", { email }, email)
     return { success: false, error: "Invalid email or password" }
   }
 
@@ -63,6 +103,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     
     // Check if user already exists
     if (storedUsers.some((u: User) => u.email === data.email)) {
+      logAudit("signUpFailed", { email: data.email }, data.email)
       return { success: false, error: "An account with this email already exists" }
     }
     
@@ -81,11 +122,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const { password: _, ...userWithoutPassword } = newUser
     setUser(userWithoutPassword)
     localStorage.setItem("buildsync_user", JSON.stringify(userWithoutPassword))
+    logAudit("signUp", { email: data.email, role: data.role }, data.email)
     
     return { success: true }
   }
 
   const signOut = () => {
+    logAudit("signOut", {}, user?.email || null)
     setUser(null)
     localStorage.removeItem("buildsync_user")
   }
@@ -112,6 +155,12 @@ export function getRoleDisplayName(role: UserRole): string {
     property_manager: "Property Manager",
     resident: "Resident",
     tenant: "Tenant",
+    concierge: "Concierge",
+    staff: "Staff",
+    security: "Security",
+    vendor: "Vendor",
+    admin: "Admin",
+    guest: "Guest",
   }
   return names[role]
 }
