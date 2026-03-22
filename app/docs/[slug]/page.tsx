@@ -1,13 +1,17 @@
-import fs from 'fs';
+import fs from 'fs/promises';
 import path from 'path';
 import matter from 'gray-matter';
 import { marked } from 'marked';
 import { notFound } from 'next/navigation';
 
-export default function DocPage({ params }: { params: { slug: string } }) {
+export default async function DocPage({ params }: { params: { slug: string } }) {
   const filePath = path.join(process.cwd(), 'docs', `${params.slug}.md`);
-  if (!fs.existsSync(filePath)) return notFound();
-  const file = fs.readFileSync(filePath, 'utf8');
+  let file;
+  try {
+    file = await fs.readFile(filePath, 'utf8');
+  } catch {
+    return notFound();
+  }
   const { content, data } = matter(file);
   const html = marked(content);
   return (

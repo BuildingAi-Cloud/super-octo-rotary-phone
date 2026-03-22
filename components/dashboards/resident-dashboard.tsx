@@ -246,7 +246,7 @@ export default function ResidentDashboard({ user }: ResidentDashboardProps) {
             <div className="space-y-6">
               <div className="flex items-center justify-between">
                 <h2 className="font-[var(--font-bebas)] text-xl tracking-wide">{t("myRequests", "MY REQUESTS")}</h2>
-                {/* Removed + New Request button as per requirements */}
+                
               </div>
               <div className="space-y-4">
                 {maintenanceRequests.map((request) => (
@@ -274,7 +274,7 @@ export default function ResidentDashboard({ user }: ResidentDashboardProps) {
               <div className="border border-border/40 bg-card/30 p-6">
                 <div className="flex items-center justify-between mb-4">
                   <h2 className="font-[var(--font-bebas)] text-xl tracking-wide">{t("bulletinBoard", "BULLETIN BOARD")}</h2>
-                  {/* Removed + Post button as per requirements */}
+                  
                 </div>
                 <div className="space-y-4">
                   {bulletinPosts.map((post, index) => (
