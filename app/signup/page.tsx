@@ -8,68 +8,31 @@ import { AnimatedNoise } from "@/components/animated-noise"
 import { ScrambleText, ScrambleTextOnHover } from "@/components/scramble-text"
 import { BitmapChevron } from "@/components/bitmap-chevron"
 
-const roleOptions: { value: UserRole; label: string; description: string }[] = [
+const roleOptions: { value: UserRole; label: string; description: string; pricing: string }[] = [
   {
     value: "facility_manager",
     label: "Facility Manager",
     description: "Daily operations, maintenance, and building systems",
+    pricing: "Custom pricing based on building size and features",
   },
   {
     value: "building_owner",
     label: "Building Owner",
     description: "Asset oversight, investment tracking, and portfolio management",
+    pricing: "Portfolio pricing available. Contact sales for details.",
   },
   {
     value: "property_manager",
     label: "Property Manager",
     description: "Tenant relations, leasing, and property administration",
-  },
-  {
-    value: "resident",
-    label: "Resident",
-    description: "Building resident with access to amenities and services",
-  },
-  {
-    value: "tenant",
-    label: "Tenant",
-    description: "Commercial or residential tenant user",
-  },
-  {
-    value: "concierge",
-    label: "Concierge",
-    description: "Front desk and guest services",
-  },
-  {
-    value: "staff",
-    label: "Staff",
-    description: "General building staff and support",
-  },
-  {
-    value: "security",
-    label: "Security",
-    description: "Security personnel and access control",
-  },
-  {
-    value: "vendor",
-    label: "Vendor",
-    description: "External service provider or contractor",
-  },
-  {
-    value: "admin",
-    label: "Admin",
-    description: "System administrator with full access",
-  },
-  {
-    value: "guest",
-    label: "Guest",
-    description: "Temporary or visitor access user",
+    pricing: "Flexible pricing per managed unit or property",
   },
 ]
 
 export default function SignUpPage() {
   const router = useRouter()
   const { signUp } = useAuth()
-  const [step, setStep] = useState<1 | 2>(1)
+  const [step, setStep] = useState<1 | 2 | 3>(1)
   const [name, setName] = useState("")
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
@@ -83,13 +46,15 @@ export default function SignUpPage() {
     setStep(2)
   }
 
+  const handleAccountCreated = () => {
+    setStep(3)
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!role) return
-    
     setError("")
     setIsLoading(true)
-
     const result = await signUp({
       email,
       password,
@@ -97,15 +62,14 @@ export default function SignUpPage() {
       role,
       company: company || undefined,
     })
-    
     if (result.success) {
-      router.push("/dashboard")
+      handleAccountCreated()
     } else {
       setError(result.error || "An error occurred")
     }
-    
     setIsLoading(false)
   }
+
 
   return (
     <main className="relative min-h-screen flex items-center justify-center p-6">
@@ -121,12 +85,14 @@ export default function SignUpPage() {
             </span>
           </Link>
           <h1 className="font-[var(--font-bebas)] text-4xl md:text-5xl tracking-tight">
-            <ScrambleText text={step === 1 ? "SELECT YOUR ROLE" : "CREATE ACCOUNT"} duration={0.8} />
+            <ScrambleText text={step === 1 ? "SELECT YOUR ROLE" : step === 2 ? "CREATE ACCOUNT" : "PAYMENT (OPTIONAL)"} duration={0.8} />
           </h1>
           <p className="mt-4 font-mono text-sm text-muted-foreground">
             {step === 1 
               ? "Choose the role that best describes your responsibilities" 
-              : "Complete your account setup to get started"}
+              : step === 2
+                ? "Complete your account setup to get started"
+                : "You can skip payment for now. Payment will be required after launch."}
           </p>
         </div>
 
@@ -140,6 +106,11 @@ export default function SignUpPage() {
           <div className={`flex items-center gap-2 ${step >= 2 ? "text-accent" : "text-muted-foreground"}`}>
             <span className={`h-2 w-2 ${step >= 2 ? "bg-accent" : "bg-muted"}`} />
             <span className="font-mono text-[10px] uppercase tracking-widest">Details</span>
+          </div>
+          <div className="h-px w-8 bg-border" />
+          <div className={`flex items-center gap-2 ${step === 3 ? "text-accent" : "text-muted-foreground"}`}>
+            <span className={`h-2 w-2 ${step === 3 ? "bg-accent" : "bg-muted"}`} />
+            <span className="font-mono text-[10px] uppercase tracking-widest">Payment</span>
           </div>
         </div>
 
@@ -160,12 +131,13 @@ export default function SignUpPage() {
                   <p className="mt-1 font-mono text-xs text-muted-foreground">
                     {option.description}
                   </p>
+                  <p className="mt-2 font-mono text-xs text-accent">{option.pricing}</p>
                 </div>
                 <BitmapChevron className="mt-1 opacity-0 group-hover:opacity-100 transition-all duration-200 group-hover:translate-x-1" />
               </button>
             ))}
           </div>
-        ) : (
+        ) : step === 2 ? (
           /* Account details form */
           <form onSubmit={handleSubmit} className="space-y-6">
             {error && (
@@ -264,7 +236,49 @@ export default function SignUpPage() {
               By creating an account, you agree to our Terms of Service and Privacy Policy
             </p>
           </form>
+        ) : (
+          // Payment step (optional/sandbox)
+          <div className="flex flex-col items-center gap-8 p-8 border border-accent/30 bg-accent/5 rounded-lg">
+            <div className="text-center">
+              <h2 className="font-[var(--font-bebas)] text-2xl mb-2">Payment (Optional/Sandbox)</h2>
+              <p className="font-mono text-xs text-muted-foreground mb-4">You can skip payment for now. Payment will be required after launch.</p>
+              <div className="mb-4">
+                {/* Placeholder for Stripe/Wise sandbox UI */}
+                <span className="inline-block px-4 py-2 bg-muted text-muted-foreground rounded">[Stripe/Wise Sandbox Payment UI Here]</span>
+              </div>
+              <button
+                className="mt-2 px-6 py-3 bg-accent text-accent-foreground rounded font-mono text-xs uppercase tracking-widest hover:bg-accent/90 transition-all"
+                onClick={() => router.push("/dashboard")}
+              >
+                Skip for now
+              </button>
+            </div>
+          </div>
         )}
+
+        {/* Footer */}
+        <div className="mt-8 text-center">
+          <p className="font-mono text-xs text-muted-foreground">
+            Already have an account?{" "}
+            <Link href="/signin" className="text-accent hover:underline">
+              Sign in
+            </Link>
+          </p>
+        </div>
+
+        {/* Back link */}
+        <div className="mt-12 text-center">
+          <Link
+            href="/"
+            className="inline-flex items-center gap-2 font-mono text-[10px] uppercase tracking-widest text-muted-foreground hover:text-foreground transition-colors"
+          >
+            <BitmapChevron className="rotate-180" />
+            <span>Back to Home</span>
+          </Link>
+        </div>
+      </div>
+    </main>
+  )
 
         {/* Footer */}
         <div className="mt-8 text-center">

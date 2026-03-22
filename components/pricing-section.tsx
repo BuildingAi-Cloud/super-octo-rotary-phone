@@ -1,13 +1,10 @@
 "use client"
 
+
 import { useRef, useEffect } from "react"
 import Link from "next/link"
-import gsap from "gsap"
-import { ScrollTrigger } from "gsap/ScrollTrigger"
 import { ScrambleTextOnHover } from "@/components/scramble-text"
 import { BitmapChevron } from "@/components/bitmap-chevron"
-
-gsap.registerPlugin(ScrollTrigger)
 
 const plans = [
   {
@@ -64,6 +61,13 @@ const plans = [
   },
 ]
 
+// Collect all unique features for table rows
+const allFeatures = Array.from(
+  new Set(
+    plans.flatMap((plan) => plan.features.map((f) => f.replace(/^Everything in .*/, "All previous features")))
+  )
+)
+
 export function PricingSection() {
   const sectionRef = useRef<HTMLElement>(null)
   const headerRef = useRef<HTMLDivElement>(null)
@@ -80,73 +84,65 @@ export function PricingSection() {
         duration: 1,
         ease: "power3.out",
         scrollTrigger: {
-          trigger: headerRef.current,
-          start: "top 85%",
-          toggleActions: "play none none reverse",
-        },
-      })
 
-      // Cards staggered animation
-      const cards = cardsRef.current?.children
-      if (cards) {
-        gsap.from(cards, {
-          y: 80,
-          opacity: 0,
-          duration: 0.8,
-          stagger: 0.15,
-          ease: "power3.out",
-          scrollTrigger: {
-            trigger: cardsRef.current,
-            start: "top 80%",
-            toggleActions: "play none none reverse",
-          },
-        })
-      }
-    }, sectionRef)
-
-    return () => ctx.revert()
-  }, [])
-
-  return (
-    <section id="pricing" ref={sectionRef} className="relative py-32 pl-6 md:pl-28 pr-6 md:pr-12">
-      {/* Section header */}
-      <div ref={headerRef} className="mb-16">
-        <span className="font-mono text-[10px] uppercase tracking-[0.3em] text-accent">05 / Pricing</span>
-        <h2 className="mt-4 font-[var(--font-bebas)] text-5xl md:text-7xl tracking-tight">CHOOSE YOUR PLAN</h2>
-        <p className="mt-4 max-w-lg font-mono text-sm text-muted-foreground leading-relaxed">
-          All plans are paid. No free trials. Scalable pricing for facilities of all sizes. All plans include core security features and compliance tools.
-        </p>
-      </div>
-
-      {/* Pricing cards */}
-      <div ref={cardsRef} className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        {plans.length === 0 && (
-          <div className="col-span-3 text-center text-red-600 font-bold text-xl py-12">
-            No pricing plans available. Please check the PricingSection component.
-          </div>
-        )}
-        {plans.map((plan, index) => (
-          <div
-            key={index}
-            className={`relative flex flex-col border p-8 transition-all duration-300 hover:border-accent/50 ${
-              plan.highlight 
-                ? "border-accent bg-accent/5" 
-                : "border-border/40 bg-card/30"
-            }`}
-          >
-            {plan.highlight && (
-              <div className="absolute -top-3 left-8">
-                <span className="bg-accent text-accent-foreground px-3 py-1 font-mono text-[10px] uppercase tracking-widest">
-                  Most Popular
-                </span>
+          return (
+            <section id="pricing" className="relative py-32 pl-6 md:pl-28 pr-6 md:pr-12">
+              {/* Section header */}
+              <div className="mb-16">
+                <span className="font-mono text-[10px] uppercase tracking-[0.3em] text-accent">05 / Pricing</span>
+                <h2 className="mt-4 font-[var(--font-bebas)] text-5xl md:text-7xl tracking-tight">CHOOSE YOUR PLAN</h2>
+                <p className="mt-4 max-w-lg font-mono text-sm text-muted-foreground leading-relaxed">
+                  All plans are paid. No free trials. Scalable pricing for facilities of all sizes. All plans include core security features and compliance tools.
+                </p>
               </div>
-            )}
 
-            <div className="mb-6">
-              <h3 className="font-[var(--font-bebas)] text-2xl tracking-wide">{plan.name}</h3>
-              <p className="mt-2 font-mono text-xs text-muted-foreground">{plan.description}</p>
-            </div>
-
+              {/* Pricing comparison table */}
+              <div className="overflow-x-auto">
+                <table className="min-w-full border border-border/40 bg-card/30 rounded-lg">
+                  <thead>
+                    <tr>
+                      <th className="text-left font-mono text-xs uppercase tracking-widest p-4 bg-background/80">Features</th>
+                      {plans.map((plan, idx) => (
+                        <th key={plan.name} className={`text-center p-4 font-[var(--font-bebas)] text-2xl tracking-wide ${plan.highlight ? "bg-accent/10" : ""}`}>
+                          <div>{plan.name}</div>
+                          <div className="font-mono text-xs text-muted-foreground mt-1">{plan.description}</div>
+                          <div className="mt-2 font-[var(--font-bebas)] text-3xl">{plan.price} <span className="font-mono text-xs text-muted-foreground">{plan.period}</span></div>
+                          <Link
+                            href={plan.name === "Enterprise" ? "mailto:sales@buildsync.com" : `/checkout?plan=${plan.name.toLowerCase()}`}
+                            className={`mt-3 group inline-flex items-center justify-center gap-2 px-4 py-2 font-mono text-xs uppercase tracking-widest transition-all duration-200 ${
+                              plan.highlight
+                                ? "bg-accent text-accent-foreground hover:bg-accent/90"
+                                : "border border-foreground/20 text-foreground hover:border-accent hover:text-accent"
+                            }`}
+                          >
+                            <ScrambleTextOnHover text={plan.cta} as="span" duration={0.5} />
+                            <BitmapChevron className="transition-transform duration-[400ms] ease-in-out group-hover:translate-x-1" />
+                          </Link>
+                          {plan.highlight && (
+                            <div className="mt-2">
+                              <span className="bg-accent text-accent-foreground px-2 py-1 font-mono text-[10px] uppercase tracking-widest rounded">Most Popular</span>
+                            </div>
+                          )}
+                        </th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {allFeatures.map((feature, rowIdx) => (
+                      <tr key={feature} className="border-t border-border/20">
+                        <td className="p-4 font-mono text-xs text-foreground/80 w-56 min-w-[180px]">{feature}</td>
+                        {plans.map((plan, colIdx) => (
+                          <td key={plan.name} className="text-center p-4">
+                            {plan.features.some(f => f === feature || (feature === "All previous features" && f.startsWith("Everything in ")))
+                              ? <span className="inline-block w-5 h-5 text-accent">✔️</span>
+                              : "—"}
+                          </td>
+                        ))}
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             <div className="mb-8">
               <span className="font-[var(--font-bebas)] text-5xl tracking-tight">{plan.price}</span>
               <span className="font-mono text-sm text-muted-foreground">{plan.period}</span>
