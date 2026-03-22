@@ -24,10 +24,22 @@ export function Header() {
 
   return (
     <header className="fixed top-0 left-0 right-0 z-50 flex flex-wrap items-center gap-2 md:gap-6 p-4 md:p-6 bg-background/80 backdrop-blur border-b border-border">
-      <div className="flex items-center min-w-[180px]">
-        <Link href="/" className="flex items-center" aria-label="Home">
+      <div
+        className="flex items-center min-w-[120px] md:min-w-[180px] justify-center"
+        style={{ maxHeight: 200 }}
+      >
+        <Link
+          href="/"
+          className="flex items-center"
+          aria-label="Home"
+          style={{ maxHeight: 200 }}
+        >
           <SplitFlapAudioProvider>
-            <SplitFlapText text="BUILDSYNC" speed={80} />
+            <SplitFlapText
+              text="BUILDSYNC"
+              speed={80}
+              className="max-h-[48px] md:max-h-[120px] lg:max-h-[200px] h-full w-auto px-2 md:px-4"
+            />
           </SplitFlapAudioProvider>
         </Link>
       </div>
