@@ -11,14 +11,16 @@ import { getRoleDisplayName } from "@/lib/auth-context"
 import { SplitFlapText, SplitFlapAudioProvider } from "@/components/split-flap-text"
 import { useRouter } from "next/navigation"
 
-  const { user, signOut } = useAuth()
-  const router = useRouter()
-  const { t } = useTranslation()
+
+export function Header() {
+  const { user, signOut } = useAuth();
+  const router = useRouter();
+  const { t } = useTranslation();
 
   const handleLogout = () => {
-    signOut()
-    router.push("/signin")
-  }
+    signOut();
+    router.push("/signin");
+  };
 
   return (
     <header className="fixed top-0 left-0 right-0 z-50 flex flex-wrap items-center gap-2 md:gap-6 p-4 md:p-6 bg-background/80 backdrop-blur border-b border-border">
@@ -40,6 +42,12 @@ import { useRouter } from "next/navigation"
         )}
       </div>
       <nav className="flex items-center gap-2 md:gap-4">
+        <Link
+          href="/about"
+          className="font-mono text-xs uppercase tracking-widest text-muted-foreground hover:text-accent transition-colors duration-200"
+        >
+          About
+        </Link>
         {user ? (
           <>
             <Link
