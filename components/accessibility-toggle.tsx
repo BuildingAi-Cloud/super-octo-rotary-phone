@@ -1,11 +1,12 @@
 "use client"
 
 import { useState, useEffect, useRef } from "react"
+import { toast } from "@/hooks/use-toast"
 
 const OPTIONS = [
-  { key: "fontSize", label: "Large Font" },
-  { key: "highContrast", label: "High Contrast" },
-  { key: "dyslexiaFont", label: "Dyslexia Friendly" },
+  { key: "accessibility-large-font", label: "Large Font" },
+  { key: "accessibility-high-contrast", label: "High Contrast" },
+  { key: "accessibility-dyslexia-font", label: "Dyslexia Friendly" },
 ]
 
 export function AccessibilityToggle() {
@@ -24,10 +25,24 @@ export function AccessibilityToggle() {
   }, [open])
 
   useEffect(() => {
-    document.body.classList.toggle("accessibility-large-font", selected.includes("fontSize"))
-    document.body.classList.toggle("accessibility-high-contrast", selected.includes("highContrast"))
-    document.body.classList.toggle("accessibility-dyslexia-font", selected.includes("dyslexiaFont"))
+    OPTIONS.forEach(opt => {
+      document.body.classList.toggle(opt.key, selected.includes(opt.key))
+    })
   }, [selected])
+
+  function handleToggle(optKey: string, optLabel: string) {
+    setSelected(sel => {
+      const isActive = sel.includes(optKey)
+      const newSel = isActive ? sel.filter(k => k !== optKey) : [...sel, optKey]
+      toast({
+        title: isActive ? `${optLabel} disabled` : `${optLabel} enabled`,
+        description: isActive
+          ? `The ${optLabel} accessibility option has been turned off.`
+          : `The ${optLabel} accessibility option is now active.`
+      })
+      return newSel
+    })
+  }
 
   return (
     <div className="relative" ref={menuRef}>
@@ -52,7 +67,7 @@ export function AccessibilityToggle() {
               <li key={opt.key}>
                 <button
                   className={`w-full text-left px-4 py-2 hover:bg-accent/10 ${selected.includes(opt.key) ? "font-bold text-accent" : ""}`}
-                  onClick={() => setSelected(sel => sel.includes(opt.key) ? sel.filter(k => k !== opt.key) : [...sel, opt.key])}
+                  onClick={() => handleToggle(opt.key, opt.label)}
                   type="button"
                 >
                   {opt.label}
