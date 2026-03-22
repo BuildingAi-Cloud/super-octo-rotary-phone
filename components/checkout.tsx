@@ -32,5 +32,12 @@ export function Checkout({ productId }: { productId: string }) {
         <EmbeddedCheckout />
       </EmbeddedCheckoutProvider>
     </div>
-  );
-}
+    export function Checkout() {
+      return (
+        <div id="checkout" className="text-center">
+          <div className="font-mono text-sm text-muted-foreground mb-4">
+            Payments are currently disabled. You can skip payment and continue using the app.
+          </div>
+        </div>
+      );
+    }

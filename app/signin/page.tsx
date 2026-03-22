@@ -51,36 +51,39 @@ export default function SignInPage() {
   const [sendgridApiKey, setSendgridApiKey] = useState("");
 
 
-  // Bypass OTP: Directly sign in and redirect
+  // Actually call signIn from useAuth and check credentials
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
     setIsLoading(true);
     try {
-      // Optionally: validate email format here
-      // Optionally: call signIn from useAuth if needed
-      router.push("/dashboard");
+      const result = await signIn(email, password);
+      if (result.success) {
+        router.push("/dashboard");
+      } else {
+        setError(result.error || "Invalid email or password");
+      }
     } catch (err) {
       setError("Failed to sign in");
     }
     setIsLoading(false);
   };
 
-  // Helper to create test user
+  // Helper to create test user with correct password
   const createTestUser = () => {
     const users = JSON.parse(localStorage.getItem("buildsync_users") || "[]");
     if (!users.some((u: any) => u.email === "test@test.com")) {
       users.push({
         id: "test-id",
         email: "test@test.com",
-        password: "123456",
+        password: "12345678",
         name: "Test User",
         role: "facility_manager"
       });
       localStorage.setItem("buildsync_users", JSON.stringify(users));
-      alert("Test user created!\nEmail: test@test.com\nPassword: 123456");
+      alert("Test user created!\nEmail: test@test.com\nPassword: 12345678");
     } else {
-      alert("Test user already exists.\nEmail: test@test.com\nPassword: 123456");
+      alert("Test user already exists.\nEmail: test@test.com\nPassword: 12345678");
     }
   };
 }

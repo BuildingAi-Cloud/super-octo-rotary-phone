@@ -14,8 +14,7 @@ function ReturnContent() {
 
   useEffect(() => {
     if (sessionId) {
-      // In a real app, you would verify the session with Stripe
-      // For demo purposes, we'll just show success
+      // Payment confirmation is simulated; no real payment processing
       setTimeout(() => {
         setStatus("success")
       }, 1500)

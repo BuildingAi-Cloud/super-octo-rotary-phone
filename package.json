@@ -1,13 +1,18 @@
 {
+<<<<<<< HEAD
   "name": "buildings-com",
   "version": "0.1.0",
+=======
+  "type": "module",
+  "name": "my-v0-project",
+  "version": "0.2.0",
+>>>>>>> 77ae785 (fix: use babel.config.cjs for ESM compatibility with Next.js)
   "private": true,
   "scripts": {
-    "build": "next build",
-    "dev": "next dev",
-    "lint": "eslint .",
-    "start": "next start",
-    "test": "jest"
+    "type": "module",
+    "name": "my-v0-project",
+    "version": "0.2.0",
+    "private": true,
   },
   "dependencies": {
     "@hookform/resolvers": "^3.10.0",
