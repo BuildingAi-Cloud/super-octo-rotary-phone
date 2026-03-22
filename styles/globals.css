@@ -124,27 +124,36 @@
   }
 }
 
-body.accessibility-enabled {
-  font-size: 1.15em;
+
+body.accessibility-large-font {
+  font-size: 1.25em !important;
+}
+
+body.accessibility-high-contrast {
   background: #111 !important;
   color: #fff !important;
 }
-body.accessibility-enabled a,
-body.accessibility-enabled button,
-body.accessibility-enabled input,
-body.accessibility-enabled select {
+body.accessibility-high-contrast a,
+body.accessibility-high-contrast button,
+body.accessibility-high-contrast input,
+body.accessibility-high-contrast select {
   outline: 2px solid #ff7a1a !important;
   outline-offset: 2px;
   background: #222 !important;
   color: #fff !important;
 }
-body.accessibility-enabled .border,
-body.accessibility-enabled .border-border {
+body.accessibility-high-contrast .border,
+body.accessibility-high-contrast .border-border {
   border-color: #ff7a1a !important;
 }
-body.accessibility-enabled .bg-background {
+body.accessibility-high-contrast .bg-background {
   background: #111 !important;
 }
-body.accessibility-enabled .text-muted-foreground {
+body.accessibility-high-contrast .text-muted-foreground {
   color: #ff7a1a !important;
+}
+
+body.accessibility-dyslexia-font {
+  font-family: 'OpenDyslexic', 'Comic Sans MS', 'Arial', sans-serif !important;
+  letter-spacing: 0.05em !important;
 }
