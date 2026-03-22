@@ -1,5 +1,6 @@
+
+"use client";
 import { useTranslation } from "react-i18next"
-"use client"
 
 import { useState } from "react"
 import { amenityStore, addBooking, getBookingsForUser } from "@/lib/amenity-store"

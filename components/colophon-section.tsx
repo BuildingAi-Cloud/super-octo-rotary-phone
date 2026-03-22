@@ -1,5 +1,6 @@
+
+"use client";
 import { useTranslation } from "react-i18next"
-"use client"
 
 import { useRef, useEffect } from "react"
 import gsap from "gsap"
