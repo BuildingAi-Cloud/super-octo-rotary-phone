@@ -40,19 +40,31 @@ export default function SignUpPage() {
       if (!role) return;
       setError("");
       setIsLoading(true);
-      const result = await signUp({
-        email,
-        password,
-        name,
-        role,
-        company: company || undefined,
-      });
-      if (result.success) {
-        setStep(3);
-      } else {
-        setError(result.error || "An error occurred");
+      let timeoutId: NodeJS.Timeout | null = null;
+      try {
+        // Timeout fallback: reset loading after 10 seconds
+        timeoutId = setTimeout(() => {
+          setIsLoading(false);
+          setError("Request timed out. Please try again.");
+        }, 10000);
+        const result = await signUp({
+          email,
+          password,
+          name,
+          role,
+          company: company || undefined,
+        });
+        if (timeoutId) clearTimeout(timeoutId);
+        if (result.success) {
+          setStep(3);
+        } else {
+          setError(result.error || "An error occurred");
+        }
+      } catch (err: any) {
+        setError(err?.message || "An unexpected error occurred");
+      } finally {
+        setIsLoading(false);
       }
-      setIsLoading(false);
     };
   const router = useRouter();
   const { signUp } = useAuth();

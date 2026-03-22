@@ -111,9 +111,15 @@ export function ColophonSection() {
         <div className="col-span-1">
           <h4 className="font-mono text-[9px] uppercase tracking-[0.3em] text-muted-foreground mb-4">{t("industries", "Industries")}</h4>
           <ul className="space-y-2">
-            <li className="font-mono text-xs text-foreground/80">{t("commercial", "Commercial")}</li>
-            <li className="font-mono text-xs text-foreground/80">{t("institutional", "Institutional")}</li>
-            <li className="font-mono text-xs text-foreground/80">{t("publicSector", "Public Sector")}</li>
+            <li>
+              <a href="/commercial" className="font-mono text-xs text-foreground/80 hover:underline">{t("commercial", "Commercial")}</a>
+            </li>
+            <li>
+              <a href="/institutional" className="font-mono text-xs text-foreground/80 hover:underline">{t("institutional", "Institutional")}</a>
+            </li>
+            <li>
+              <a href="/public-sector" className="font-mono text-xs text-foreground/80 hover:underline">{t("publicSector", "Public Sector")}</a>
+            </li>
           </ul>
         </div>
 
@@ -121,8 +127,12 @@ export function ColophonSection() {
         <div className="col-span-1">
           <h4 className="font-mono text-[9px] uppercase tracking-[0.3em] text-muted-foreground mb-4">{t("events", "Events")}</h4>
           <ul className="space-y-2">
-            <li className="font-mono text-xs text-foreground/80">Webinars</li>
-            <li className="font-mono text-xs text-foreground/80">Training</li>
+            <li>
+              <a href="/webinars" className="font-mono text-xs text-foreground/80 hover:underline">Webinars</a>
+            </li>
+            <li>
+              <a href="/training" className="font-mono text-xs text-foreground/80 hover:underline">Training</a>
+            </li>
           </ul>
         </div>
 
@@ -154,8 +164,12 @@ export function ColophonSection() {
         <div className="col-span-1">
           <h4 className="font-mono text-[9px] uppercase tracking-[0.3em] text-muted-foreground mb-4">Trust</h4>
           <ul className="space-y-2">
-            <li className="font-mono text-xs text-foreground/80">Privacy Policy</li>
-            <li className="font-mono text-xs text-foreground/80">Security</li>
+            <li>
+              <a href="/privacy-policy" className="font-mono text-xs text-foreground/80 hover:underline">Privacy Policy</a>
+            </li>
+            <li>
+              <a href="/security" className="font-mono text-xs text-foreground/80 hover:underline">Security</a>
+            </li>
           </ul>
         </div>
       </div>
