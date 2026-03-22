@@ -1,0 +1,9 @@
+# Version control for Dockerfile
+# Update this file with each Dockerfile change
+
+version: 1.0.0
+last_updated: 2026-03-21
+notes: |
+  - Initial version for Next.js on-premise service
+  - Uses Node 20-alpine, pnpm, exposes port 3000
+  - Installs dependencies and builds app

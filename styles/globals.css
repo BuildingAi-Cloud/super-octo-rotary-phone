@@ -123,3 +123,28 @@
     @apply bg-background text-foreground;
   }
 }
+
+body.accessibility-enabled {
+  font-size: 1.15em;
+  background: #111 !important;
+  color: #fff !important;
+}
+body.accessibility-enabled a,
+body.accessibility-enabled button,
+body.accessibility-enabled input,
+body.accessibility-enabled select {
+  outline: 2px solid #ff7a1a !important;
+  outline-offset: 2px;
+  background: #222 !important;
+  color: #fff !important;
+}
+body.accessibility-enabled .border,
+body.accessibility-enabled .border-border {
+  border-color: #ff7a1a !important;
+}
+body.accessibility-enabled .bg-background {
+  background: #111 !important;
+}
+body.accessibility-enabled .text-muted-foreground {
+  color: #ff7a1a !important;
+}

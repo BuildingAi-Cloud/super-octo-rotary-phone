@@ -8,6 +8,12 @@ import { BuildingOwnerDashboard } from "@/components/dashboards/building-owner-d
 import { PropertyManagerDashboard } from "@/components/dashboards/property-manager-dashboard"
 import ResidentDashboard from "@/components/dashboards/resident-dashboard"
 import { TenantDashboard } from "@/components/dashboards/tenant-dashboard"
+// Add stubs for other roles
+// import ConciergeDashboard from "@/components/dashboards/concierge-dashboard"
+// import StaffDashboard from "@/components/dashboards/staff-dashboard"
+// import SecurityDashboard from "@/components/dashboards/security-dashboard"
+// import VendorDashboard from "@/components/dashboards/vendor-dashboard"
+// import AdminDashboard from "@/components/dashboards/admin-dashboard"
 import { AnimatedNoise } from "@/components/animated-noise"
 
 export default function DashboardPage() {
@@ -44,12 +50,27 @@ export default function DashboardPage() {
       return <BuildingOwnerDashboard user={user} />
     case "property_manager":
       return <PropertyManagerDashboard user={user} />
+    case "resident":
+      return <ResidentDashboard user={user} />
+    case "tenant":
+      return <TenantDashboard user={user} />
+    // Uncomment and implement these as needed
+    // case "concierge":
+    //   return <ConciergeDashboard user={user} />
+    // case "staff":
+    //   return <StaffDashboard user={user} />
+    // case "security":
+    //   return <SecurityDashboard user={user} />
+    // case "vendor":
+    //   return <VendorDashboard user={user} />
+    // case "admin":
+    //   return <AdminDashboard user={user} />
     default:
       return (
         <main className="flex items-center justify-center min-h-screen">
           <div className="text-center">
             <h1 className="text-2xl font-bold mb-4">Access Restricted</h1>
-            <p className="text-muted-foreground">This platform is only available for Facility Managers, Building Owners, and Property Managers.</p>
+            <p className="text-muted-foreground">This platform does not yet support your user type. Please contact support or try again later.</p>
           </div>
         </main>
       );

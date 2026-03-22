@@ -24,6 +24,46 @@ const roleOptions: { value: UserRole; label: string; description: string }[] = [
     label: "Property Manager",
     description: "Tenant relations, leasing, and property administration",
   },
+  {
+    value: "resident",
+    label: "Resident",
+    description: "Building resident with access to amenities and services",
+  },
+  {
+    value: "tenant",
+    label: "Tenant",
+    description: "Commercial or residential tenant user",
+  },
+  {
+    value: "concierge",
+    label: "Concierge",
+    description: "Front desk and guest services",
+  },
+  {
+    value: "staff",
+    label: "Staff",
+    description: "General building staff and support",
+  },
+  {
+    value: "security",
+    label: "Security",
+    description: "Security personnel and access control",
+  },
+  {
+    value: "vendor",
+    label: "Vendor",
+    description: "External service provider or contractor",
+  },
+  {
+    value: "admin",
+    label: "Admin",
+    description: "System administrator with full access",
+  },
+  {
+    value: "guest",
+    label: "Guest",
+    description: "Temporary or visitor access user",
+  },
 ]
 
 export default function SignUpPage() {

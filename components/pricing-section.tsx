@@ -108,7 +108,7 @@ export function PricingSection() {
   }, [])
 
   return (
-    <section id="pricing" ref={sectionRef} className="relative py-32 pl-6 md:pl-28 pr-6 md:pr-12 border-4 border-red-500">
+    <section id="pricing" ref={sectionRef} className="relative py-32 pl-6 md:pl-28 pr-6 md:pr-12">
       {/* Section header */}
       <div ref={headerRef} className="mb-16">
         <span className="font-mono text-[10px] uppercase tracking-[0.3em] text-accent">05 / Pricing</span>

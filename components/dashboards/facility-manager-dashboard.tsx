@@ -2,6 +2,7 @@
 
 import { type User } from "@/lib/auth-context"
 import { DashboardHeader } from "./dashboard-header"
+import { useTranslation } from "react-i18next"
 import { AnimatedNoise } from "@/components/animated-noise"
 import { ScrambleText } from "@/components/scramble-text"
 import { AmenityManagement } from "@/components/amenity-management"
@@ -44,6 +45,7 @@ export function FacilityManagerDashboard({ user }: FacilityManagerDashboardProps
     { id: "2", name: "Fitness Center", status: "maintenance" },
     { id: "3", name: "Pool & Spa", status: "booked" }
   ]
+  const { t } = useTranslation()
   return (
     <main className="relative min-h-screen bg-background">
       <AnimatedNoise opacity={0.02} />
@@ -60,7 +62,7 @@ export function FacilityManagerDashboard({ user }: FacilityManagerDashboardProps
               <ScrambleText text="MAINTENANCE & OPERATIONS" duration={0.8} />
             </h1>
             <p className="mt-2 font-mono text-sm text-muted-foreground">
-              Welcome back, {user.name}. Manage work orders, equipment, and IoT alerts.
+              {t('welcome')}
             </p>
           </div>
 

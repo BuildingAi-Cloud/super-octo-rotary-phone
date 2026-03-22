@@ -1,12 +1,12 @@
 # Dockerfile for Next.js On-Premise Service
-# Use official Node.js image as base
-FROM node:20-slim
+# Use official Node.js Alpine image as base (smaller, fewer vulnerabilities)
+FROM node:20-alpine
 
 # Set working directory
 WORKDIR /app
 
-# Upgrade system packages for security
-RUN apt-get update && apt-get upgrade -y && rm -rf /var/lib/apt/lists/*
+# Alpine base: install minimal build dependencies if needed
+RUN apk add --no-cache bash
 
 # Copy package.json and lock file
 COPY package.json ./

@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next"
 "use client"
 
 import { useRef, useEffect } from "react"
@@ -7,6 +8,7 @@ import { ScrollTrigger } from "gsap/ScrollTrigger"
 gsap.registerPlugin(ScrollTrigger)
 
 export function ColophonSection() {
+  const { t } = useTranslation()
   const sectionRef = useRef<HTMLElement>(null)
   const headerRef = useRef<HTMLDivElement>(null)
   const gridRef = useRef<HTMLDivElement>(null)
@@ -75,48 +77,48 @@ export function ColophonSection() {
     >
       {/* Section header */}
       <div ref={headerRef} className="mb-16">
-        <span className="font-mono text-[10px] uppercase tracking-[0.3em] text-accent">04 / Connect</span>
-        <h2 className="mt-4 font-[var(--font-bebas)] text-5xl md:text-7xl tracking-tight">GET STARTED</h2>
+        <span className="font-mono text-[10px] uppercase tracking-[0.3em] text-accent">04 / {t("connect", "Connect")}</span>
+        <h2 className="mt-4 font-[var(--font-bebas)] text-5xl md:text-7xl tracking-tight">{t("getStarted", "GET STARTED")}</h2>
       </div>
 
       {/* Multi-column layout */}
       <div ref={gridRef} className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-8 md:gap-12">
         {/* Resources */}
         <div className="col-span-1">
-          <h4 className="font-mono text-[9px] uppercase tracking-[0.3em] text-muted-foreground mb-4">Resources</h4>
+          <h4 className="font-mono text-[9px] uppercase tracking-[0.3em] text-muted-foreground mb-4">{t("resources", "Resources")}</h4>
           <ul className="space-y-2">
             <li className="font-mono text-xs text-foreground/80">
-              <a href="/docs/overview" className="hover:underline">Documentation</a>
+              <a href="/docs/overview" className="hover:underline">{t("documentation", "Documentation")}</a>
             </li>
             <li className="font-mono text-xs text-foreground/80">
-              <a href="/docs/api-reference" className="hover:underline">API Reference</a>
+              <a href="/docs/api-reference" className="hover:underline">{t("apiReference", "API Reference")}</a>
             </li>
           </ul>
         </div>
 
         {/* Compliance */}
         <div className="col-span-1">
-          <h4 className="font-mono text-[9px] uppercase tracking-[0.3em] text-muted-foreground mb-4">Compliance</h4>
+          <h4 className="font-mono text-[9px] uppercase tracking-[0.3em] text-muted-foreground mb-4">{t("compliance", "Compliance")}</h4>
           <ul className="space-y-2">
             <li className="font-mono text-xs text-foreground/80">ISO 27001</li>
             <li className="font-mono text-xs text-foreground/80">SOC 2 Type II</li>
-            <li className="font-mono text-xs text-foreground/80">GDPR Ready</li>
+            <li className="font-mono text-xs text-foreground/80">GDPR {t("ready", "Ready")}</li>
           </ul>
         </div>
 
         {/* Industries */}
         <div className="col-span-1">
-          <h4 className="font-mono text-[9px] uppercase tracking-[0.3em] text-muted-foreground mb-4">Industries</h4>
+          <h4 className="font-mono text-[9px] uppercase tracking-[0.3em] text-muted-foreground mb-4">{t("industries", "Industries")}</h4>
           <ul className="space-y-2">
-            <li className="font-mono text-xs text-foreground/80">Commercial</li>
-            <li className="font-mono text-xs text-foreground/80">Institutional</li>
-            <li className="font-mono text-xs text-foreground/80">Public Sector</li>
+            <li className="font-mono text-xs text-foreground/80">{t("commercial", "Commercial")}</li>
+            <li className="font-mono text-xs text-foreground/80">{t("institutional", "Institutional")}</li>
+            <li className="font-mono text-xs text-foreground/80">{t("publicSector", "Public Sector")}</li>
           </ul>
         </div>
 
         {/* Events */}
         <div className="col-span-1">
-          <h4 className="font-mono text-[9px] uppercase tracking-[0.3em] text-muted-foreground mb-4">Events</h4>
+          <h4 className="font-mono text-[9px] uppercase tracking-[0.3em] text-muted-foreground mb-4">{t("events", "Events")}</h4>
           <ul className="space-y-2">
             <li className="font-mono text-xs text-foreground/80">Webinars</li>
             <li className="font-mono text-xs text-foreground/80">Training</li>
@@ -137,8 +139,9 @@ export function ColophonSection() {
             </li>
             <li>
               <a
-                href="#"
+                href="https://www.linkedin.com/company/buildings-com/"
                 className="font-mono text-xs text-foreground/80 hover:text-accent transition-colors duration-200"
+                target="_blank" rel="noopener noreferrer"
               >
                 LinkedIn
               </a>
