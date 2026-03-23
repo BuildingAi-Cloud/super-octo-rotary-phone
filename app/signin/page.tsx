@@ -11,45 +11,12 @@ import { AccessibilityToggle } from "@/components/accessibility-toggle"
 
 
 export default function SignInPage() {
-    return (
-      <main className="min-h-screen flex flex-col items-center justify-center bg-background">
-        <form onSubmit={handleSignIn} className="bg-card p-8 rounded shadow-md w-full max-w-sm flex flex-col gap-4">
-          <h1 className="text-2xl font-bold mb-2 text-center">Sign In</h1>
-          <AccessibilityToggle />
-          <input
-            type="email"
-            placeholder="Email"
-            value={email}
-            onChange={e => setEmail(e.target.value)}
-            className="input input-bordered w-full"
-            required
-          />
-          <input
-            type="password"
-            placeholder="Password"
-            value={password}
-            onChange={e => setPassword(e.target.value)}
-            className="input input-bordered w-full"
-            required
-          />
-          {error && <div className="text-red-500 text-sm">{error}</div>}
-          <button type="submit" className="btn btn-primary w-full" disabled={isLoading}>
-            {isLoading ? "Signing in..." : "Sign In"}
-          </button>
-          <button type="button" className="btn btn-secondary w-full" onClick={createTestUser}>
-            Create Test User
-          </button>
-        </form>
-      </main>
-    );
   const router = useRouter();
   const { signIn } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const [sendgridApiKey, setSendgridApiKey] = useState("");
-
 
   // Actually call signIn from useAuth and check credentials
   const handleSignIn = async (e: React.FormEvent) => {
@@ -86,5 +53,37 @@ export default function SignInPage() {
       alert("Test user already exists.\nEmail: test@test.com\nPassword: 12345678");
     }
   };
+
+  return (
+    <main className="min-h-screen flex flex-col items-center justify-center bg-background">
+      <form onSubmit={handleSignIn} className="bg-card p-8 rounded shadow-md w-full max-w-sm flex flex-col gap-4">
+        <h1 className="text-2xl font-bold mb-2 text-center">Sign In</h1>
+        <AccessibilityToggle />
+        <input
+          type="email"
+          placeholder="Email"
+          value={email}
+          onChange={e => setEmail(e.target.value)}
+          className="input input-bordered w-full"
+          required
+        />
+        <input
+          type="password"
+          placeholder="Password"
+          value={password}
+          onChange={e => setPassword(e.target.value)}
+          className="input input-bordered w-full"
+          required
+        />
+        {error && <div className="text-red-500 text-sm">{error}</div>}
+        <button type="submit" className="btn btn-primary w-full" disabled={isLoading}>
+          {isLoading ? "Signing in..." : "Sign In"}
+        </button>
+        <button type="button" className="btn btn-secondary w-full" onClick={createTestUser}>
+          Create Test User
+        </button>
+      </form>
+    </main>
+  );
 }
 
