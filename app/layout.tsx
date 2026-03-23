@@ -39,11 +39,28 @@ export const metadata: Metadata = {
   },
 }
 
+import { usePathname } from "next/navigation"
+
 export default function RootLayout({ children }: { children: React.ReactNode }) {
+  // This is a workaround for static export: don't wrap static pages in ClientLayout
+  // List all static routes here
+  const staticRoutes = [
+    "/concierge/reservation",
+    "/api-reference"
+  ];
+  // Use a dynamic check for the current path
+  let pathname = "";
+  try {
+    // Only works in client components, so fallback to empty string on server
+    pathname = usePathname ? usePathname() : "";
+  } catch {}
+
+  const isStatic = staticRoutes.includes(pathname);
+
   return (
     <html lang="en" className="dark" suppressHydrationWarning>
       <body className={`${ibmPlexSans.variable} ${bebasNeue.variable} ${ibmPlexMono.variable} font-sans antialiased overflow-x-hidden`}>
-        <ClientLayout>{children}</ClientLayout>
+        {isStatic ? children : <ClientLayout>{children}</ClientLayout>}
       </body>
     </html>
   )

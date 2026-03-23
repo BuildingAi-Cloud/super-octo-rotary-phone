@@ -5,6 +5,7 @@ import { getAuditLog, clearAuditLog, AuditEntry } from "@/lib/audit"
 import { useAuth } from "@/lib/auth-context"
 import { useRouter } from "next/navigation"
 
+export default function AuditLogViewer() {
   const { user } = useAuth();
   const router = useRouter();
   const [logs, setLogs] = useState<AuditEntry[]>([]);
