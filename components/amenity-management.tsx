@@ -122,5 +122,5 @@ export function AmenityManagement({ initialAmenities }: { initialAmenities: Amen
         </div>
       )}
     </section>
-  )
+  );
 }
