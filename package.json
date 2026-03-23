@@ -8,7 +8,8 @@
     "dev": "next dev",
     "lint": "eslint .",
     "start": "next start",
-    "test": "jest"
+    "test": "jest",
+    "clean:next-lock": "rm -f .next/dev/lock .next/lock || true"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.10.0",
