@@ -12,8 +12,8 @@ RUN apk add --no-cache bash
 COPY package.json ./
 COPY pnpm-lock.yaml ./
 
-# Install pnpm
-RUN npm install -g pnpm
+# Activate the pnpm version that matches the lockfile format.
+RUN corepack enable && corepack prepare pnpm@9.15.0 --activate
 
 # Install dependencies
 RUN pnpm install --frozen-lockfile
