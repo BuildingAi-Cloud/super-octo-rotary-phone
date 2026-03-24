@@ -10,5 +10,4 @@ tmp
 *.log
 Dockerfile*
 README.md
-docs
 submodule-backup
