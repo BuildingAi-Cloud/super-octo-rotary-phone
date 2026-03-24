@@ -10,6 +10,7 @@
     "lint": "eslint .",
     "start": "next start",
     "test": "jest --passWithNoTests",
+    "update-api-reference": "node update-api-reference.js",
     "clean:next-lock": "rm -f .next/dev/lock .next/lock || true"
   },
   "dependencies": {

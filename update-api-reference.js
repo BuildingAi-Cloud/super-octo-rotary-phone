@@ -21,7 +21,12 @@ function scanApiRoutes(dir, prefix = '/api') {
     if (stat.isDirectory()) {
       endpoints = endpoints.concat(scanApiRoutes(fullPath, prefix + '/' + file));
     } else if (file.endsWith('.ts') || file.endsWith('.js')) {
-      const route = prefix + (file === 'index.ts' || file === 'index.js' ? '' : '/' + file.replace(/\.(ts|js)$/, ''));
+      const isRootRouteFile =
+        file === 'index.ts' ||
+        file === 'index.js' ||
+        file === 'route.ts' ||
+        file === 'route.js';
+      const route = prefix + (isRootRouteFile ? '' : '/' + file.replace(/\.(ts|js)$/, ''));
       endpoints.push(route);
     }
   }
@@ -31,7 +36,7 @@ function scanApiRoutes(dir, prefix = '/api') {
 const endpoints = scanApiRoutes(apiDir);
 
 const header = `# API Reference\n\nThis page is automatically generated.\n\n`;
-const list = endpoints.map(e => `- ${e}`).join('\n');
+const list = endpoints.map((e) => `- ${e}`).join('\n');
 const content = `${header}${list}\n`;
 
 fs.writeFileSync(docsFile, content);
