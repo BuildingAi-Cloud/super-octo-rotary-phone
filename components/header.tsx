@@ -23,7 +23,7 @@ export function Header() {
   };
 
   return (
-    <header className="fixed top-0 left-0 right-0 z-50 flex items-center p-4 md:p-6 bg-background/90 dark:bg-background/80 backdrop-blur border-b border-border">
+    <header className="fixed top-0 left-0 right-0 z-50 items-center p-4 md:p-6 bg-background/90 dark:bg-background/80 backdrop-blur border-b border-border">
       <div className="flex-1" />
       <nav className="flex items-center gap-2 md:gap-4 ml-auto">
         <AccessibilityToggle />

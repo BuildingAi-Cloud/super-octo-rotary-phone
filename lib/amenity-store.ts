@@ -26,14 +26,17 @@ export const amenityStore: Amenity[] = [
 
 export const bookingStore: Booking[] = []
 
+export function addBooking(booking: Booking) {
   // Find amenity and check policy
   const amenity = amenityStore.find(a => a.id === booking.amenityId)
   if (!amenity) return
+
   if (amenity.policy === "auto_approve" && amenity.status === "available") {
     booking.status = "approved"
   } else {
     booking.status = "pending"
   }
+
   bookingStore.push(booking)
 }
 

@@ -1,9 +1,7 @@
 "use client"
 import ClientLayout from "../ClientLayout"
-// Removed duplicate imports
-// import { HeroSection } from "@/components/hero-section";
-// import { PrinciplesSection } from "@/components/principles-section";
-// import { WorkSection } from "@/components/work-section";
+import { PrinciplesSection } from "@/components/principles-section"
+import { WorkSection } from "@/components/work-section"
 
 export default function AboutPage() {
   return (
@@ -43,6 +41,5 @@ export default function AboutPage() {
         </section>
       </main>
     </ClientLayout>
-  );
+  )
 }
-// Removed duplicate AboutPage function and imports

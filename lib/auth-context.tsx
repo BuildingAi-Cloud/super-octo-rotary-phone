@@ -82,6 +82,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, [])
 
+  useEffect(() => {
+    try {
+      const storedUser = localStorage.getItem("buildsync_user")
+
+      if (storedUser) {
+        setUser(JSON.parse(storedUser))
+      }
+    } catch {
+      localStorage.removeItem("buildsync_user")
+    } finally {
+      setIsLoading(false)
+    }
+  }, [])
+
   const signIn = async (email: string, password: string): Promise<{ success: boolean; error?: string }> => {
     // Demo authentication - in production, this would call an API
     const storedUsers = JSON.parse(localStorage.getItem("buildsync_users") || "[]")
