@@ -3,13 +3,13 @@ export interface AuditEntry {
   timestamp: string
   user: string | null
   action: string
-  details?: any
+  details?: unknown
   ip?: string
 }
 
 const AUDIT_KEY = "buildsync_audit_log"
 
-export function logAudit(action: string, details?: any, user: string | null = null) {
+export function logAudit(action: string, details?: unknown, user: string | null = null) {
   const entry: AuditEntry = {
     timestamp: new Date().toISOString(),
     user,

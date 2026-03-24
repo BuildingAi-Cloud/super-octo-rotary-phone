@@ -38,8 +38,22 @@ export default function SignInPage() {
 
   // Helper to create test user with correct password
   const createTestUser = () => {
-    const users = JSON.parse(localStorage.getItem("buildsync_users") || "[]");
-    if (!users.some((u: any) => u.email === "test@test.com")) {
+    type StoredUser = {
+      id?: string
+      email?: string
+      name?: string
+      password?: string
+      role?: string
+      firstName?: string
+      lastName?: string
+      companyName?: string
+      phone?: string
+      acceptedTerms?: boolean
+      acceptedPrivacy?: boolean
+      createdAt?: string
+    }
+    const users = JSON.parse(localStorage.getItem("buildsync_users") || "[]") as StoredUser[];
+    if (!users.some((storedUser) => storedUser.email === "test@test.com")) {
       users.push({
         id: "test-id",
         email: "test@test.com",

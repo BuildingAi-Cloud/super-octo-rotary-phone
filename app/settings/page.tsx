@@ -7,19 +7,6 @@ import { useState, useEffect } from "react"
 export default function SettingsPage() {
   const { user } = useAuth()
 
-
-  // Only allow property_manager, admin, or staff roles to see settings
-  if (!user || !["property_manager", "admin", "staff"].includes(user.role)) {
-    return (
-      <main className="flex items-center justify-center min-h-screen">
-        <div className="text-center">
-          <h1 className="text-2xl font-bold mb-4">Access Restricted</h1>
-          <p className="text-muted-foreground">You do not have permission to view these settings.</p>
-        </div>
-      </main>
-    )
-  }
-
   // SMTP/SendGrid settings state
   const [smtpHost, setSmtpHost] = useState("");
   const [smtpPort, setSmtpPort] = useState("");
@@ -48,6 +35,18 @@ export default function SettingsPage() {
     setStatus("Testing... (demo only, no real email sent)");
     setTimeout(() => setStatus("Test complete (demo only)"), 1200);
   };
+
+  // Only allow property_manager, admin, or staff roles to see settings
+  if (!user || !["property_manager", "admin", "staff"].includes(user.role)) {
+    return (
+      <main className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold mb-4">Access Restricted</h1>
+          <p className="text-muted-foreground">You do not have permission to view these settings.</p>
+        </div>
+      </main>
+    )
+  }
 
   return (
     <main className="max-w-xl mx-auto p-8">

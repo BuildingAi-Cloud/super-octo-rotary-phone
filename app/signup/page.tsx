@@ -60,8 +60,9 @@ export default function SignUpPage() {
         } else {
           setError(result.error || "An error occurred");
         }
-      } catch (err: any) {
-        setError(err?.message || "An unexpected error occurred");
+      } catch (error: unknown) {
+        const message = error instanceof Error ? error.message : "An unexpected error occurred"
+        setError(message);
       } finally {
         setIsLoading(false);
       }
