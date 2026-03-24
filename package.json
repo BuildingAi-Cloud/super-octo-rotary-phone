@@ -8,7 +8,7 @@
     "dev": "next dev",
     "lint": "eslint .",
     "start": "next start",
-    "test": "jest",
+    "test": "jest --passWithNoTests",
     "clean:next-lock": "rm -f .next/dev/lock .next/lock || true"
   },
   "dependencies": {

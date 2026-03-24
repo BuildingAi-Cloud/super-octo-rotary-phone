@@ -1,20 +1,17 @@
-import { redirect } from "next/navigation";
-import { getCurrentUser } from "@/lib/auth-context";
-import Sidebar from "@/components/ui/sidebar";
-import { DashboardHeader } from "@/components/dashboards/dashboard-header";
+"use client"
 
-export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
-  // Replace with your actual auth check logic
-  const user = await getCurrentUser();
-  if (!user) redirect("/signin");
+import { useAuth } from "@/lib/auth-context"
+
+export default function DashboardLayout({ children }: { children: React.ReactNode }) {
+  const { user, isLoading } = useAuth()
+
+  if (isLoading || !user) {
+    return <section>{children}</section>
+  }
 
   return (
-    <div className="flex min-h-screen">
-      <Sidebar />
-      <main className="flex-1 bg-background p-4 md:p-8">
-        <DashboardHeader user={user} />
+    <main className="min-h-screen bg-background p-4 md:p-8">
         <section className="mt-6">{children}</section>
-      </main>
-    </div>
-  );
+    </main>
+  )
 }

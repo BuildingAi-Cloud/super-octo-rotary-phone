@@ -1,4 +1,4 @@
-module.exports = {
+export default {
   testEnvironment: 'jsdom',
   setupFilesAfterEnv: ['@testing-library/jest-dom'],
   moduleNameMapper: {
@@ -10,4 +10,4 @@ module.exports = {
   transformIgnorePatterns: [
     '/node_modules/'
   ],
-};
+}

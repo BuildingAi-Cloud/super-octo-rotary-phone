@@ -3,6 +3,11 @@
 import { useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { useAuth } from "@/lib/auth-context"
+import { FacilityManagerDashboard } from "@/components/dashboards/facility-manager-dashboard"
+import { BuildingOwnerDashboard } from "@/components/dashboards/building-owner-dashboard"
+import { PropertyManagerDashboard } from "@/components/dashboards/property-manager-dashboard"
+import ResidentDashboard from "@/components/dashboards/resident-dashboard"
+import { TenantDashboard } from "@/components/dashboards/tenant-dashboard"
 import ConciergeDashboard from "@/components/dashboards/concierge-dashboard"
 import StaffDashboard from "@/components/dashboards/staff-dashboard"
 import SecurityDashboard from "@/components/dashboards/security-dashboard"
@@ -69,16 +74,6 @@ export default function DashboardPage() {
             <p className="text-muted-foreground">This platform does not yet support your user type. Please contact support or try again later.</p>
           </div>
         </main>
-      );
+      )
   }
-    // New layout for clearer separation
-    return (
-      <div className="dashboard-layout">
-        {/* Additional layout components can be added here */}
-        <div className="dashboard-content">
-          {/* Render dashboard based on user role */}
-          {renderDashboard(user)}
-        </div>
-      </div>
-    );
-  }
+}
