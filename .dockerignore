@@ -1,0 +1,14 @@
+.git
+.github
+.next
+.vscode
+node_modules
+coverage
+dist
+out
+tmp
+*.log
+Dockerfile*
+README.md
+docs
+submodule-backup
