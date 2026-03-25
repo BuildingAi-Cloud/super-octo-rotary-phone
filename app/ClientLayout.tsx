@@ -16,6 +16,7 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
         <SmoothScroll>{children}</SmoothScroll>
       </div>
       <footer className="w-full text-center py-6 text-xs text-muted-foreground bg-background/80 border-t border-border mt-12 md:pl-20">
+        <a href="/documentation" className="underline hover:text-accent mr-4">Documentation</a>
         &copy; {new Date().getFullYear()} BuildSync. All rights reserved.
       </footer>
     </>
