@@ -103,7 +103,6 @@ export default function SignInPage() {
           </div>
         </div>
         <form onSubmit={handleSignIn} className="space-y-6 bg-card/30 border border-border/40 p-8 rounded-lg w-full max-w-md flex flex-col gap-6 shadow-md mx-auto">
-          <AccessibilityToggle />
           <div className="space-y-2">
             <label htmlFor="email" className="font-mono text-[10px] uppercase tracking-[0.3em] text-muted-foreground">Email</label>
             <Input
