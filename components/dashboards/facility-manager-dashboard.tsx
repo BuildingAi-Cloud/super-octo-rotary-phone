@@ -7,6 +7,10 @@ import { AnimatedNoise } from "@/components/animated-noise"
 import { ScrambleText } from "@/components/scramble-text"
 
 import { AmenityManagement } from "@/components/amenity-management"
+
+export function FacilityManagerDashboard({ user }: FacilityManagerDashboardProps) {
+  // ...existing hooks, variables, etc.
+  // (all code above the return statement)
   return (
     <>
       <main className="relative min-h-screen bg-background">
