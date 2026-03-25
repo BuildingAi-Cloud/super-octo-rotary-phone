@@ -70,23 +70,34 @@ const allFeatures = Array.from(
 
 export function PricingSection() {
   return (
-    <section className="py-16 bg-background/80">
-      <div className="mb-10 text-3xl md:text-4xl font-extrabold text-center tracking-tight">Pricing Plans</div>
-      <div className="flex flex-col md:flex-row justify-center items-stretch gap-8 max-w-5xl mx-auto">
-        {plans.map((plan) => (
-          <div
+    <section className="relative py-32 pl-6 md:pl-28 pr-6 md:pr-12 max-w-[2400px] mx-auto w-full">
+      {/* Section header styled like PrinciplesSection */}
+      <div className="mb-24">
+        <span className="font-mono text-[10px] uppercase tracking-[0.3em] text-accent">05 / Pricing</span>
+        <h2 className="mt-4 font-[var(--font-bebas)] text-5xl md:text-7xl tracking-tight">PRICING PLANS</h2>
+        <div className="mt-2 text-base text-muted-foreground max-w-2xl">
+          Flexible plans for every building size and need. Choose what fits your community best.
+        </div>
+      </div>
+
+      {/* Pricing cards styled as split articles, similar to PrinciplesSection */}
+      <div className="space-y-24 md:space-y-0 md:grid md:grid-cols-3 md:gap-12">
+        {plans.map((plan, idx) => (
+          <article
             key={plan.name}
-            className={`flex flex-col rounded-2xl shadow-lg border border-border bg-white/90 dark:bg-background/90 px-6 py-8 w-full md:w-1/3 transition-transform duration-200 hover:scale-105 ${
+            className={`flex flex-col items-start text-left rounded-2xl shadow-lg border border-border bg-white/90 dark:bg-background/90 px-8 py-10 transition-transform duration-200 hover:scale-105 ${
               plan.highlight ? "border-accent ring-2 ring-accent/40 bg-accent/5" : ""
             }`}
           >
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-lg font-bold uppercase tracking-widest text-accent-foreground">{plan.name}</span>
-              {plan.highlight && (
-                <span className="px-2 py-1 text-xs font-semibold rounded bg-accent text-accent-foreground">Most Popular</span>
-              )}
-            </div>
-            <div className="text-3xl font-extrabold text-primary mb-1">{plan.price}
+            {/* Annotation label */}
+            <span className="font-mono text-[10px] uppercase tracking-[0.3em] text-muted-foreground mb-4">
+              {`PLAN ${idx + 1}`}
+            </span>
+            <h3 className="font-[var(--font-bebas)] text-4xl md:text-6xl lg:text-7xl tracking-tight leading-none mb-2">
+              {plan.name}
+            </h3>
+            <div className="text-4xl font-extrabold text-primary mb-1">
+              {plan.price}
               {plan.period && <span className="text-base font-medium text-muted-foreground">{plan.period}</span>}
             </div>
             <div className="mb-4 text-sm text-muted-foreground min-h-[40px]">{plan.description}</div>
@@ -108,7 +119,9 @@ export function PricingSection() {
             >
               {plan.cta}
             </Link>
-          </div>
+            {/* Decorative line for visual separation */}
+            <div className="mt-8 h-[1px] bg-border w-24 md:w-48" />
+          </article>
         ))}
       </div>
       <div className="mt-8 text-center text-xs text-muted-foreground">All prices are in USD. Contact us for enterprise or custom needs.</div>
