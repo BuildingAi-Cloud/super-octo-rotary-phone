@@ -24,16 +24,16 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   const [mounted, setMounted] = useState(false)
 
   useEffect(() => {
-    setMounted(true)
+    requestAnimationFrame(() => setMounted(true))
     // Check localStorage first, then system preference
     const stored = localStorage.getItem("theme") as Theme | null
     if (stored) {
-      setThemeState(stored)
+      requestAnimationFrame(() => setThemeState(stored))
       document.documentElement.classList.toggle("dark", stored === "dark")
     } else {
       const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches
       const initialTheme = prefersDark ? "dark" : "light"
-      setThemeState(initialTheme)
+      requestAnimationFrame(() => setThemeState(initialTheme))
       document.documentElement.classList.toggle("dark", prefersDark)
     }
   }, [])

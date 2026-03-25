@@ -81,12 +81,12 @@ export function ScrambleText({ text, className, delayMs = 0, duration = 0.9 }: S
   useEffect(() => {
     if (hasAnimated || !text) return
 
-    // Start with scrambled text
+    // Start with scrambled text (defer setState)
     const scrambledStart = text
       .split("")
       .map(() => GLYPHS[Math.floor(Math.random() * GLYPHS.length)])
       .join("")
-    setDisplayText(scrambledStart)
+    requestAnimationFrame(() => setDisplayText(scrambledStart))
 
     timeoutRef.current = setTimeout(() => {
       animationRef.current = runScrambleAnimation(text, duration, setDisplayText, () => {
@@ -103,7 +103,7 @@ export function ScrambleText({ text, className, delayMs = 0, duration = 0.9 }: S
   // Handle text prop changes after initial animation
   useEffect(() => {
     if (hasAnimated && displayText !== text) {
-      setDisplayText(text)
+      requestAnimationFrame(() => setDisplayText(text))
     }
   }, [text, hasAnimated, displayText])
 
@@ -152,7 +152,7 @@ export function ScrambleTextOnHover({
   // Update display text if text prop changes
   useEffect(() => {
     if (!isAnimating.current) {
-      setDisplayText(text)
+      requestAnimationFrame(() => setDisplayText(text))
     }
   }, [text])
 
