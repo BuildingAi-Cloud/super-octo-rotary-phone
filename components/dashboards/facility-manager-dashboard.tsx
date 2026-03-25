@@ -214,75 +214,73 @@ export function FacilityManagerDashboard({ user }: FacilityManagerDashboardProps
   };
 
   return (
-    <>
-      <main className="relative min-h-screen bg-background">
-        <AnimatedNoise opacity={0.02} />
-        <div className="grid-bg fixed inset-0 opacity-20" aria-hidden="true" />
-        <div className="relative z-10">
-          <DashboardHeader user={user} />
-          {/* Tabs Navigation */}
-          <div className="flex gap-2 md:gap-4 border-b border-border px-6 md:px-8 bg-background/80 sticky top-0 z-30">
-            {CONFIG.TABS.map((tab) => (
-              <button
-                key={tab.key}
-                className={`py-3 px-4 font-mono text-xs uppercase tracking-widest border-b-2 transition-colors duration-200 ${activeTab === tab.key ? "border-accent text-accent" : "border-transparent text-muted-foreground hover:text-accent"}`}
-                onClick={() => setActiveTab(tab.key)}
-                aria-current={activeTab === tab.key ? "page" : undefined}
-              >
-                {tab.label}
-              </button>
-            ))}
-          </div>
-          {/* Tab Content */}
-          {activeTab === "dashboard" && (
-            <>
-              {/* Stat Cards */}
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-4 p-6 md:p-8">
-                {CONFIG.STAT_CARDS.map((card) => (
-                  <StatCard
-                    key={card.label}
-                    label={card.label}
-                    value={statValues[card.valueKey]}
-                    color={card.color}
-                    sub={card.sub}
-                  />
-                ))}
-              </div>
-              {/* Main dashboard grid */}
-              <div className="p-6 md:p-8">
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                  <div className="lg:col-span-2 border border-border/40 bg-card/30 p-6">
-                    <MaintenanceRequestList requests={maintenanceRequests} />
-                  </div>
-                  <div className="border border-border/40 bg-card/30 p-6">
-                    <h2 className="font-[var(--font-bebas)] text-xl tracking-wide mb-4">IoT ALERTS</h2>
-                    <IoTAlerts alerts={iotAlerts} />
-                  </div>
-                </div>
-                <div className="mt-6 border border-border/40 bg-card/30 p-6">
-                  <h2 className="font-[var(--font-bebas)] text-xl tracking-wide mb-4">PREVENTATIVE MAINTENANCE</h2>
-                  <PreventativeMaintenanceTable tasks={preventativeMaintenance} />
-                </div>
-                <div className="mt-6 border border-border/40 bg-card/30 p-6">
-                  <h2 className="font-[var(--font-bebas)] text-xl tracking-wide mb-4">EQUIPMENT DIRECTORY</h2>
-                  <EquipmentDirectory assets={assetInventory} />
-                </div>
-              </div>
-            </>
-          )}
-          {activeTab === "amenities" && (
-            <div className="p-6 md:p-8">
-              <AmenityManagement initialAmenities={[]} />
-            </div>
-          )}
-          {activeTab !== "dashboard" && activeTab !== "amenities" && (
-            <div className="p-6 md:p-8 text-muted-foreground font-mono">
-              {CONFIG.TABS.find((t) => t.key === activeTab)?.label} coming soon...
-            </div>
-          )}
+    <main className="relative min-h-screen bg-background">
+      <AnimatedNoise opacity={0.02} />
+      <div className="grid-bg fixed inset-0 opacity-20" aria-hidden="true" />
+      <div className="relative z-10">
+        <DashboardHeader user={user} />
+        {/* Tabs Navigation */}
+        <div className="flex gap-2 md:gap-4 border-b border-border px-6 md:px-8 bg-background/80 sticky top-0 z-30">
+          {CONFIG.TABS.map((tab) => (
+            <button
+              key={tab.key}
+              className={`py-3 px-4 font-mono text-xs uppercase tracking-widest border-b-2 transition-colors duration-200 ${activeTab === tab.key ? "border-accent text-accent" : "border-transparent text-muted-foreground hover:text-accent"}`}
+              onClick={() => setActiveTab(tab.key)}
+              aria-current={activeTab === tab.key ? "page" : undefined}
+            >
+              {tab.label}
+            </button>
+          ))}
         </div>
-      </main>
-    </>
+        {/* Tab Content */}
+        {activeTab === "dashboard" && (
+          <div>
+            {/* Stat Cards */}
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4 p-6 md:p-8">
+              {CONFIG.STAT_CARDS.map((card) => (
+                <StatCard
+                  key={card.label}
+                  label={card.label}
+                  value={statValues[card.valueKey]}
+                  color={card.color}
+                  sub={card.sub}
+                />
+              ))}
+            </div>
+            {/* Main dashboard grid */}
+            <div className="p-6 md:p-8">
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <div className="lg:col-span-2 border border-border/40 bg-card/30 p-6">
+                  <MaintenanceRequestList requests={maintenanceRequests} />
+                </div>
+                <div className="border border-border/40 bg-card/30 p-6">
+                  <h2 className="font-[var(--font-bebas)] text-xl tracking-wide mb-4">IoT ALERTS</h2>
+                  <IoTAlerts alerts={iotAlerts} />
+                </div>
+              </div>
+              <div className="mt-6 border border-border/40 bg-card/30 p-6">
+                <h2 className="font-[var(--font-bebas)] text-xl tracking-wide mb-4">PREVENTATIVE MAINTENANCE</h2>
+                <PreventativeMaintenanceTable tasks={preventativeMaintenance} />
+              </div>
+              <div className="mt-6 border border-border/40 bg-card/30 p-6">
+                <h2 className="font-[var(--font-bebas)] text-xl tracking-wide mb-4">EQUIPMENT DIRECTORY</h2>
+                <EquipmentDirectory assets={assetInventory} />
+              </div>
+            </div>
+          </div>
+        )}
+        {activeTab === "amenities" && (
+          <div className="p-6 md:p-8">
+            <AmenityManagement initialAmenities={[]} />
+          </div>
+        )}
+        {activeTab !== "dashboard" && activeTab !== "amenities" && (
+          <div className="p-6 md:p-8 text-muted-foreground font-mono">
+            {CONFIG.TABS.find((t) => t.key === activeTab)?.label} coming soon...
+          </div>
+        )}
+      </div>
+    </main>
   );
 }
                   
