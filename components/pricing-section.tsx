@@ -69,50 +69,49 @@ const allFeatures = Array.from(
 )
 
 export function PricingSection() {
-  const sectionRef = useRef<HTMLElement>(null)
-  const headerRef = useRef<HTMLDivElement>(null)
-  const cardsRef = useRef<HTMLDivElement>(null)
-
-  useEffect(() => {
-    if (!sectionRef.current) return;
-    // Animation logic here (commented out for now)
-    // const ctx = gsap.context(() => {
-    //   gsap.from(headerRef.current, { ... });
-    // }, sectionRef);
-  }, []);
-
   return (
-    <section ref={sectionRef} className="py-12">
-      <div ref={headerRef} className="mb-6 text-2xl font-bold text-center">Pricing Plans</div>
-      <div className="overflow-x-auto">
-        <table className="min-w-full border border-border rounded bg-background/80">
-          <thead>
-            <tr>
-              <th className="px-4 py-2 border-b">Plan</th>
-              <th className="px-4 py-2 border-b">Price</th>
-              <th className="px-4 py-2 border-b">Description</th>
-              <th className="px-4 py-2 border-b">Key Features</th>
-            </tr>
-          </thead>
-          <tbody>
-            {plans.map((plan) => (
-              <tr key={plan.name} className={plan.highlight ? "bg-accent/10" : ""}>
-                <td className="px-4 py-2 font-semibold">{plan.name}</td>
-                <td className="px-4 py-2">{plan.price} <span className="text-xs">{plan.period}</span></td>
-                <td className="px-4 py-2">{plan.description}</td>
-                <td className="px-4 py-2">
-                  <ul className="list-disc ml-4">
-                    {plan.features.slice(0, 3).map((f, i) => (
-                      <li key={i}>{f}</li>
-                    ))}
-                    {plan.features.length > 3 && <li>...and more</li>}
-                  </ul>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+    <section className="py-16 bg-background/80">
+      <div className="mb-10 text-3xl md:text-4xl font-extrabold text-center tracking-tight">Pricing Plans</div>
+      <div className="flex flex-col md:flex-row justify-center items-stretch gap-8 max-w-5xl mx-auto">
+        {plans.map((plan) => (
+          <div
+            key={plan.name}
+            className={`flex flex-col rounded-2xl shadow-lg border border-border bg-white/90 dark:bg-background/90 px-6 py-8 w-full md:w-1/3 transition-transform duration-200 hover:scale-105 ${
+              plan.highlight ? "border-accent ring-2 ring-accent/40 bg-accent/5" : ""
+            }`}
+          >
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-lg font-bold uppercase tracking-widest text-accent-foreground">{plan.name}</span>
+              {plan.highlight && (
+                <span className="px-2 py-1 text-xs font-semibold rounded bg-accent text-accent-foreground">Most Popular</span>
+              )}
+            </div>
+            <div className="text-3xl font-extrabold text-primary mb-1">{plan.price}
+              {plan.period && <span className="text-base font-medium text-muted-foreground">{plan.period}</span>}
+            </div>
+            <div className="mb-4 text-sm text-muted-foreground min-h-[40px]">{plan.description}</div>
+            <ul className="flex-1 mb-6 space-y-2">
+              {plan.features.map((f, i) => (
+                <li key={i} className="flex items-center gap-2 text-sm">
+                  <span className="inline-block w-4 h-4 text-green-500">✔️</span>
+                  <span>{f.replace(/^Everything in .*/, "All previous features")}</span>
+                </li>
+              ))}
+            </ul>
+            <Link
+              href={plan.cta === "Contact Sales" ? "/contact" : "/signup"}
+              className={`mt-auto inline-block text-center rounded-lg px-5 py-2 font-semibold transition-colors duration-200 shadow-sm ${
+                plan.highlight
+                  ? "bg-accent text-accent-foreground hover:bg-accent/80"
+                  : "bg-primary/90 text-white hover:bg-primary"
+              }`}
+            >
+              {plan.cta}
+            </Link>
+          </div>
+        ))}
       </div>
+      <div className="mt-8 text-center text-xs text-muted-foreground">All prices are in USD. Contact us for enterprise or custom needs.</div>
     </section>
   );
 }

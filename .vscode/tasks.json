@@ -7,6 +7,17 @@
 			"command": "npm test",
 			"isBackground": false,
 			"group": "test"
+		},
+		{
+			"label": "Build and check Next.js app",
+			"type": "shell",
+			"command": "npm run build && npm run lint && npm test",
+			"isBackground": false,
+			"problemMatcher": [
+				"$tsc",
+				"$eslint-stylish"
+			],
+			"group": "build"
 		}
 	]
 }
