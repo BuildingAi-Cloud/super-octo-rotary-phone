@@ -10,7 +10,7 @@ export default function Page() {
     <main className="relative min-h-screen">
       <div className="grid-bg fixed inset-0 opacity-30" aria-hidden="true" />
 
-      <div className="relative z-10">
+      <div className="relative z-10 max-w-[2400px] mx-auto w-full px-4">
         <HeroSection />
         <SignalsSection />
         <WorkSection />
