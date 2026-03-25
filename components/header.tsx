@@ -23,19 +23,24 @@ export function Header() {
   };
 
   return (
-    <header className="fixed top-0 left-0 right-0 z-50 bg-background/90 dark:bg-background/80 backdrop-blur border-b border-border flex items-center justify-end min-h-[64px] px-4 md:px-8">
-      {/* Accessibility button absolutely positioned top right, does not affect layout */}
-      <div className="absolute top-4 right-4 md:top-6 md:right-8 z-50">
+    <header className="fixed top-0 left-0 right-0 z-50 bg-background/90 dark:bg-background/80 backdrop-blur border-b border-border flex items-center min-h-[64px] px-4 md:px-8">
+      {/* Accessibility button always visible for accessibility */}
+      <div className="mr-2">
         <AccessibilityToggle />
       </div>
-      {/* Navigation and controls */}
-      <nav className="flex items-center space-x-2 md:space-x-4">
+      <nav className="flex items-center gap-2 md:gap-4 ml-auto">
+        {/* 1. Theme toggle */}
+        <ThemeToggle />
+        {/* 2. Language selector */}
+        <LanguageSelector />
+        {/* 3. About page */}
         <Link
           href="/about"
-          className="font-mono text-xs uppercase tracking-widest text-muted-foreground hover:text-accent transition-colors duration-200 px-2"
+          className="font-mono text-xs uppercase tracking-widest text-muted-foreground hover:text-accent transition-colors duration-200"
         >
           About
         </Link>
+        {/* 4. Sign in / 5. Get Started */}
         {user ? (
           <>
             <Link
@@ -62,7 +67,7 @@ export function Header() {
             )}
             <button
               onClick={handleLogout}
-              className="px-4 py-2 border border-destructive text-destructive font-mono text-xs uppercase tracking-widest rounded hover:bg-destructive hover:text-white transition-all duration-200"
+              className="ml-2 px-4 py-2 border border-destructive text-destructive font-mono text-xs uppercase tracking-widest rounded hover:bg-destructive hover:text-white transition-all duration-200"
               aria-label="Logout"
             >
               {t("logout")}
@@ -72,7 +77,7 @@ export function Header() {
           <>
             <Link
               href="/signin"
-              className="font-mono text-xs uppercase tracking-widest text-muted-foreground hover:text-foreground transition-colors duration-200 px-2"
+              className="font-mono text-xs uppercase tracking-widest text-muted-foreground hover:text-foreground transition-colors duration-200"
             >
               <ScrambleTextOnHover text={t("signIn", "Sign In") as string} as="span" duration={0.4} />
             </Link>
@@ -89,8 +94,6 @@ export function Header() {
             {getRoleDisplayName(user.role)}
           </span>
         )}
-        <LanguageSelector />
-        <ThemeToggle />
       </nav>
     </header>
   );
