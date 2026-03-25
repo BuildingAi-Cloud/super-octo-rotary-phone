@@ -19,7 +19,7 @@ function ReturnContent() {
         setStatus("success")
       }, 1500)
     } else {
-      setStatus("error")
+      requestAnimationFrame(() => setStatus("error"))
     }
   }, [sessionId])
 
