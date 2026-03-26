@@ -63,7 +63,20 @@ export function HeroSection() {
           The trusted platform for facility managers, building owners, and property managers. Privacy-first security, operational excellence, and smart building automation.
         </p>
 
-        <div className="mt-16 flex items-center gap-8">
+        <div className="mt-16 flex flex-col md:flex-row items-center gap-8">
+          <div className="relative">
+            <select
+              className="border border-foreground/20 px-6 py-3 font-mono text-xs uppercase tracking-widest text-foreground bg-background rounded-md focus:outline-none focus:ring-2 focus:ring-accent"
+              defaultValue="residential"
+              aria-label="Get Started Sector"
+            >
+              <option value="residential">Residential (default)</option>
+              <option value="commercial">Commercial</option>
+              <option value="institutional">Institutional</option>
+              <option value="public-sector">Public Sector</option>
+            </select>
+            <span className="ml-3 font-mono text-xs text-muted-foreground">Get Started</span>
+          </div>
           <a
             href="#solutions"
             className="group inline-flex items-center gap-3 border border-foreground/20 px-6 py-3 font-mono text-xs uppercase tracking-widest text-foreground hover:border-accent hover:text-accent transition-all duration-200"
