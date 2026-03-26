@@ -27,3 +27,7 @@ yarn-error.log*
 next-env.d.ts
 .next-dev.err.log
 .next-dev.out.log
+
+# prevent accidental publish of internal agent files
+.claude/agents/Fullstack Architect.agent.md
+.github/agents/architect.agent.md.md
