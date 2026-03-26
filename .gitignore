@@ -31,3 +31,6 @@ next-env.d.ts
 # prevent accidental publish of internal agent files
 .claude/agents/Fullstack Architect.agent.md
 .github/agents/architect.agent.md.md
+.claude/agents/*.agent.md
+.github/agents/*.agent.md
+.github/agents/*.agent.md.md
