@@ -8,22 +8,44 @@ export default function SettingsPage() {
   const { user } = useAuth()
 
   // SMTP/SendGrid settings state
-  const [smtpHost, setSmtpHost] = useState("");
-  const [smtpPort, setSmtpPort] = useState("");
-  const [smtpUser, setSmtpUser] = useState("");
-  const [smtpPass, setSmtpPass] = useState("");
-  const [sendgridApiKey, setSendgridApiKey] = useState("");
+  const [smtpHost, setSmtpHost] = useState(() => {
+    if (typeof window !== "undefined") {
+      const saved = JSON.parse(localStorage.getItem("buildsync_settings") || "{}")
+      return saved.smtpHost || "";
+    }
+    return "";
+  });
+  const [smtpPort, setSmtpPort] = useState(() => {
+    if (typeof window !== "undefined") {
+      const saved = JSON.parse(localStorage.getItem("buildsync_settings") || "{}")
+      return saved.smtpPort || "";
+    }
+    return "";
+  });
+  const [smtpUser, setSmtpUser] = useState(() => {
+    if (typeof window !== "undefined") {
+      const saved = JSON.parse(localStorage.getItem("buildsync_settings") || "{}")
+      return saved.smtpUser || "";
+    }
+    return "";
+  });
+  const [smtpPass, setSmtpPass] = useState(() => {
+    if (typeof window !== "undefined") {
+      const saved = JSON.parse(localStorage.getItem("buildsync_settings") || "{}")
+      return saved.smtpPass || "";
+    }
+    return "";
+  });
+  const [sendgridApiKey, setSendgridApiKey] = useState(() => {
+    if (typeof window !== "undefined") {
+      const saved = JSON.parse(localStorage.getItem("buildsync_settings") || "{}")
+      return saved.sendgridApiKey || "";
+    }
+    return "";
+  });
   const [status, setStatus] = useState("");
 
-  useEffect(() => {
-    // Load settings from localStorage (for demo)
-    const saved = JSON.parse(localStorage.getItem("buildsync_settings") || "{}")
-    setSmtpHost(saved.smtpHost || "");
-    setSmtpPort(saved.smtpPort || "");
-    setSmtpUser(saved.smtpUser || "");
-    setSmtpPass(saved.smtpPass || "");
-    setSendgridApiKey(saved.sendgridApiKey || "");
-  }, []);
+  // Removed useEffect for settings initialization
 
   const handleSave = (e: React.FormEvent) => {
     e.preventDefault();

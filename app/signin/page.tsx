@@ -3,6 +3,7 @@
 import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { useAuth, type UserRole } from "@/lib/auth-context"
+import { provisionAllTestUsersInSupabase } from "@/lib/auth-context"
 import Link from "next/link"
 import { AnimatedNoise } from "@/components/animated-noise"
 import { ScrambleText, ScrambleTextOnHover } from "@/components/scramble-text"
@@ -39,30 +40,19 @@ export default function SignInPage() {
     setIsLoading(false);
   };
 
-  // Helper to create test user with correct password
-  const createTestUser = () => {
-    const users = JSON.parse(localStorage.getItem("buildsync_users") || "[]");
-    if (!users.some((u) => u.email === "test@test.com")) {
-=======
-    const users = JSON.parse(localStorage.getItem("buildsync_users") || "[]");
-    if (!users.some((u: { email: string }) => u.email === "test@test.com")) {
->>>>>>> ffd3eaf (fix(submodule): clean submodule state and stage all changes for deployment)
-      users.push({
-        id: "test-id",
-        email: "test@test.com",
-        password: "12345678",
-        name: "Test User",
-        role: "facility_manager"
-      });
-      localStorage.setItem("buildsync_users", JSON.stringify(users));
-      alert("Test user created!\nEmail: test@test.com\nPassword: 12345678");
-    } else {
-      alert("Test user already exists.\nEmail: test@test.com\nPassword: 12345678");
+
+
+  // Dev-only: Provision all test users in Supabase
+  const provisionTestUsers = async () => {
+    try {
+      const created = await provisionAllTestUsersInSupabase();
+      alert(`Provisioned ${created} test users in Supabase.`);
+    } catch (e: any) {
+      alert(`Error provisioning test users: ${e.message}`);
     }
   };
 
   return (
-<<<<<<< HEAD
     <main className="relative min-h-screen flex items-center justify-center p-6">
       <AnimatedNoise opacity={0.03} />
       <div className="grid-bg fixed inset-0 opacity-30" aria-hidden="true" />
@@ -78,6 +68,13 @@ export default function SignInPage() {
             <ScrambleText text="SIGN IN" duration={0.8} />
           </h1>
           <p className="mt-4 font-mono text-sm text-muted-foreground">
+            <button
+              type="button"
+              className="underline text-xs text-accent ml-2"
+              onClick={provisionTestUsers}
+            >
+              Provision All Test Users (Dev Only)
+            </button>
             Welcome back! Please sign in to your account.
           </p>
         </div>
