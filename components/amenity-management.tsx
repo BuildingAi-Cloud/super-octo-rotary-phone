@@ -1,41 +1,15 @@
 "use client"
 
-import { useState } from "react"
-import { bookingStore, updateBookingStatus, getBookingsForAmenity } from "@/lib/amenity-store"
+import { useEffect, useState } from "react"
+import { updateBookingStatus, getBookingsForAmenity } from "@/lib/amenity-store"
 
-import type { AmenityPolicy, AmenityApprover } from "@/lib/amenity-store"
-
-interface AmenityDetails {
-  amenityName: string
-  type: string
-  capacity: number
-  description: string
-  openingTime: string
-  closingTime: string
-  active: boolean
-}
-
-interface AmenityRules {
-  minSlotDuration: "15m" | "30m" | "1h"
-  maxBookingDuration: "30m" | "1h" | "2h" | "4h"
-  advanceBookingWindowDays: number
-  capacityOverride?: number
-  allowOverlappingBookings: boolean
-  bookingApprovalRequired: boolean
-}
-
-interface Amenity {
-  id: string
-  name: string
-  status: "available" | "maintenance" | "booked"
-  policy: AmenityPolicy
-  approver?: AmenityApprover
-  nextSlot?: string
-  capacity?: string
-  reopens?: string
-  details?: AmenityDetails
-  rules?: AmenityRules
-}
+import type {
+  Amenity,
+  AmenityApprover,
+  AmenityDetails,
+  AmenityPolicy,
+  AmenityRules,
+} from "@/lib/amenity-store"
 
 import { useAuth } from "@/lib/auth-context"
 
@@ -69,30 +43,93 @@ export function AmenityManagement({ initialAmenities }: { initialAmenities: Amen
   const [activeRulesAmenityId, setActiveRulesAmenityId] = useState<string | null>(null)
   const [editForm, setEditForm] = useState<AmenityDetails>(createDefaultDetails(""))
   const [rulesForm, setRulesForm] = useState<AmenityRules>(createDefaultRules())
+  const [isSaving, setIsSaving] = useState(false)
   const { user } = useAuth();
 
-  function addAmenity() {
-    if (!newAmenity.trim()) return
-    setAmenities([
-      ...amenities,
-      { id: crypto.randomUUID(), name: newAmenity, status: "available", policy: "auto_approve" }
-    ])
-    setNewAmenity("")
+  useEffect(() => {
+    let active = true
+
+    async function loadAmenities() {
+      try {
+        const response = await fetch("/api/amenities", { cache: "no-store" })
+        if (!response.ok) return
+        const payload = await response.json() as { amenities?: Amenity[] }
+        if (active && Array.isArray(payload.amenities)) {
+          setAmenities(payload.amenities)
+        }
+      } catch {
+        // Keep initial amenities when API is not reachable.
+      }
+    }
+
+    void loadAmenities()
+    return () => {
+      active = false
+    }
+  }, [])
+
+  async function addAmenity() {
+    const trimmedName = newAmenity.trim()
+    if (!trimmedName) return
+
+    setIsSaving(true)
+    try {
+      const response = await fetch("/api/amenities", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name: trimmedName, status: "available", policy: "auto_approve" }),
+      })
+
+      if (!response.ok) return
+      const payload = await response.json() as { amenity?: Amenity }
+      if (!payload.amenity) return
+      setAmenities(prev => [...prev, payload.amenity as Amenity])
+      setNewAmenity("")
+    } finally {
+      setIsSaving(false)
+    }
   }
 
-  function updateAmenityPolicy(id: string, policy: AmenityPolicy) {
-    setAmenities(amenities.map(a => a.id === id ? { ...a, policy } : a))
-  }
-  function updateAmenityApprover(id: string, approver: AmenityApprover) {
-    setAmenities(amenities.map(a => a.id === id ? { ...a, approver } : a))
+  async function patchAmenity(id: string, updates: Partial<Amenity>) {
+    const response = await fetch(`/api/amenities/${id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(updates),
+    })
+
+    if (!response.ok) return null
+    const payload = await response.json() as { amenity?: Amenity }
+    return payload.amenity || null
   }
 
-  function updateAmenityStatus(id: string, status: Amenity["status"]) {
-    setAmenities(amenities.map(a => a.id === id ? { ...a, status } : a))
+  async function updateAmenityPolicy(id: string, policy: AmenityPolicy) {
+    setAmenities(prev => prev.map(a => a.id === id ? { ...a, policy } : a))
+    const updated = await patchAmenity(id, { policy })
+    if (updated) {
+      setAmenities(prev => prev.map(a => a.id === id ? updated : a))
+    }
   }
 
-  function deleteAmenity(id: string) {
-    setAmenities(amenities.filter(a => a.id !== id))
+  async function updateAmenityApprover(id: string, approver: AmenityApprover) {
+    setAmenities(prev => prev.map(a => a.id === id ? { ...a, approver } : a))
+    const updated = await patchAmenity(id, { approver })
+    if (updated) {
+      setAmenities(prev => prev.map(a => a.id === id ? updated : a))
+    }
+  }
+
+  async function updateAmenityStatus(id: string, status: Amenity["status"]) {
+    setAmenities(prev => prev.map(a => a.id === id ? { ...a, status } : a))
+    const updated = await patchAmenity(id, { status })
+    if (updated) {
+      setAmenities(prev => prev.map(a => a.id === id ? updated : a))
+    }
+  }
+
+  async function deleteAmenity(id: string) {
+    const response = await fetch(`/api/amenities/${id}`, { method: "DELETE" })
+    if (!response.ok) return
+    setAmenities(prev => prev.filter(a => a.id !== id))
   }
 
   function openEditModal(amenity: Amenity) {
@@ -100,17 +137,21 @@ export function AmenityManagement({ initialAmenities }: { initialAmenities: Amen
     setEditForm(amenity.details || createDefaultDetails(amenity.name))
   }
 
-  function saveEditDetails() {
+  async function saveEditDetails() {
     if (!activeEditAmenityId) return
-    setAmenities(amenities.map(amenity => {
-      if (amenity.id !== activeEditAmenityId) return amenity
-      return {
-        ...amenity,
-        name: editForm.amenityName,
-        details: editForm,
-      }
-    }))
+    setIsSaving(true)
+
+    const updated = await patchAmenity(activeEditAmenityId, {
+      name: editForm.amenityName,
+      details: editForm,
+    })
+
+    if (updated) {
+      setAmenities(prev => prev.map(amenity => amenity.id === activeEditAmenityId ? updated : amenity))
+    }
+
     setActiveEditAmenityId(null)
+    setIsSaving(false)
   }
 
   function openRulesModal(amenity: Amenity) {
@@ -118,16 +159,17 @@ export function AmenityManagement({ initialAmenities }: { initialAmenities: Amen
     setRulesForm(amenity.rules || createDefaultRules())
   }
 
-  function saveRules() {
+  async function saveRules() {
     if (!activeRulesAmenityId) return
-    setAmenities(amenities.map(amenity => {
-      if (amenity.id !== activeRulesAmenityId) return amenity
-      return {
-        ...amenity,
-        rules: rulesForm,
-      }
-    }))
+
+    setIsSaving(true)
+    const updated = await patchAmenity(activeRulesAmenityId, { rules: rulesForm })
+    if (updated) {
+      setAmenities(prev => prev.map(amenity => amenity.id === activeRulesAmenityId ? updated : amenity))
+    }
+
     setActiveRulesAmenityId(null)
+    setIsSaving(false)
   }
 
   const activeRulesAmenity = amenities.find(amenity => amenity.id === activeRulesAmenityId)
@@ -271,6 +313,7 @@ export function AmenityManagement({ initialAmenities }: { initialAmenities: Amen
               </button>
               <button
                 onClick={saveEditDetails}
+                disabled={isSaving}
                 className="bg-accent px-4 py-2 text-accent-foreground font-mono text-xs uppercase"
               >
                 Save
@@ -360,6 +403,7 @@ export function AmenityManagement({ initialAmenities }: { initialAmenities: Amen
               </button>
               <button
                 onClick={saveRules}
+                disabled={isSaving}
                 className="bg-accent px-4 py-2 text-accent-foreground font-mono text-xs uppercase"
               >
                 Save Rules
