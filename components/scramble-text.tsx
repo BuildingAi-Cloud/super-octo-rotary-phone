@@ -98,7 +98,7 @@ export function ScrambleText({ text, className, delayMs = 0, duration = 0.9 }: S
       if (timeoutRef.current) clearTimeout(timeoutRef.current)
       if (animationRef.current) animationRef.current.kill()
     }
-  }, []) // Empty deps - only run on mount
+  }, [delayMs, duration, hasAnimated, text])
 
   // Handle text prop changes after initial animation
   useEffect(() => {

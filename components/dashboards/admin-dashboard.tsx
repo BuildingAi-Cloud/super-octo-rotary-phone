@@ -5,7 +5,6 @@ import { getAuditLog, AuditEntry } from "@/lib/audit";
 import { Table, TableHeader, TableBody, TableHead, TableRow, TableCell } from "@/components/ui/table";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Select } from "@/components/ui/select";
 import Link from "next/link";
 
 const roleLabels: Record<UserRole, string> = {
@@ -22,7 +21,7 @@ const roleLabels: Record<UserRole, string> = {
   guest: "Guest",
 };
 
-export default function AdminDashboard({ user }: { user: User }) {
+export default function AdminDashboard() {
   const [tab, setTab] = useState<"users" | "settings" | "audit">("users");
   const [users, setUsers] = useState<User[]>([]);
   const [search, setSearch] = useState("");

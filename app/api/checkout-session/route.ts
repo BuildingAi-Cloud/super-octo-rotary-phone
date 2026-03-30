@@ -1,6 +1,6 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 
 // Stripe integration is disabled for this deployment.
-export async function POST(req: NextRequest) {
+export async function POST() {
   return NextResponse.json({ error: 'Stripe integration is disabled.' }, { status: 501 });
 }
