@@ -97,7 +97,10 @@
     "@types/react-dom": "^19",
     "@typescript-eslint/eslint-plugin": "^8.57.1",
     "babel-jest": "^30.3.0",
+<<<<<<< HEAD
     "eslint": "^10.1.0",
+=======
+>>>>>>> c693e530f91d65c8ff1d9132dca19c58fc144e69
     "eslint-config-next": "^16.2.1",
     "eslint-plugin-react": "^7.37.5",
     "eslint-plugin-react-hooks": "^7.0.1",
