@@ -34,3 +34,6 @@ next-env.d.ts
 .claude/agents/*.agent.md
 .github/agents/*.agent.md
 .github/agents/*.agent.md.md
+
+# prompt assets
+.github/prompts/

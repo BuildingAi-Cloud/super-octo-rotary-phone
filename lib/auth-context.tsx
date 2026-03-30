@@ -102,7 +102,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const foundUser = storedUsers.find((u: User & { password: string }) => u.email === email && u.password === password)
     
     if (foundUser) {
-      const { password: _, ...userWithoutPassword } = foundUser
+      const userWithoutPassword = { ...foundUser }
+      delete (userWithoutPassword as { password?: string }).password
       setUser(userWithoutPassword)
       localStorage.setItem("buildsync_user", JSON.stringify(userWithoutPassword))
       logAudit("signIn", { email }, email)
@@ -133,7 +134,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     storedUsers.push(newUser)
     localStorage.setItem("buildsync_users", JSON.stringify(storedUsers))
     
-    const { password: _, ...userWithoutPassword } = newUser
+    const userWithoutPassword = { ...newUser }
+    delete (userWithoutPassword as { password?: string }).password
     setUser(userWithoutPassword)
     localStorage.setItem("buildsync_user", JSON.stringify(userWithoutPassword))
     logAudit("signUp", { email: data.email, role: data.role }, data.email)
