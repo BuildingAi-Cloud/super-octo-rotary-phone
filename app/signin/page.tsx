@@ -8,24 +8,17 @@ import { provisionAllTestUsersInSupabase } from "@/lib/auth-context"
 import Link from "next/link"
 import { AnimatedNoise } from "@/components/animated-noise"
 import { ScrambleText, ScrambleTextOnHover } from "@/components/scramble-text"
-import { AccessibilityToggle } from "@/components/accessibility-toggle"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { BitmapChevron } from "@/components/bitmap-chevron"
-=======
 "use client";
->>>>>>> 582e1aeb0d0d7230a1c2c6cd184a867c39413a31
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { useAuth } from "@/lib/auth-context";
+import { useAuth, provisionAllTestUsersInSupabase } from "@/lib/auth-context";
 import Link from "next/link";
 import { AnimatedNoise } from "@/components/animated-noise";
 import { ScrambleText, ScrambleTextOnHover } from "@/components/scramble-text";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { BitmapChevron } from "@/components/bitmap-chevron";
-
 
 export default function SignInPage() {
   const router = useRouter();
@@ -53,9 +46,6 @@ export default function SignInPage() {
     setIsLoading(false);
   };
 
-<<<<<<< HEAD
-
-
   // Dev-only: Provision all test users in Supabase
   const provisionTestUsers = async () => {
     try {
@@ -63,7 +53,9 @@ export default function SignInPage() {
       alert(`Provisioned ${created} test users in Supabase.`);
     } catch (e: any) {
       alert(`Error provisioning test users: ${e.message}`);
-=======
+    }
+  };
+
   // Helper to create test user with correct password
   const createTestUser = () => {
     const users = JSON.parse(localStorage.getItem("buildsync_users") || "[]");
@@ -79,7 +71,6 @@ export default function SignInPage() {
       alert("Test user created!\nEmail: test@test.com\nPassword: 12345678");
     } else {
       alert("Test user already exists.\nEmail: test@test.com\nPassword: 12345678");
->>>>>>> 582e1aeb0d0d7230a1c2c6cd184a867c39413a31
     }
   };
 
@@ -187,4 +178,6 @@ export default function SignInPage() {
     </main>
   );
 }
+          >
 
+            <BitmapChevron className="rotate-180" />

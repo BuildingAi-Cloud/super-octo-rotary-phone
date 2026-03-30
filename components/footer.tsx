@@ -10,6 +10,7 @@ export default function Footer() {
           <Link href="/api-access">API Access</Link>
           <Link href="/privacy-policy">Privacy Policy</Link>
           <Link href="/support">Support</Link>
+          <Link href="/docs/ollama-docs-screenshot.png" target="_blank" rel="noopener noreferrer">Ollama Docs Screenshot</Link>
         </div>
         <div className="flex flex-col md:flex-row gap-2 md:gap-4 items-center">
           <span>&copy; {new Date().getFullYear()} BuildSync</span>

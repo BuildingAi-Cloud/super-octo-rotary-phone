@@ -18,22 +18,42 @@ export default function SettingsPage() {
   const [smtpPort, setSmtpPort] = useState(() => {
     if (typeof window !== "undefined") {
       const saved = JSON.parse(localStorage.getItem("buildsync_settings") || "{}")
-      return saved.smtpPort || "";
-    }
-    return "";
-  });
-  const [smtpUser, setSmtpUser] = useState(() => {
-    if (typeof window !== "undefined") {
-      const saved = JSON.parse(localStorage.getItem("buildsync_settings") || "{}")
-      return saved.smtpUser || "";
-    }
-    return "";
-  });
-  const [smtpPass, setSmtpPass] = useState(() => {
-    if (typeof window !== "undefined") {
-      const saved = JSON.parse(localStorage.getItem("buildsync_settings") || "{}")
-      return saved.smtpPass || "";
-    }
+    const [smtpHost, setSmtpHost] = useState(() => {
+      if (typeof window !== "undefined") {
+        const saved = JSON.parse(localStorage.getItem("buildsync_settings") || "{}")
+        return saved.smtpHost || "";
+      }
+      return "";
+    });
+    const [smtpPort, setSmtpPort] = useState(() => {
+      if (typeof window !== "undefined") {
+        const saved = JSON.parse(localStorage.getItem("buildsync_settings") || "{}")
+        return saved.smtpPort || "";
+      }
+      return "";
+    });
+    const [smtpUser, setSmtpUser] = useState(() => {
+      if (typeof window !== "undefined") {
+        const saved = JSON.parse(localStorage.getItem("buildsync_settings") || "{}")
+        return saved.smtpUser || "";
+      }
+      return "";
+    });
+    const [smtpPass, setSmtpPass] = useState(() => {
+      if (typeof window !== "undefined") {
+        const saved = JSON.parse(localStorage.getItem("buildsync_settings") || "{}")
+        return saved.smtpPass || "";
+      }
+      return "";
+    });
+    const [sendgridApiKey, setSendgridApiKey] = useState(() => {
+      if (typeof window !== "undefined") {
+        const saved = JSON.parse(localStorage.getItem("buildsync_settings") || "{}")
+        return saved.sendgridApiKey || "";
+      }
+      return "";
+    });
+    const [status, setStatus] = useState("");
     return "";
   });
   const [sendgridApiKey, setSendgridApiKey] = useState(() => {
