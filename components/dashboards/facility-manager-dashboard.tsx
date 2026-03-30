@@ -3,9 +3,7 @@
 import React from "react";
 import { type User } from "@/lib/auth-context";
 import { DashboardHeader } from "./dashboard-header";
-import { useTranslation } from "react-i18next";
 import { AnimatedNoise } from "@/components/animated-noise";
-import { ScrambleText } from "@/components/scramble-text";
 import { AmenityManagement } from "@/components/amenity-management";
 
 // --- CONFIG ---
@@ -37,10 +35,6 @@ const CONFIG = {
 
 interface FacilityManagerDashboardProps {
   user: User;
-}
-interface Tab {
-  key: string;
-  label: string;
 }
 interface StatCardProps {
   label: string;
@@ -180,7 +174,6 @@ const EquipmentDirectory: React.FC<EquipmentDirectoryProps> = ({ assets }) => (
 );
 
 export function FacilityManagerDashboard({ user }: FacilityManagerDashboardProps) {
-  const { t } = useTranslation();
   const [activeTab, setActiveTab] = React.useState(CONFIG.TABS[0].key);
 
   // Demo/mock data

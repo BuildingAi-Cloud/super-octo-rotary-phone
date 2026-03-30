@@ -1,10 +1,7 @@
 "use client"
 
 
-import { useRef, useEffect } from "react"
 import Link from "next/link"
-import { ScrambleTextOnHover } from "@/components/scramble-text"
-import { BitmapChevron } from "@/components/bitmap-chevron"
 
 const plans = [
   {
@@ -60,13 +57,6 @@ const plans = [
     cta: "Contact Sales",
   },
 ]
-
-// Collect all unique features for table rows
-const allFeatures = Array.from(
-  new Set(
-    plans.flatMap((plan) => plan.features.map((f) => f.replace(/^Everything in .*/, "All previous features")))
-  )
-)
 
 export function PricingSection() {
   return (

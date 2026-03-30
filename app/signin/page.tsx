@@ -2,11 +2,10 @@
 
 import { useState } from "react"
 import { useRouter } from "next/navigation"
-import { useAuth, type UserRole } from "@/lib/auth-context"
+import { useAuth } from "@/lib/auth-context"
 import Link from "next/link"
 import { AnimatedNoise } from "@/components/animated-noise"
 import { ScrambleText, ScrambleTextOnHover } from "@/components/scramble-text"
-import { AccessibilityToggle } from "@/components/accessibility-toggle"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { BitmapChevron } from "@/components/bitmap-chevron"
@@ -33,7 +32,7 @@ export default function SignInPage() {
       } else {
         setError(result.error || "Invalid email or password");
       }
-    } catch (err) {
+    } catch {
       setError("Failed to sign in");
     }
     setIsLoading(false);

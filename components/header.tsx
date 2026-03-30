@@ -8,7 +8,6 @@ import { ThemeToggle } from "@/components/theme-toggle"
 import { AccessibilityToggle } from "@/components/accessibility-toggle"
 import { LanguageSelector } from "@/components/language-selector"
 import { getRoleDisplayName } from "@/lib/auth-context"
-import { SplitFlapText, SplitFlapAudioProvider } from "@/components/split-flap-text"
 import { useRouter } from "next/navigation"
 
 
