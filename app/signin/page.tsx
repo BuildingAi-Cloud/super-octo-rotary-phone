@@ -1,8 +1,18 @@
+<<<<<<< HEAD
 "use client"
 
 import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { useAuth, type UserRole } from "@/lib/auth-context"
+=======
+"use client";
+
+<<<<<<< HEAD
+import { useState } from "react"
+import { useRouter } from "next/navigation"
+import { useAuth, type UserRole } from "@/lib/auth-context"
+import { provisionAllTestUsersInSupabase } from "@/lib/auth-context"
+>>>>>>> feature/ui-updates
 import Link from "next/link"
 import { AnimatedNoise } from "@/components/animated-noise"
 import { ScrambleText, ScrambleTextOnHover } from "@/components/scramble-text"
@@ -10,7 +20,23 @@ import { AccessibilityToggle } from "@/components/accessibility-toggle"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { BitmapChevron } from "@/components/bitmap-chevron"
+<<<<<<< HEAD
 
+=======
+=======
+"use client";
+>>>>>>> 582e1aeb0d0d7230a1c2c6cd184a867c39413a31
+
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { useAuth } from "@/lib/auth-context";
+import Link from "next/link";
+import { AnimatedNoise } from "@/components/animated-noise";
+import { ScrambleText, ScrambleTextOnHover } from "@/components/scramble-text";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { BitmapChevron } from "@/components/bitmap-chevron";
+>>>>>>> feature/ui-updates
 
 
 export default function SignInPage() {
@@ -39,6 +65,7 @@ export default function SignInPage() {
     setIsLoading(false);
   };
 
+<<<<<<< HEAD
   // Helper to create test user with correct password
   const createTestUser = () => {
     const users = JSON.parse(localStorage.getItem("buildsync_users") || "[]");
@@ -47,6 +74,23 @@ export default function SignInPage() {
     const users = JSON.parse(localStorage.getItem("buildsync_users") || "[]");
     if (!users.some((u: { email: string }) => u.email === "test@test.com")) {
 >>>>>>> ffd3eaf (fix(submodule): clean submodule state and stage all changes for deployment)
+=======
+<<<<<<< HEAD
+
+
+  // Dev-only: Provision all test users in Supabase
+  const provisionTestUsers = async () => {
+    try {
+      const created = await provisionAllTestUsersInSupabase();
+      alert(`Provisioned ${created} test users in Supabase.`);
+    } catch (e: any) {
+      alert(`Error provisioning test users: ${e.message}`);
+=======
+  // Helper to create test user with correct password
+  const createTestUser = () => {
+    const users = JSON.parse(localStorage.getItem("buildsync_users") || "[]");
+    if (!users.some((u: { email: string }) => u.email === "test@test.com")) {
+>>>>>>> feature/ui-updates
       users.push({
         id: "test-id",
         email: "test@test.com",
@@ -58,11 +102,18 @@ export default function SignInPage() {
       alert("Test user created!\nEmail: test@test.com\nPassword: 12345678");
     } else {
       alert("Test user already exists.\nEmail: test@test.com\nPassword: 12345678");
+<<<<<<< HEAD
+=======
+>>>>>>> 582e1aeb0d0d7230a1c2c6cd184a867c39413a31
+>>>>>>> feature/ui-updates
     }
   };
 
   return (
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> feature/ui-updates
     <main className="relative min-h-screen flex items-center justify-center p-6">
       <AnimatedNoise opacity={0.03} />
       <div className="grid-bg fixed inset-0 opacity-30" aria-hidden="true" />
@@ -78,6 +129,16 @@ export default function SignInPage() {
             <ScrambleText text="SIGN IN" duration={0.8} />
           </h1>
           <p className="mt-4 font-mono text-sm text-muted-foreground">
+<<<<<<< HEAD
+=======
+            <button
+              type="button"
+              className="underline text-xs text-accent ml-2"
+              onClick={provisionTestUsers}
+            >
+              Provision All Test Users (Dev Only)
+            </button>
+>>>>>>> feature/ui-updates
             Welcome back! Please sign in to your account.
           </p>
         </div>
@@ -130,6 +191,7 @@ export default function SignInPage() {
             type="button"
             className="w-full"
             variant="outline"
+<<<<<<< HEAD
               <main className="relative min-h-screen flex items-center justify-center p-6">
                 <AnimatedNoise opacity={0.03} />
                 <div className="grid-bg fixed inset-0 opacity-30" aria-hidden="true" />
@@ -223,4 +285,35 @@ export default function SignInPage() {
                     </Link>
                   </div>
                 </div>
+=======
+            size="lg"
+            onClick={createTestUser}
+          >
+            Create Test User
+          </Button>
+        </form>
+        {/* Footer */}
+        <div className="mt-8 text-center">
+          <p className="font-mono text-xs text-muted-foreground">
+            Don&apos;t have an account?{' '}
+            <Link href="/signup" className="text-accent hover:underline">
+              Sign up
+            </Link>
+          </p>
+        </div>
+        {/* Back link */}
+        <div className="mt-12 text-center">
+          <Link
+            href="/"
+            className="inline-flex items-center gap-2 font-mono text-[10px] uppercase tracking-widest text-muted-foreground hover:text-foreground transition-colors"
+          >
+            <BitmapChevron className="rotate-180" />
+            <span>Back to Home</span>
+          </Link>
+        </div>
+      </div>
+    </main>
+  );
+}
+>>>>>>> feature/ui-updates
 

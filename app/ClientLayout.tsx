@@ -4,7 +4,9 @@ import { SmoothScroll } from "@/components/smooth-scroll"
 import "./globals.css"
 
 import { Header } from "@/components/header"
+<<<<<<< HEAD
 import { SideNav } from "@/components/side-nav"
+import Footer from "@/components/footer"
 
 export default function ClientLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -15,10 +17,7 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
       <div className="pt-[80px] md:pl-20 md:pt-[96px]">
         <SmoothScroll>{children}</SmoothScroll>
       </div>
-      <footer className="w-full text-center py-6 text-xs text-muted-foreground bg-background/80 border-t border-border mt-12 md:pl-20">
-        <a href="/documentation" className="underline hover:text-accent mr-4">Documentation</a>
-        &copy; {new Date().getFullYear()} BuildSync. All rights reserved.
-      </footer>
+      <Footer />
     </>
   )
 }

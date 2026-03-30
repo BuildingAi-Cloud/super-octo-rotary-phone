@@ -19,7 +19,11 @@ jobs:
         with:
           version: 9.15.0
       - name: Install dependencies
+<<<<<<< HEAD
         run: pnpm install --frozen-lockfile
+=======
+        run: pnpm install
+>>>>>>> feature/ui-updates
       - name: Lint
         run: pnpm lint
       - name: Build
@@ -48,6 +52,7 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+<<<<<<< HEAD
       - name: Commit generated API reference
         if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/master' }}
         run: |
@@ -55,6 +60,8 @@ jobs:
             git add docs/api-reference.md
             git commit -m "docs(api): update generated api reference [skip ci]"
           fi
+=======
+>>>>>>> feature/ui-updates
       - name: Bump minor version and tag release
         if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/master' }}
         run: |

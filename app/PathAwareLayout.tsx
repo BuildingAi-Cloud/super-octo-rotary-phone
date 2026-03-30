@@ -9,7 +9,11 @@ import ClientLayout from "./ClientLayout"
 
 export default function PathAwareLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
+<<<<<<< HEAD
   const staticRoutes = ["/concierge/reservation", "/api-reference"]
+=======
+  const staticRoutes = ["/api-reference"]
+>>>>>>> feature/ui-updates
   const chromeExcludedRoutes = ["/dashboard"]
   const isStatic = staticRoutes.includes(pathname)
   const hideMarketingChrome = chromeExcludedRoutes.some((route) => pathname.startsWith(route))

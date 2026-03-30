@@ -47,6 +47,7 @@ const demoAnnouncements: Announcement[] = [
 ];
 
 export default function StaffDashboard({ user }: { user: User }) {
+<<<<<<< HEAD
   const [tasks, setTasks] = useState<Task[]>([]);
   const [announcements, setAnnouncements] = useState<Announcement[]>([]);
   const [incidents, setIncidents] = useState<Incident[]>([]);
@@ -61,6 +62,27 @@ export default function StaffDashboard({ user }: { user: User }) {
     const storedIncidents = JSON.parse(localStorage.getItem("buildsync_staff_incidents") || "null");
     setIncidents(storedIncidents || []);
   }, []);
+=======
+  const [tasks, setTasks] = useState<Task[]>(() => {
+    if (typeof window !== "undefined") {
+      const stored = JSON.parse(localStorage.getItem("buildsync_staff_tasks") || "null");
+      return stored || demoTasks;
+    }
+    return demoTasks;
+  });
+  const [announcements, setAnnouncements] = useState<Announcement[]>(() => demoAnnouncements);
+  const [incidents, setIncidents] = useState<Incident[]>(() => {
+    if (typeof window !== "undefined") {
+      const storedIncidents = JSON.parse(localStorage.getItem("buildsync_staff_incidents") || "null");
+      return storedIncidents || [];
+    }
+    return [];
+  });
+  const [incidentDesc, setIncidentDesc] = useState("");
+  const [incidentStatus, setIncidentStatus] = useState("");
+
+  // Removed useEffect for tasks/announcements/incidents initialization
+>>>>>>> feature/ui-updates
 
   const handleComplete = (id: string) => {
     const updated = tasks.map(t => t.id === id ? { ...t, status: "completed" } : t);

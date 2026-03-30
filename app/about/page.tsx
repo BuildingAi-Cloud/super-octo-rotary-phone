@@ -1,4 +1,3 @@
-"use client"
 import ClientLayout from "../ClientLayout"
 import { PrinciplesSection } from "@/components/principles-section"
 import { WorkSection } from "@/components/work-section"

@@ -8,6 +8,7 @@ export default function SettingsPage() {
   const { user } = useAuth()
 
   // SMTP/SendGrid settings state
+<<<<<<< HEAD
   const [smtpHost, setSmtpHost] = useState("");
   const [smtpPort, setSmtpPort] = useState("");
   const [smtpUser, setSmtpUser] = useState("");
@@ -24,6 +25,46 @@ export default function SettingsPage() {
     setSmtpPass(saved.smtpPass || "");
     setSendgridApiKey(saved.sendgridApiKey || "");
   }, []);
+=======
+  const [smtpHost, setSmtpHost] = useState(() => {
+    if (typeof window !== "undefined") {
+      const saved = JSON.parse(localStorage.getItem("buildsync_settings") || "{}")
+      return saved.smtpHost || "";
+    }
+    return "";
+  });
+  const [smtpPort, setSmtpPort] = useState(() => {
+    if (typeof window !== "undefined") {
+      const saved = JSON.parse(localStorage.getItem("buildsync_settings") || "{}")
+      return saved.smtpPort || "";
+    }
+    return "";
+  });
+  const [smtpUser, setSmtpUser] = useState(() => {
+    if (typeof window !== "undefined") {
+      const saved = JSON.parse(localStorage.getItem("buildsync_settings") || "{}")
+      return saved.smtpUser || "";
+    }
+    return "";
+  });
+  const [smtpPass, setSmtpPass] = useState(() => {
+    if (typeof window !== "undefined") {
+      const saved = JSON.parse(localStorage.getItem("buildsync_settings") || "{}")
+      return saved.smtpPass || "";
+    }
+    return "";
+  });
+  const [sendgridApiKey, setSendgridApiKey] = useState(() => {
+    if (typeof window !== "undefined") {
+      const saved = JSON.parse(localStorage.getItem("buildsync_settings") || "{}")
+      return saved.sendgridApiKey || "";
+    }
+    return "";
+  });
+  const [status, setStatus] = useState("");
+
+  // Removed useEffect for settings initialization
+>>>>>>> feature/ui-updates
 
   const handleSave = (e: React.FormEvent) => {
     e.preventDefault();

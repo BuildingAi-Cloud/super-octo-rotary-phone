@@ -24,6 +24,7 @@ const roleLabels: Record<UserRole, string> = {
 
 export default function AdminDashboard({ user }: { user: User }) {
   const [tab, setTab] = useState<"users" | "settings" | "audit">("users");
+<<<<<<< HEAD
   const [users, setUsers] = useState<User[]>([]);
   const [search, setSearch] = useState("");
   const [audit, setAudit] = useState<AuditEntry[]>([]);
@@ -34,6 +35,23 @@ export default function AdminDashboard({ user }: { user: User }) {
     setUsers(stored);
     setAudit(getAuditLog().reverse());
   }, []);
+=======
+  const [users, setUsers] = useState<User[]>(() => {
+    if (typeof window !== "undefined") {
+      return JSON.parse(localStorage.getItem("buildsync_users") || "[]");
+    }
+    return [];
+  });
+  const [search, setSearch] = useState("");
+  const [audit, setAudit] = useState<AuditEntry[]>(() => {
+    if (typeof window !== "undefined") {
+      return getAuditLog().reverse();
+    }
+    return [];
+  });
+
+  // Removed useEffect for users/audit initialization
+>>>>>>> feature/ui-updates
 
   const handleRoleChange = (id: string, newRole: UserRole) => {
     const updated = users.map(u => u.id === id ? { ...u, role: newRole } : u);

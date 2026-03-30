@@ -16,7 +16,11 @@ const NAV_SECTIONS = [
       { label: "Custom Fields", href: "/concierge/custom-fields" },
       { label: "Calendar", href: "/concierge/calendar" },
       { label: "Library", href: "/concierge/library" },
+<<<<<<< HEAD
       { label: "Reservation", href: "/concierge/reservation" },
+=======
+
+>>>>>>> feature/ui-updates
       { label: "Pet Registry", href: "/concierge/pet-registry" },
       { label: "Parking Management", href: "/concierge/parking" },
       { label: "Asset Manager", href: "/concierge/assets" },

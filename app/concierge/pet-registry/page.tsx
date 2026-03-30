@@ -1,3 +1,7 @@
+<<<<<<< HEAD
+=======
+import React from "react";
+>>>>>>> feature/ui-updates
 export default function ConciergePetRegistryPage() {
   return (
     <main className="min-h-screen py-24 px-6 md:px-28 bg-background">
