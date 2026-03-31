@@ -7,6 +7,7 @@ import { useTranslation } from "react-i18next";
 import { AnimatedNoise } from "@/components/animated-noise";
 import { ScrambleText } from "@/components/scramble-text";
 import { AmenityManagement } from "@/components/amenity-management";
+import FacilityManagerSchedule from "@/components/dashboards/facility-manager-schedule";
 
 // --- CONFIG ---
 const CONFIG = {
@@ -237,15 +238,27 @@ export function FacilityManagerDashboard({ user }: { user: User }) {
           <div>
             {/* Stat Cards */}
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4 p-6 md:p-8">
-              {CONFIG.STAT_CARDS.map((card) => (
-                <StatCard
-                  key={card.label}
-                  label={card.label}
-                  value={statValues[card.valueKey]}
-                  color={card.color}
-                  sub={card.sub}
-                />
-              ))}
+              {CONFIG.STAT_CARDS.map((card) =>
+                card.label === "Scheduled Today" ? (
+                  <div key={card.label}>
+                    <StatCard
+                      label={card.label}
+                      value={statValues[card.valueKey]}
+                      color={card.color}
+                      sub={card.sub}
+                    />
+                    <FacilityManagerSchedule />
+                  </div>
+                ) : (
+                  <StatCard
+                    key={card.label}
+                    label={card.label}
+                    value={statValues[card.valueKey]}
+                    color={card.color}
+                    sub={card.sub}
+                  />
+                )
+              )}
             </div>
             {/* Main dashboard grid */}
             <div className="p-6 md:p-8">
