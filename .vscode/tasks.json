@@ -11,7 +11,7 @@
 		{
 			"label": "Build and check Next.js app",
 			"type": "shell",
-			"command": "npm run build && npm run lint && npm test",
+			"command": "npm run build; if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }; npm run lint; if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }; npm test",
 			"isBackground": false,
 			"problemMatcher": [
 				"$tsc",
@@ -22,14 +22,14 @@
 		{
 			"label": "Build and check Next.js app",
 			"type": "shell",
-			"command": "npm run build && npm run lint && npm test",
+			"command": "npm run build; if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }; npm run lint; if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }; npm test",
 			"isBackground": false,
 			"group": "build"
 		},
 		{
 			"label": "Build and check Next.js app",
 			"type": "shell",
-			"command": "npm run build && npm run lint && npm test",
+			"command": "npm run build; if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }; npm run lint; if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }; npm test",
 			"isBackground": false,
 			"group": "build"
 		}

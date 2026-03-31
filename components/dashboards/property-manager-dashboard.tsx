@@ -5,6 +5,7 @@ import { DashboardHeader } from "./dashboard-header"
 import { AnimatedNoise } from "@/components/animated-noise"
 import { ScrambleText } from "@/components/scramble-text"
 import { AmenityManagement } from "@/components/amenity-management"
+import GovernancePanel from "@/components/governance/GovernancePanel"
 
 interface PropertyManagerDashboardProps {
   user: User
@@ -233,6 +234,11 @@ export function PropertyManagerDashboard({ user }: PropertyManagerDashboardProps
                 ))}
               </div>
             </div>
+          </div>
+
+          {/* Governance & E-Voting */}
+          <div className="mt-6">
+            <GovernancePanel />
           </div>
         </div>
       </div>
