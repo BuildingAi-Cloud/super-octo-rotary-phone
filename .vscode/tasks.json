@@ -32,6 +32,41 @@
 			"command": "npm run build && npm run lint && npm test",
 			"isBackground": false,
 			"group": "build"
+		},
+		{
+			"label": "Build and check Next.js app",
+			"type": "shell",
+			"command": "npm run build && npm run lint && npm test",
+			"isBackground": false,
+			"group": "build"
+		},
+		{
+			"label": "Build and check Next.js app",
+			"type": "shell",
+			"command": "npm run build && npm run lint && npm test",
+			"isBackground": false,
+			"group": "build"
+		},
+		{
+			"label": "Build and check Next.js app",
+			"type": "shell",
+			"command": "npm run build && npm run lint && npm test",
+			"isBackground": false,
+			"group": "build"
+		},
+		{
+			"label": "Build and check Next.js app",
+			"type": "shell",
+			"command": "npm run build && npm run lint && npm test",
+			"isBackground": false,
+			"group": "build"
+		},
+		{
+			"label": "Build and check Next.js app",
+			"type": "shell",
+			"command": "npm run build && npm run lint && npm test",
+			"isBackground": false,
+			"group": "build"
 		}
 	]
 }

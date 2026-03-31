@@ -1,10 +1,9 @@
-<<<<<<< HEAD
-=======
-import React from "react";
->>>>>>> feature/ui-updates
 import type { Metadata } from "next"
 import { IBM_Plex_Sans, IBM_Plex_Mono, Bebas_Neue } from "next/font/google"
-import PathAwareLayout from "./PathAwareLayout"
+import { Analytics } from "@vercel/analytics/next"
+import { SmoothScroll } from "@/components/smooth-scroll"
+import { AuthProvider } from "@/lib/auth-context"
+import { ThemeProvider } from "@/lib/theme-context"
 import "./globals.css"
 
 const ibmPlexSans = IBM_Plex_Sans({
@@ -20,7 +19,7 @@ const ibmPlexMono = IBM_Plex_Mono({
 const bebasNeue = Bebas_Neue({ weight: "400", subsets: ["latin"], variable: "--font-bebas" })
 
 export const metadata: Metadata = {
-  title: "BUILDSYNC — Intelligent Facility Management Platform",
+  title: "BUILDSYNC  Intelligent Facility Management Platform",
   description:
     "The trusted platform for facility managers, building owners, and property managers. Operational excellence, security, sustainability, and smart building technology.",
   generator: "v0.app",
@@ -43,11 +42,23 @@ export const metadata: Metadata = {
   },
 }
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default function RootLayout({
+  children,
+}: Readonly<{
+  children: React.ReactNode
+}>) {
   return (
     <html lang="en" className="dark" suppressHydrationWarning>
-      <body className={`${ibmPlexSans.variable} ${bebasNeue.variable} ${ibmPlexMono.variable} font-sans antialiased overflow-x-hidden`}>
-        <PathAwareLayout>{children}</PathAwareLayout>
+      <body
+        className={`${ibmPlexSans.variable} ${bebasNeue.variable} ${ibmPlexMono.variable} font-sans antialiased overflow-x-hidden`}
+      >
+        <div className="noise-overlay" aria-hidden="true" />
+        <ThemeProvider>
+          <AuthProvider>
+            <SmoothScroll>{children}</SmoothScroll>
+          </AuthProvider>
+        </ThemeProvider>
+        <Analytics />
       </body>
     </html>
   )
