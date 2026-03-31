@@ -1,6 +1,6 @@
 "use client"
 
-import type React from "react"
+import React from "react";
 import { usePathname } from "next/navigation"
 import "@/lib/i18n"
 import { AuthProvider } from "@/lib/auth-context"

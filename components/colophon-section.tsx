@@ -1,8 +1,8 @@
 
-"use client";
-import { useTranslation } from "react-i18next"
 
-import { useRef, useEffect } from "react"
+"use client";
+import React, { useRef, useEffect } from "react";
+import { useTranslation } from "react-i18next"
 import gsap from "gsap"
 import { ScrollTrigger } from "gsap/ScrollTrigger"
 
