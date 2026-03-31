@@ -6,6 +6,7 @@ import { Table, TableHeader, TableBody, TableHead, TableRow, TableCell } from "@
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
+import GovernancePanel from "@/components/governance/GovernancePanel";
 
 const roleLabels: Record<UserRole, string> = {
   facility_manager: "Facility Manager",
@@ -22,7 +23,7 @@ const roleLabels: Record<UserRole, string> = {
 };
 
 export default function AdminDashboard() {
-  const [tab, setTab] = useState<"users" | "settings" | "audit">("users");
+  const [tab, setTab] = useState<"users" | "settings" | "audit" | "governance">("users");
   const [users, setUsers] = useState<User[]>([]);
   const [search, setSearch] = useState("");
   const [audit, setAudit] = useState<AuditEntry[]>([]);
@@ -58,6 +59,7 @@ export default function AdminDashboard() {
       <div className="flex gap-4 mb-6">
         <Button variant={tab === "users" ? "default" : "outline"} onClick={() => setTab("users")}>Users</Button>
         <Button variant={tab === "settings" ? "default" : "outline"} onClick={() => setTab("settings")}>Settings</Button>
+        <Button variant={tab === "governance" ? "default" : "outline"} onClick={() => setTab("governance")}>Governance</Button>
         <Button variant={tab === "audit" ? "default" : "outline"} onClick={() => setTab("audit")}>Audit Log</Button>
       </div>
 
@@ -148,6 +150,12 @@ export default function AdminDashboard() {
               ))}
             </TableBody>
           </Table>
+        </div>
+      )}
+
+      {tab === "governance" && (
+        <div>
+          <GovernancePanel />
         </div>
       )}
     </div>
