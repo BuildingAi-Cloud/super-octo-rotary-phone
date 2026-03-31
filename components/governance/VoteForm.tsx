@@ -201,19 +201,28 @@ export function VoteForm({ userId, onSuccess, onCancel }: VoteFormProps) {
           {voteType === "E-VOTE" && (
             <div className="p-4 bg-orange-50 border border-orange-200 rounded-lg">
               <Label className="mb-2 block font-semibold">Voting Options</Label>
-              <div className="space-y-2">
-                <div className="flex items-center">
-                  <div className="w-4 h-4 rounded-full bg-green-500 mr-2"></div>
-                  <span>Yes</span>
-                </div>
-                <div className="flex items-center">
-                  <div className="w-4 h-4 rounded-full bg-yellow-500 mr-2"></div>
-                  <span>Abstain</span>
-                </div>
-                <div className="flex items-center">
-                  <div className="w-4 h-4 rounded-full bg-red-500 mr-2"></div>
-                  <span>No</span>
-                </div>
+              <div className="flex gap-3">
+                <button
+                  type="button"
+                  className="flex items-center gap-2 px-4 py-2 rounded-md border-2 border-green-500 bg-white text-green-700 font-medium cursor-default"
+                >
+                  <span className="w-3 h-3 rounded-full bg-green-500 inline-block" />
+                  Yes
+                </button>
+                <button
+                  type="button"
+                  className="flex items-center gap-2 px-4 py-2 rounded-md border-2 border-yellow-500 bg-white text-yellow-700 font-medium cursor-default"
+                >
+                  <span className="w-3 h-3 rounded-full bg-yellow-500 inline-block" />
+                  Abstain
+                </button>
+                <button
+                  type="button"
+                  className="flex items-center gap-2 px-4 py-2 rounded-md border-2 border-red-500 bg-white text-red-700 font-medium cursor-default"
+                >
+                  <span className="w-3 h-3 rounded-full bg-red-500 inline-block" />
+                  No
+                </button>
               </div>
               <p className="text-xs text-muted-foreground mt-2">Fixed voting options for all E-VOTE proposals</p>
             </div>
