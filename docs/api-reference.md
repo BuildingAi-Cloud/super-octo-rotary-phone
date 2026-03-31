@@ -8,4 +8,9 @@ This page is automatically generated.
 - /api/auth
 - /api/checkout-session
 - /api/dashboard
+- /api/governance/[id]/cast
+- /api/governance/[id]/results
+- /api/governance/[id]
+- /api/governance/_storage
+- /api/governance
 - /api/otp
