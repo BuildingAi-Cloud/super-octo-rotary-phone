@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
+import i18n from "@/lib/i18n"
 import { useTranslation } from "react-i18next"
 
 // Simple IP-based language detection (placeholder, real-world apps should use a backend or service)
@@ -16,20 +17,21 @@ async function detectLanguage(): Promise<string> {
 
 export function LanguageSelector() {
 
-  const { i18n } = useTranslation()
-  const [language, setLanguage] = useState(i18n.language || "en")
+  const { i18n: i18nInstance } = useTranslation()
+  const activeI18n = typeof i18nInstance?.changeLanguage === "function" ? i18nInstance : i18n
+  const [language, setLanguage] = useState(activeI18n.language || "en")
 
   useEffect(() => {
     detectLanguage().then((lng) => {
       setLanguage(lng)
-      i18n.changeLanguage(lng)
+      activeI18n.changeLanguage(lng)
     })
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   const handleChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     setLanguage(e.target.value)
-    i18n.changeLanguage(e.target.value)
+    activeI18n.changeLanguage(e.target.value)
   }
 
   return (
