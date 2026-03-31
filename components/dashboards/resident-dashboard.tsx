@@ -8,6 +8,7 @@ import { type User } from "@/lib/auth-context"
 import { DashboardHeader } from "./dashboard-header"
 import { AnimatedNoise } from "@/components/animated-noise"
 import { ScrambleText } from "@/components/scramble-text"
+import GovernancePanel from "@/components/governance/GovernancePanel"
 
 
 interface ResidentDashboardProps {
@@ -174,6 +175,11 @@ export default function ResidentDashboard({ user }: ResidentDashboardProps) {
                     </div>
                   ))}
                 </div>
+              </div>
+
+              {/* Governance & E-Voting */}
+              <div className="mt-6">
+                <GovernancePanel />
               </div>
             </>
           )}

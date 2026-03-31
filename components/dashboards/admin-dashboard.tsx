@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Select } from "@/components/ui/select";
 import Link from "next/link";
+import GovernancePanel from "@/components/governance/GovernancePanel";
 
 const roleLabels: Record<UserRole, string> = {
   facility_manager: "Facility Manager",
@@ -23,7 +24,7 @@ const roleLabels: Record<UserRole, string> = {
 };
 
 export default function AdminDashboard({ user }: { user: User }) {
-  const [tab, setTab] = useState<"users" | "settings" | "audit">("users");
+  const [tab, setTab] = useState<"users" | "settings" | "audit" | "governance">("users");
   const [users, setUsers] = useState<User[]>(() => {
     if (typeof window !== "undefined") {
       return JSON.parse(localStorage.getItem("buildsync_users") || "[]");
@@ -64,6 +65,7 @@ export default function AdminDashboard({ user }: { user: User }) {
         <Button variant={tab === "users" ? "default" : "outline"} onClick={() => setTab("users")}>Users</Button>
         <Button variant={tab === "settings" ? "default" : "outline"} onClick={() => setTab("settings")}>Settings</Button>
         <Button variant={tab === "audit" ? "default" : "outline"} onClick={() => setTab("audit")}>Audit Log</Button>
+        <Button variant={tab === "governance" ? "default" : "outline"} onClick={() => setTab("governance")}>Governance</Button>
       </div>
 
       {tab === "users" && (
@@ -154,6 +156,10 @@ export default function AdminDashboard({ user }: { user: User }) {
             </TableBody>
           </Table>
         </div>
+      )}
+
+      {tab === "governance" && (
+        <GovernancePanel />
       )}
     </div>
   );

@@ -4,6 +4,7 @@ import { type User } from "@/lib/auth-context"
 import { DashboardHeader } from "./dashboard-header"
 import { AnimatedNoise } from "@/components/animated-noise"
 import { ScrambleText } from "@/components/scramble-text"
+import GovernancePanel from "@/components/governance/GovernancePanel"
 
 interface BuildingOwnerDashboardProps {
   user: User
@@ -26,12 +27,6 @@ const amenityBookings = [
   { amenity: "Party Room A", date: "Today", time: "6:00 PM - 10:00 PM", resident: "Unit 1204" },
   { amenity: "Guest Suite", date: "Mar 19-21", time: "Check-in 3PM", resident: "Unit 803" },
   { amenity: "Tennis Court 1", date: "Tomorrow", time: "9:00 AM - 11:00 AM", resident: "Unit 505" },
-]
-
-const governanceActivity = [
-  { item: "Budget Approval 2026", type: "e-vote", status: "active", participation: "67%", deadline: "Mar 25" },
-  { item: "Board Meeting - Q1 Review", type: "meeting", status: "scheduled", participation: "-", deadline: "Mar 28" },
-  { item: "Amenity Fee Proposal", type: "e-vote", status: "completed", participation: "82%", deadline: "Closed" },
 ]
 
 const financialOverview = [
@@ -76,39 +71,8 @@ export function BuildingOwnerDashboard({ user }: BuildingOwnerDashboardProps) {
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             {/* Governance & E-Voting */}
-            <div className="lg:col-span-2 border border-border/40 bg-card/30 p-6">
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="font-[var(--font-bebas)] text-xl tracking-wide">GOVERNANCE & E-VOTING</h2>
-                <button className="px-3 py-1 border border-accent bg-accent/10 font-mono text-[10px] uppercase tracking-widest text-accent hover:bg-accent/20 transition-colors">
-                  + New Vote
-                </button>
-              </div>
-              <div className="space-y-4">
-                {governanceActivity.map((item, index) => (
-                  <div key={index} className="flex items-center justify-between border border-border/30 p-4">
-                    <div className="flex items-center gap-4">
-                      <span className={`px-2 py-1 font-mono text-[10px] uppercase tracking-widest ${
-                        item.type === "e-vote" ? "bg-accent/20 text-accent" : "bg-blue-500/20 text-blue-400"
-                      }`}>
-                        {item.type}
-                      </span>
-                      <div>
-                        <p className="font-mono text-xs text-foreground">{item.item}</p>
-                        <p className="font-mono text-[10px] text-muted-foreground">
-                          {item.participation !== "-" && `${item.participation} participation • `}Deadline: {item.deadline}
-                        </p>
-                      </div>
-                    </div>
-                    <span className={`px-2 py-1 font-mono text-[10px] uppercase tracking-widest ${
-                      item.status === "active" ? "bg-green-500/20 text-green-400" :
-                      item.status === "scheduled" ? "bg-yellow-500/20 text-yellow-400" :
-                      "bg-muted text-muted-foreground"
-                    }`}>
-                      {item.status}
-                    </span>
-                  </div>
-                ))}
-              </div>
+            <div className="lg:col-span-2">
+              <GovernancePanel />
             </div>
 
             {/* Resident Stats */}
