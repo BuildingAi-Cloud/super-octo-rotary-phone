@@ -37,3 +37,7 @@ next-env.d.ts
 
 # prompt assets
 .github/prompts/
+
+# build artifacts
+build-out.txt
+build-stderr.txt
