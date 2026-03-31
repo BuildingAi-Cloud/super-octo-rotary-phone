@@ -1,8 +1,3 @@
-<<<<<<< HEAD
-=======
-
-import React from "react";
->>>>>>> feature/ui-updates
 "use client"
 
 import { useRef, useState, useEffect } from "react"

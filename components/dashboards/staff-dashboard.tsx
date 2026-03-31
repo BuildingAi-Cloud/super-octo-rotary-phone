@@ -3,10 +3,6 @@ import { useState, useEffect } from "react";
 import { User } from "@/lib/auth-context";
 import { Card, CardHeader, CardTitle, CardContent, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-<<<<<<< HEAD
-=======
-import { Input } from "@/components/ui/input";
->>>>>>> feature/ui-updates
 import { Textarea } from "@/components/ui/textarea";
 
 interface Task {

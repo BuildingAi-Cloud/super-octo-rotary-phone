@@ -1,4 +1,6 @@
 import Link from "next/link";
+
+export default function ApiReferencePage() {
   return (
     <main className="min-h-screen py-24 px-6 md:px-28 bg-background">
       <section className="max-w-4xl mx-auto">

@@ -3,15 +3,9 @@
 import React from "react";
 import { type User } from "@/lib/auth-context";
 import { DashboardHeader } from "./dashboard-header";
-<<<<<<< HEAD
 import { useTranslation } from "react-i18next";
 import { AnimatedNoise } from "@/components/animated-noise";
 import { ScrambleText } from "@/components/scramble-text";
-=======
-import { useTranslation } from "react-i18next";
-import { AnimatedNoise } from "@/components/animated-noise";
-import { ScrambleText } from "@/components/scramble-text";
->>>>>>> feature/ui-updates
 import { AmenityManagement } from "@/components/amenity-management";
 
 // --- CONFIG ---
@@ -48,13 +42,6 @@ interface Tab {
   key: string;
   label: string;
 }
-<<<<<<< HEAD
-=======
-interface Tab {
-  key: string;
-  label: string;
-}
->>>>>>> feature/ui-updates
 interface StatCardProps {
   label: string;
   value: React.ReactNode;
@@ -192,6 +179,7 @@ const EquipmentDirectory: React.FC<EquipmentDirectoryProps> = ({ assets }) => (
   </div>
 );
 
+export function FacilityManagerDashboard({ user }: { user: User }) {
   const { t } = useTranslation();
   const [activeTab, setActiveTab] = React.useState(CONFIG.TABS[0].key);
 
@@ -294,6 +282,4 @@ const EquipmentDirectory: React.FC<EquipmentDirectoryProps> = ({ assets }) => (
       </div>
     </main>
   );
-  );
 }
-                  

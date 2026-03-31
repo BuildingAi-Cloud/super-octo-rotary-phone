@@ -4,7 +4,6 @@ import { SmoothScroll } from "@/components/smooth-scroll"
 import "./globals.css"
 
 import { Header } from "@/components/header"
-<<<<<<< HEAD
 import { SideNav } from "@/components/side-nav"
 import Footer from "@/components/footer"
 
@@ -18,11 +17,6 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
         <SmoothScroll>{children}</SmoothScroll>
       </div>
       <Footer />
-    </>
-  )
-}
-      <Footer />
->>>>>>> feature/ui-updates
     </>
   )
 }

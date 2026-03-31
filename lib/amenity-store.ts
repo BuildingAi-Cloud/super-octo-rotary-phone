@@ -2,7 +2,6 @@
 export type AmenityStatus = "available" | "maintenance" | "booked"
 export type AmenityPolicy = "auto_approve" | "manager_approval"
 export type AmenityApprover = "facility_manager" | "concierge" | "property_manager"
-<<<<<<< HEAD
 
 export interface AmenityDetails {
   amenityName: string
@@ -23,19 +22,14 @@ export interface AmenityRules {
   bookingApprovalRequired: boolean
 }
 
-=======
->>>>>>> feature/ui-updates
 export interface Amenity {
   id: string
   name: string
   status: AmenityStatus
   policy: AmenityPolicy
   approver?: AmenityApprover
-<<<<<<< HEAD
   details?: AmenityDetails
   rules?: AmenityRules
-=======
->>>>>>> feature/ui-updates
 }
 export interface Booking {
   id: string
@@ -80,7 +74,6 @@ export function getBookingsForAmenity(amenityId: string) {
 export function getBookingsForUser(userId: string) {
   return bookingStore.filter(b => b.userId === userId)
 }
-<<<<<<< HEAD
 
 export function listAmenities() {
   return [...amenityStore]
@@ -104,5 +97,3 @@ export function deleteAmenityById(id: string) {
   amenityStore.splice(index, 1)
   return true
 }
-=======
->>>>>>> feature/ui-updates

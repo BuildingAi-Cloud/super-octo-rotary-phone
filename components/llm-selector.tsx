@@ -14,11 +14,7 @@ export function LlmSelector() {
 
   useEffect(() => {
     const stored = localStorage.getItem("llm_endpoint")
-<<<<<<< HEAD
     if (stored) requestAnimationFrame(() => setLlmUrl(stored))
-=======
-    if (stored) requestAnimationFrame(() => setLlmUrl(stored))
->>>>>>> feature/ui-updates
   }, [])
 
   const handleChange = (e: React.ChangeEvent<HTMLSelectElement>) => {

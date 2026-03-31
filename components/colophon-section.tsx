@@ -88,10 +88,10 @@ export function ColophonSection() {
           <h4 className="font-mono text-[9px] uppercase tracking-[0.3em] text-muted-foreground mb-4">{t("resources", "Resources")}</h4>
           <ul className="space-y-2">
             <li className="font-mono text-xs text-foreground/80">
-              <a href="/docs/overview" className="hover:underline">{t("documentation", "Documentation")}</a>
+              <a href="/documentation" className="hover:underline">{t("documentation", "Documentation")}</a>
             </li>
             <li className="font-mono text-xs text-foreground/80">
-              <a href="/docs/api-reference" className="hover:underline">{t("apiReference", "API Reference")}</a>
+              <a href="/api-reference" className="hover:underline">{t("apiReference", "API Reference")}</a>
             </li>
           </ul>
         </div>
