@@ -1,12 +1,43 @@
 "use client"
 
+import { GlobalSearch } from "@/components/global-search";
+
 export default function DocumentationPage() {
   return (
     <main className="min-h-screen max-w-[900px] mx-auto px-4 py-16">
-      <h1 className="font-[var(--font-bebas)] text-5xl md:text-7xl tracking-tight mb-6 text-center">Documentation</h1>
-      <p className="font-mono text-base md:text-lg text-muted-foreground mb-12 text-center">
-        Welcome to the BuildSync documentation. Here you'll find detailed guides, user flows, and dashboard wireframes for every role in the platform. For the best experience, use the navigation below or search for a topic.
+      <div className="flex justify-end mb-4">
+        <GlobalSearch />
+      </div>
+      <h1 className="font-[var(--font-bebas)] text-5xl md:text-7xl tracking-tight mb-6 text-center">Documentation & Advanced Search</h1>
+      <p className="font-mono text-base md:text-lg text-muted-foreground mb-6 text-center">
+        Welcome to the BuildSync documentation. Here you'll find detailed guides, user flows, and dashboard wireframes for every role in the platform. Use the advanced search below to quickly locate the information you need.
       </p>
+      <div className="text-muted-foreground text-xs text-center mb-8">
+        (Use the search button above to find documentation and pages. For now, browse the docs or contact support.)
+      </div>
+      <div className="text-muted-foreground text-xs text-center mb-8">
+        <b>API Documentation:</b> API access for specific products will be available soon. Customers will be able to review API docs and receive API keys after purchase. To view/manage your API access, log in and visit <a href="/api-access" className="underline">API Access</a>.
+      </div>
+=======
+import { GlobalSearch } from "@/components/global-search";
+
+export default function DocumentationPage() {
+  return (
+    <main className="min-h-screen max-w-[900px] mx-auto px-4 py-16">
+      <div className="flex justify-end mb-4">
+        <GlobalSearch />
+      </div>
+      <h1 className="font-[var(--font-bebas)] text-5xl md:text-7xl tracking-tight mb-6 text-center">Documentation & Advanced Search</h1>
+      <p className="font-mono text-base md:text-lg text-muted-foreground mb-6 text-center">
+        Welcome to the BuildSync documentation. Here you'll find detailed guides, user flows, and dashboard wireframes for every role in the platform. Use the advanced search below to quickly locate the information you need.
+      </p>
+      <div className="text-muted-foreground text-xs text-center mb-8">
+        (Use the search button above to find documentation and pages. For now, browse the docs or contact support.)
+      </div>
+      <div className="text-muted-foreground text-xs text-center mb-8">
+        <b>API Documentation:</b> API access for specific products will be available soon. Customers will be able to review API docs and receive API keys after purchase. To view/manage your API access, log in and visit <a href="/api-access" className="underline">API Access</a>.
+      </div>
+>>>>>>> feature/ui-updates
       <section className="mb-12">
         <h2 className="font-mono text-2xl mb-4">Quick Links</h2>
         <ul className="grid grid-cols-1 md:grid-cols-2 gap-4">

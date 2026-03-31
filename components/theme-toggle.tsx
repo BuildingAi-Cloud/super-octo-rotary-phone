@@ -8,7 +8,11 @@ export function ThemeToggle() {
   const [mounted, setMounted] = useState(false)
 
   useEffect(() => {
+<<<<<<< HEAD
     setMounted(true)
+=======
+    requestAnimationFrame(() => setMounted(true))
+>>>>>>> feature/ui-updates
   }, [])
 
   // Prevent hydration mismatch by not rendering icons until mounted

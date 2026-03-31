@@ -1,6 +1,7 @@
 "use client";
+import { User } from "@/lib/auth-context";
 
-export default function VendorDashboard() {
+export default function VendorDashboard({ user }: { user: User }) {
   return (
     <div className="p-8">
       <h2 className="text-2xl font-bold mb-4">Welcome, Vendor!</h2>

@@ -1,10 +1,11 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { User, UserRole } from "@/lib/auth-context";
 import { getAuditLog, AuditEntry } from "@/lib/audit";
 import { Table, TableHeader, TableBody, TableHead, TableRow, TableCell } from "@/components/ui/table";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { Select } from "@/components/ui/select";
 import Link from "next/link";
 
 const roleLabels: Record<UserRole, string> = {
@@ -21,18 +22,22 @@ const roleLabels: Record<UserRole, string> = {
   guest: "Guest",
 };
 
-export default function AdminDashboard() {
+export default function AdminDashboard({ user }: { user: User }) {
   const [tab, setTab] = useState<"users" | "settings" | "audit">("users");
-  const [users, setUsers] = useState<User[]>([]);
+  const [users, setUsers] = useState<User[]>(() => {
+    if (typeof window !== "undefined") {
+      return JSON.parse(localStorage.getItem("buildsync_users") || "[]");
+    }
+    return [];
+  });
   const [search, setSearch] = useState("");
-  const [audit, setAudit] = useState<AuditEntry[]>([]);
-
-  useEffect(() => {
-    // Load users from localStorage
-    const stored = JSON.parse(localStorage.getItem("buildsync_users") || "[]");
-    setUsers(stored);
-    setAudit(getAuditLog().reverse());
-  }, []);
+  const [audit, setAudit] = useState<AuditEntry[]>(() => {
+    if (typeof window !== "undefined") {
+      return getAuditLog().reverse();
+    }
+    return [];
+  });
+  // ...existing code...
 
   const handleRoleChange = (id: string, newRole: UserRole) => {
     const updated = users.map(u => u.id === id ? { ...u, role: newRole } : u);

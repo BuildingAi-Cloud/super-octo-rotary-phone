@@ -19,67 +19,66 @@ function createDefaultDetails(amenityName: string): AmenityDetails {
     type: "Other",
     capacity: 0,
     description: "",
-    openingTime: "09:00",
-    closingTime: "18:00",
-    active: true,
-  }
-}
+    "use client"
 
-function createDefaultRules(): AmenityRules {
-  return {
-    minSlotDuration: "30m",
-    maxBookingDuration: "2h",
-    advanceBookingWindowDays: 30,
-    capacityOverride: undefined,
-    allowOverlappingBookings: false,
-    bookingApprovalRequired: false,
-  }
-}
+    import { useEffect, useState } from "react"
+    import { updateBookingStatus, getBookingsForAmenity } from "@/lib/amenity-store"
 
-export function AmenityManagement({ initialAmenities }: { initialAmenities: Amenity[] }) {
-  const [amenities, setAmenities] = useState<Amenity[]>(initialAmenities)
-  const [newAmenity, setNewAmenity] = useState("")
-  const [activeEditAmenityId, setActiveEditAmenityId] = useState<string | null>(null)
-  const [activeRulesAmenityId, setActiveRulesAmenityId] = useState<string | null>(null)
-  const [editForm, setEditForm] = useState<AmenityDetails>(createDefaultDetails(""))
-  const [rulesForm, setRulesForm] = useState<AmenityRules>(createDefaultRules())
-  const [isSaving, setIsSaving] = useState(false)
-  const { user } = useAuth();
+    import type {
+      Amenity,
+      AmenityApprover,
+      AmenityDetails,
+      AmenityPolicy,
+      AmenityRules,
+    } from "@/lib/amenity-store"
 
-  useEffect(() => {
-    let active = true
+    import { useAuth } from "@/lib/auth-context"
 
-    async function loadAmenities() {
-      try {
-        const response = await fetch("/api/amenities", { cache: "no-store" })
-        if (!response.ok) return
-        const payload = await response.json() as { amenities?: Amenity[] }
-        if (active && Array.isArray(payload.amenities)) {
-          setAmenities(payload.amenities)
-        }
-      } catch {
-        // Keep initial amenities when API is not reachable.
+    function createDefaultDetails(amenityName: string): AmenityDetails {
+      return {
+        amenityName,
+        type: "Other",
+        capacity: 0,
+        description: "",
+        openingTime: "09:00",
+        closingTime: "18:00",
+        active: true,
       }
     }
 
-    void loadAmenities()
-    return () => {
-      active = false
+    function createDefaultRules(): AmenityRules {
+      return {
+        minSlotDuration: "30m",
+        maxBookingDuration: "2h",
+        advanceBookingWindowDays: 30,
+        capacityOverride: undefined,
+        allowOverlappingBookings: false,
+        bookingApprovalRequired: false,
+      }
     }
-  }, [])
 
-  async function addAmenity() {
-    const trimmedName = newAmenity.trim()
-    if (!trimmedName) return
+    export function AmenityManagement({ initialAmenities }: { initialAmenities: Amenity[] }) {
+      const [amenities, setAmenities] = useState<Amenity[]>(initialAmenities)
+      const [newAmenity, setNewAmenity] = useState("")
+      const [activeEditAmenityId, setActiveEditAmenityId] = useState<string | null>(null)
+      const [activeRulesAmenityId, setActiveRulesAmenityId] = useState<string | null>(null)
+      const [editForm, setEditForm] = useState<AmenityDetails>(createDefaultDetails(""))
+      const [rulesForm, setRulesForm] = useState<AmenityRules>(createDefaultRules())
+      const [isSaving, setIsSaving] = useState(false)
+      const { user } = useAuth();
 
-    setIsSaving(true)
-    try {
-      const response = await fetch("/api/amenities", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name: trimmedName, status: "available", policy: "auto_approve" }),
-      })
+      useEffect(() => {
+        let active = true
 
+        async function loadAmenities() {
+          try {
+            const response = await fetch("/api/amenities", { cache: "no-store" })
+            if (!response.ok) return
+            const payload = await response.json() as { amenities?: Amenity[] }
+            if (active && Array.isArray(payload.amenities)) {
+              setAmenities(payload.amenities)
+            }
+          } catch {
       if (!response.ok) return
       const payload = await response.json() as { amenity?: Amenity }
       if (!payload.amenity) return
@@ -184,7 +183,11 @@ export function AmenityManagement({ initialAmenities }: { initialAmenities: Amen
           placeholder="Amenity name"
           className="border border-border px-3 py-2 font-mono text-sm"
         />
-        <button onClick={addAmenity} className="bg-accent px-4 py-2 text-accent-foreground font-mono text-xs uppercase tracking-widest">Add</button>
+<<<<<<< HEAD
+        <button onClick={addAmenity} className="bg-accent px-4 py-2 text-accent-foreground font-mono text-xs uppercase tracking-widest" disabled={isSaving}>Add</button>
+=======
+        <button onClick={addAmenity} className="bg-accent px-4 py-2 text-accent-foreground font-mono text-xs uppercase tracking-widest" disabled={isSaving}>Add</button>
+>>>>>>> feature/ui-updates
       </div>
       <div className="space-y-3">
         {amenities.map(amenity => (

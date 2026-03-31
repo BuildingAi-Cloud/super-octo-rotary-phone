@@ -1,3 +1,8 @@
+<<<<<<< HEAD
+=======
+
+import React from "react";
+>>>>>>> feature/ui-updates
 "use client"
 
 import { useRef, useEffect } from "react"
@@ -7,50 +12,58 @@ import { ScrollTrigger } from "gsap/ScrollTrigger"
 
 gsap.registerPlugin(ScrollTrigger)
 
-const PRINCIPLES = [
-  {
-    number: "01",
-    titleParts: [
-      { text: "OPERATIONAL", highlight: true },
-      { text: " EXCELLENCE", highlight: false },
-    ],
-    description: "Streamlined HVAC maintenance, energy management, and building automation that reduces costs and maximizes efficiency.",
-    align: "left",
-  },
-  {
-    number: "02",
-    titleParts: [
-      { text: "SECURITY", highlight: true },
-      { text: " & PRIVACY", highlight: false },
-    ],
-    description: "End-to-end encryption, access control, and compliance with building safety regulations to protect residents and assets.",
-    align: "right",
-  },
-  {
-    number: "03",
-    titleParts: [
-      { text: "SUSTAINABLE ", highlight: false },
-      { text: "BUILDINGS", highlight: true },
-    ],
-    description: "LEED certification support, carbon footprint tracking, and green building standards for environmentally responsible operations.",
-    align: "left",
-  },
-  {
-    number: "04",
-    titleParts: [
-      { text: "SMART ", highlight: false },
-      { text: "MODERNIZATION", highlight: true },
-    ],
-    description: "PropTech integration and IoT retrofitting to transform legacy buildings into intelligent, connected environments.",
-    align: "right",
-  },
-] as const
+<<<<<<< HEAD
 
+
+=======
+>>>>>>> feature/ui-updates
 export function PrinciplesSection() {
   const sectionRef = useRef<HTMLElement>(null)
   const headerRef = useRef<HTMLDivElement>(null)
   const principlesRef = useRef<HTMLDivElement>(null)
 
+<<<<<<< HEAD
+=======
+  const principles = [
+    {
+      number: "01",
+      titleParts: [
+        { text: "OPERATIONAL", highlight: true },
+        { text: " EXCELLENCE", highlight: false },
+      ],
+      description: "Streamlined HVAC maintenance, energy management, and building automation that reduces costs and maximizes efficiency.",
+      align: "left",
+    },
+    {
+      number: "02",
+      titleParts: [
+        { text: "SECURITY", highlight: true },
+        { text: " & PRIVACY", highlight: false },
+      ],
+      description: "End-to-end encryption, access control, and compliance with building safety regulations to protect residents and assets.",
+      align: "right",
+    },
+    {
+      number: "03",
+      titleParts: [
+        { text: "SUSTAINABLE ", highlight: false },
+        { text: "BUILDINGS", highlight: true },
+      ],
+      description: "LEED certification support, carbon footprint tracking, and green building standards for environmentally responsible operations.",
+      align: "left",
+    },
+    {
+      number: "04",
+      titleParts: [
+        { text: "SMART ", highlight: false },
+        { text: "MODERNIZATION", highlight: true },
+      ],
+      description: "PropTech integration and IoT retrofitting to transform legacy buildings into intelligent, connected environments.",
+      align: "right",
+    },
+  ]
+
+>>>>>>> feature/ui-updates
   useEffect(() => {
     if (!sectionRef.current || !headerRef.current || !principlesRef.current) return
 
@@ -71,7 +84,11 @@ export function PrinciplesSection() {
       // Each principle slides in from its aligned side
       const articles = principlesRef.current?.querySelectorAll("article")
       articles?.forEach((article, index) => {
-        const isRight = PRINCIPLES[index].align === "right"
+<<<<<<< HEAD
+        const isRight = principles[index].align === "right"
+=======
+        const isRight = principles[index].align === "right"
+>>>>>>> feature/ui-updates
         gsap.from(article, {
           x: isRight ? 80 : -80,
           opacity: 0,
@@ -99,7 +116,11 @@ export function PrinciplesSection() {
 
       {/* Staggered principles */}
       <div ref={principlesRef} className="space-y-24 md:space-y-32">
-        {PRINCIPLES.map((principle, index) => (
+<<<<<<< HEAD
+        {principles.map((principle, index) => (
+=======
+        {principles.map((principle, index) => (
+>>>>>>> feature/ui-updates
           <article
             key={index}
             className={`flex flex-col ${
