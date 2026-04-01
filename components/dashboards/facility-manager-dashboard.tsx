@@ -8,6 +8,7 @@ import { AnimatedNoise } from "@/components/animated-noise";
 import { ScrambleText } from "@/components/scramble-text";
 import { AmenityManagement } from "@/components/amenity-management";
 import FacilityManagerSchedule from "@/components/dashboards/facility-manager-schedule";
+import { Dialog, DialogContent, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 
 // --- CONFIG ---
 const CONFIG = {
@@ -214,6 +215,14 @@ export function FacilityManagerDashboard({ user }: { user: User }) {
     equipmentHealth: `${equipmentHealth}%`,
   };
 
+  const [calendarOpen, setCalendarOpen] = React.useState(false);
+
+  // Handlers for tile clicks (expand as needed)
+  const handleTileClick = (tile: string) => {
+    if (tile === "Scheduled Today") setCalendarOpen(true);
+    // Add navigation or dialog logic for other tiles here
+  };
+
   return (
     <main className="relative min-h-screen bg-background">
       <AnimatedNoise opacity={0.02} />
@@ -238,28 +247,31 @@ export function FacilityManagerDashboard({ user }: { user: User }) {
           <div>
             {/* Stat Cards */}
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4 p-6 md:p-8">
-              {CONFIG.STAT_CARDS.map((card) =>
-                card.label === "Scheduled Today" ? (
-                  <div key={card.label}>
-                    <StatCard
-                      label={card.label}
-                      value={statValues[card.valueKey]}
-                      color={card.color}
-                      sub={card.sub}
-                    />
-                    <FacilityManagerSchedule />
-                  </div>
-                ) : (
+              {CONFIG.STAT_CARDS.map((card) => (
+                <div
+                  key={card.label}
+                  className="cursor-pointer hover:shadow-lg transition-shadow"
+                  onClick={() => handleTileClick(card.label)}
+                  tabIndex={0}
+                  role="button"
+                  aria-label={`Open ${card.label} details`}
+                >
                   <StatCard
-                    key={card.label}
                     label={card.label}
                     value={statValues[card.valueKey]}
                     color={card.color}
                     sub={card.sub}
                   />
-                )
-              )}
+                </div>
+              ))}
             </div>
+            {/* Calendar Dialog for Scheduled Today */}
+            <Dialog open={calendarOpen} onOpenChange={setCalendarOpen}>
+              <DialogContent className="max-w-2xl w-full">
+                <DialogTitle>Building Maintenance & Schedule (Month View)</DialogTitle>
+                <FacilityManagerSchedule />
+              </DialogContent>
+            </Dialog>
             {/* Main dashboard grid */}
             <div className="p-6 md:p-8">
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
