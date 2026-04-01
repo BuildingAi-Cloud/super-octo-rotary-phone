@@ -1,5 +1,6 @@
 "use client";
 import React, { useState } from "react";
+import Link from "next/link";
 import { Button } from "@/components/ui/button";
 
 const mockWorkOrders = [
@@ -26,6 +27,11 @@ export default function WorkOrdersPage() {
 
   return (
     <section className="mt-6 bg-background rounded-lg shadow-sm p-6">
+      <nav className="mb-6 text-sm text-muted-foreground">
+        <Link href="/dashboard" className="hover:underline">Dashboard</Link>
+        <span className="mx-2">/</span>
+        <span className="text-foreground font-semibold">Work Orders</span>
+      </nav>
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-2xl font-bold">All Work Orders</h1>
         <Button onClick={handleDownloadCSV} variant="outline">Download CSV</Button>

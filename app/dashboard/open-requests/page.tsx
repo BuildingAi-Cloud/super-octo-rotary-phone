@@ -1,5 +1,6 @@
 "use client";
 import React, { useState } from "react";
+import Link from "next/link";
 import { Button } from "@/components/ui/button";
 
 const mockRequests = [
@@ -13,6 +14,11 @@ export default function OpenRequestsPage() {
 
   return (
     <section className="mt-6 bg-background rounded-lg shadow-sm p-6">
+      <nav className="mb-6 text-sm text-muted-foreground">
+        <Link href="/dashboard" className="hover:underline">Dashboard</Link>
+        <span className="mx-2">/</span>
+        <span className="text-foreground font-semibold">Open Requests</span>
+      </nav>
       <h1 className="text-2xl font-bold mb-4">All Open Requests</h1>
       <div className="overflow-x-auto">
         <table className="w-full border">
