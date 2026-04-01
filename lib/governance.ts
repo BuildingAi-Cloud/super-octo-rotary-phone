@@ -1,12 +1,12 @@
 import type { UserRole } from "@/lib/auth-context"
 import type { MeetingAgendaItem, Vote, VoteCast, VoteOption, VoteResult } from "@/lib/governance-store"
 
-const CREATE_ROLES: UserRole[] = ["building_owner", "property_manager", "admin"]
+const CREATE_ROLES: UserRole[] = ["building_owner", "building_manager", "admin"]
 const MANAGE_ROLES: UserRole[] = ["building_owner", "admin"]
 const VIEW_MEETING_ROLES: UserRole[] = [
   "facility_manager",
   "building_owner",
-  "property_manager",
+  "building_manager",
   "resident",
   "tenant",
   "concierge",

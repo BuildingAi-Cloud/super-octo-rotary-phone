@@ -36,8 +36,8 @@ export default function SettingsPage() {
     setTimeout(() => setStatus("Test complete (demo only)"), 1200);
   };
 
-  // Only allow property_manager, admin, or staff roles to see settings
-  if (!user || !["property_manager", "admin", "staff"].includes(user.role)) {
+  // Only allow property_manager, admin, staff, or building_owner roles to see settings
+  if (!user || !["building_manager", "admin", "staff", "building_owner"].includes(user.role)) {
     return (
       <main className="flex items-center justify-center min-h-screen">
         <div className="text-center">

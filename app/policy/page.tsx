@@ -1,6 +1,6 @@
 export default function PolicyPage() {
   return (
-    <main className="min-h-screen flex flex-col items-center justify-center p-8">
+    <main className="min-h-screen flex flex-col items-center justify-center px-4 md:px-12 py-16">
       <h1 className="text-3xl font-bold mb-4">Policies & Terms</h1>
       <p className="text-muted-foreground mb-8 max-w-xl text-center">
         Please review our Privacy Policy, Terms of Service, and other important documents. We are committed to transparency and customer trust.

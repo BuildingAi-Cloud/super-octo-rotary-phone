@@ -1,6 +1,6 @@
 export default function PublicSectorPage() {
   return (
-    <main className="min-h-screen py-24 px-6 md:px-28 bg-background">
+    <main className="min-h-screen py-16 px-4 md:px-12 bg-background">
       <section className="max-w-4xl mx-auto">
         <h1 className="font-[var(--font-bebas)] text-5xl md:text-7xl tracking-tight mb-4">Public Sector Facilities</h1>
         <h2 className="font-mono text-base md:text-lg text-muted-foreground mb-8">Smart solutions for government and civic buildings</h2>

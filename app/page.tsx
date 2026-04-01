@@ -13,7 +13,7 @@ export default function Page() {
       <Header />
       <SideNav />
       <div className="grid-bg fixed inset-0 opacity-30" aria-hidden="true" />
-      <div className="relative z-10 max-w-[2400px] mx-auto w-full px-4">
+      <div className="relative z-10 max-w-7xl mx-auto w-full px-4 md:px-8 py-8 md:py-12">
         <HeroSection />
         <SignalsSection />
         <WorkSection />

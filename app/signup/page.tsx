@@ -22,9 +22,9 @@ const roleOptions: { value: UserRole; label: string; description: string; pricin
     pricing: "Portfolio pricing available. Contact sales for details.",
   },
   {
-    value: "property_manager",
-    label: "Property Manager",
-    description: "Tenant relations, leasing, and property administration",
+    value: "building_manager",
+    label: "Building Manager",
+    description: "Daily operations, tenant relations, and full property management",
     pricing: "Flexible pricing per managed unit or property",
   },
 ];
