@@ -8,7 +8,7 @@ import { AnimatedNoise } from "@/components/animated-noise";
 import { ScrambleText } from "@/components/scramble-text";
 import { AmenityManagement } from "@/components/amenity-management";
 import FacilityManagerSchedule from "@/components/dashboards/facility-manager-schedule";
-import { Dialog, DialogContent, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { useRouter } from "next/navigation";
 
 // --- CONFIG ---
 const CONFIG = {
@@ -215,11 +215,13 @@ export function FacilityManagerDashboard({ user }: { user: User }) {
     equipmentHealth: `${equipmentHealth}%`,
   };
 
-  const [calendarOpen, setCalendarOpen] = React.useState(false);
-
+  const router = useRouter();
   // Handlers for tile clicks (expand as needed)
   const handleTileClick = (tile: string) => {
-    if (tile === "Scheduled Today") setCalendarOpen(true);
+    if (tile === "Scheduled Today") {
+      router.push("/dashboard/schedule");
+      return;
+    }
     // Add navigation or dialog logic for other tiles here
   };
 
@@ -265,13 +267,7 @@ export function FacilityManagerDashboard({ user }: { user: User }) {
                 </div>
               ))}
             </div>
-            {/* Calendar Dialog for Scheduled Today */}
-            <Dialog open={calendarOpen} onOpenChange={setCalendarOpen}>
-              <DialogContent className="max-w-2xl w-full">
-                <DialogTitle>Building Maintenance & Schedule (Month View)</DialogTitle>
-                <FacilityManagerSchedule />
-              </DialogContent>
-            </Dialog>
+            {/* Calendar dialog removed; handled by navigation now */}
             {/* Main dashboard grid */}
             <div className="p-6 md:p-8">
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
