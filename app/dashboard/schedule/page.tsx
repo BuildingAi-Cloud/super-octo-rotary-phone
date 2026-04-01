@@ -3,7 +3,7 @@ import FacilityManagerSchedule from "@/components/dashboards/facility-manager-sc
 
 export default function FacilityManagerSchedulePage() {
   return (
-    <main className="min-h-screen bg-background p-6 md:p-12">
+    <section className="mt-6">
       <nav className="mb-6 text-sm text-muted-foreground">
         <Link href="/dashboard" className="hover:underline">Dashboard</Link>
         <span className="mx-2">/</span>
@@ -12,6 +12,6 @@ export default function FacilityManagerSchedulePage() {
       <h1 className="text-2xl font-bold mb-4">Building Maintenance & Schedule</h1>
       <FacilityManagerSchedule />
       {/* Future features/components can be added here */}
-    </main>
+    </section>
   );
 }
