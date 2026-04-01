@@ -226,6 +226,10 @@ export function FacilityManagerDashboard({ user }: { user: User }) {
       router.push("/dashboard/open-requests");
       return;
     }
+    if (tile === "Equipment Health") {
+      router.push("/dashboard/equipment-health");
+      return;
+    }
     // Add navigation or dialog logic for other tiles here
   };
 
