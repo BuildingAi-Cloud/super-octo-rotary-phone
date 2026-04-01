@@ -4,8 +4,8 @@ import { useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { useAuth } from "@/lib/auth-context"
 import { FacilityManagerDashboard } from "@/components/dashboards/facility-manager-dashboard"
+import { BuildingManagerDashboard } from "@/components/dashboards/building-manager-dashboard"
 import { BuildingOwnerDashboard } from "@/components/dashboards/building-owner-dashboard"
-import { PropertyManagerDashboard } from "@/components/dashboards/property-manager-dashboard"
 import ResidentDashboard from "@/components/dashboards/resident-dashboard"
 import { TenantDashboard } from "@/components/dashboards/tenant-dashboard"
 import ConciergeDashboard from "@/components/dashboards/concierge-dashboard"
@@ -46,10 +46,12 @@ export default function DashboardPage() {
   switch (user.role) {
     case "facility_manager":
       return <FacilityManagerDashboard user={user} />
+    case "building_manager":
+      return <BuildingManagerDashboard user={user} />
     case "building_owner":
       return <BuildingOwnerDashboard user={user} />
     case "property_manager":
-      return <PropertyManagerDashboard user={user} />
+      return <BuildingManagerDashboard user={user} />
     case "resident":
       return <ResidentDashboard user={user} />
     case "tenant":

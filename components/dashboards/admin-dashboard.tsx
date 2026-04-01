@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Select } from "@/components/ui/select";
 import Link from "next/link";
 import GovernancePanel from "@/components/governance/GovernancePanel";
+import OrgAdminPanel from "@/components/dashboards/org-admin-panel";
 
 const roleLabels: Record<UserRole, string> = {
   facility_manager: "Facility Manager",
@@ -24,7 +25,7 @@ const roleLabels: Record<UserRole, string> = {
 };
 
 export default function AdminDashboard({ user }: { user: User }) {
-  const [tab, setTab] = useState<"users" | "settings" | "audit" | "governance">("users");
+  const [tab, setTab] = useState<"users" | "settings" | "audit" | "governance" | "onboarding">("users");
   const [users, setUsers] = useState<User[]>(() => {
     if (typeof window !== "undefined") {
       return JSON.parse(localStorage.getItem("buildsync_users") || "[]");
@@ -66,6 +67,7 @@ export default function AdminDashboard({ user }: { user: User }) {
         <Button variant={tab === "settings" ? "default" : "outline"} onClick={() => setTab("settings")}>Settings</Button>
         <Button variant={tab === "audit" ? "default" : "outline"} onClick={() => setTab("audit")}>Audit Log</Button>
         <Button variant={tab === "governance" ? "default" : "outline"} onClick={() => setTab("governance")}>Governance</Button>
+        <Button variant={tab === "onboarding" ? "default" : "outline"} onClick={() => setTab("onboarding")}>Onboarding</Button>
       </div>
 
       {tab === "users" && (
@@ -160,6 +162,10 @@ export default function AdminDashboard({ user }: { user: User }) {
 
       {tab === "governance" && (
         <GovernancePanel />
+      )}
+
+      {tab === "onboarding" && (
+        <OrgAdminPanel user={user} />
       )}
     </div>
   );

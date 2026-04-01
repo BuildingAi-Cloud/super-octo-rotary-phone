@@ -6,7 +6,6 @@ import { useAuth } from "@/lib/auth-context";
 import Link from "next/link";
 import { AnimatedNoise } from "@/components/animated-noise";
 import { ScrambleText, ScrambleTextOnHover } from "@/components/scramble-text";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { BitmapChevron } from "@/components/bitmap-chevron";
 
@@ -34,24 +33,6 @@ export default function SignInPage() {
       setError("Failed to sign in");
     }
     setIsLoading(false);
-  };
-
-  // Helper to create test user with correct password
-  const createTestUser = () => {
-    const users = JSON.parse(localStorage.getItem("buildsync_users") || "[]");
-    if (!users.some((u: { email: string }) => u.email === "test@test.com")) {
-      users.push({
-        id: "test-id",
-        email: "test@test.com",
-        password: "12345678",
-        name: "Test User",
-        role: "facility_manager"
-      });
-      localStorage.setItem("buildsync_users", JSON.stringify(users));
-      alert("Test user created!\nEmail: test@test.com\nPassword: 12345678");
-    } else {
-      alert("Test user already exists.\nEmail: test@test.com\nPassword: 12345678");
-    }
   };
 
   return (
@@ -118,15 +99,6 @@ export default function SignInPage() {
             <ScrambleTextOnHover text={isLoading ? "Signing in..." : "Sign In"} as="span" duration={0.5} />
             {!isLoading && <BitmapChevron className="transition-transform duration-[400ms] ease-in-out group-hover:translate-x-1" />}
           </button>
-          <Button
-            type="button"
-            className="w-full"
-            variant="outline"
-            size="lg"
-            onClick={createTestUser}
-          >
-            Create Test User
-          </Button>
         </form>
         {/* Footer */}
         <div className="mt-8 text-center">

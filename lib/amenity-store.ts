@@ -1,7 +1,7 @@
 // Simple in-memory amenity and booking store for demo
 export type AmenityStatus = "available" | "maintenance" | "booked"
 export type AmenityPolicy = "auto_approve" | "manager_approval"
-export type AmenityApprover = "facility_manager" | "concierge" | "property_manager"
+export type AmenityApprover = "facility_manager" | "concierge" | "building_manager"
 
 export interface AmenityDetails {
   amenityName: string

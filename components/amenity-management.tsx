@@ -215,7 +215,7 @@ export function AmenityManagement({ initialAmenities }: { initialAmenities: Amen
               >
                 <option value="facility_manager">Facility Manager</option>
                 <option value="concierge">Concierge</option>
-                <option value="property_manager">Property Manager</option>
+                <option value="building_manager">Building Manager</option>
               </select>
             )}
             <button
@@ -414,7 +414,7 @@ export function AmenityManagement({ initialAmenities }: { initialAmenities: Amen
       )}
 
       {/* Booking approval section */}
-      {user && ["facility_manager", "concierge", "property_manager"].includes(user.role) && (
+      {user && ["facility_manager", "concierge", "building_manager"].includes(user.role) && (
         <div className="mt-8">
           <h3 className="font-mono text-xs uppercase tracking-widest mb-2">Pending Amenity Bookings</h3>
           {amenities

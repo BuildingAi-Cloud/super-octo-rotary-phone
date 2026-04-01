@@ -6,7 +6,7 @@ export default function AboutPage() {
   return (
     <main className="min-h-screen flex flex-col gap-0">
       {/* Hero Section */}
-      <section className="relative min-h-[60vh] flex flex-col items-center justify-center px-6 md:px-28 pt-32 pb-16 bg-background">
+      <section className="relative min-h-[60vh] flex flex-col items-center justify-center px-4 md:px-12 pt-24 pb-12 bg-background">
         <div className="w-full max-w-4xl mx-auto text-center">
           <h1 className="font-[var(--font-bebas)] text-5xl md:text-7xl tracking-tight mb-4">About BuildSync</h1>
           <h2 className="font-mono text-base md:text-lg text-muted-foreground mb-8">Intelligent Facility Management Platform</h2>
@@ -18,13 +18,13 @@ export default function AboutPage() {
       {/* Pillars Section */}
       <PrinciplesSection />
       {/* Solutions Section */}
-      <section className="bg-background/80">
+      <section className="bg-background/80 py-12 px-4 md:px-12">
         <div className="max-w-6xl mx-auto">
           <WorkSection />
         </div>
       </section>
       {/* Features Overview */}
-      <section className="py-24 px-6 md:px-28 bg-card/40 border-t border-border">
+      <section className="py-16 px-4 md:px-12 bg-card/40 border-t border-border">
         <div className="max-w-4xl mx-auto">
           <h2 className="font-[var(--font-bebas)] text-4xl md:text-6xl tracking-tight mb-8">What BuildSync Offers</h2>
           <ul className="grid grid-cols-1 md:grid-cols-2 gap-8 font-mono text-sm text-foreground/90">

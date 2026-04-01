@@ -5,6 +5,7 @@ import { logAudit } from "@/lib/audit"
 
 export type UserRole =
   | "facility_manager"
+  | "building_manager"
   | "building_owner"
   | "property_manager"
   | "resident"
@@ -51,6 +52,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const storedUsers = JSON.parse(localStorage.getItem("buildsync_users") || "[]")
     const roles: UserRole[] = [
       "facility_manager",
+      "building_manager",
       "building_owner",
       "property_manager",
       "resident",
@@ -167,6 +169,7 @@ export function useAuth() {
 export function getRoleDisplayName(role: UserRole): string {
   const names: Record<UserRole, string> = {
     facility_manager: "Facility Manager",
+    building_manager: "Building Manager",
     building_owner: "Building Owner",
     property_manager: "Property Manager",
     resident: "Resident",
