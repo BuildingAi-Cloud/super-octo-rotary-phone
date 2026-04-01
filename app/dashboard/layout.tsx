@@ -13,7 +13,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   return (
     <main className="relative min-h-screen bg-background p-4 md:p-8">
       <div className="grid-bg fixed inset-0 opacity-30" aria-hidden="true" />
-      <div className="relative z-10 max-w-[1400px] w-full mx-auto">
+      <div className="relative z-10 w-full max-w-[100vw] sm:max-w-[95vw] md:max-w-[900px] lg:max-w-[1200px] xl:max-w-[1400px] mx-auto px-2 sm:px-4 md:px-8">
         <section className="mt-6">{children}</section>
       </div>
     </main>
