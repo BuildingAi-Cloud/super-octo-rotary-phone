@@ -12,7 +12,7 @@ export default function OpenRequestsPage() {
   const [requests] = useState(mockRequests);
 
   return (
-    <section className="mt-6">
+    <section className="mt-6 bg-background rounded-lg shadow-sm p-6">
       <h1 className="text-2xl font-bold mb-4">All Open Requests</h1>
       <div className="overflow-x-auto">
         <table className="w-full border">

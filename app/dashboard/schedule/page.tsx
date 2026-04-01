@@ -3,7 +3,7 @@ import FacilityManagerSchedule from "@/components/dashboards/facility-manager-sc
 
 export default function FacilityManagerSchedulePage() {
   return (
-    <section className="mt-6">
+    <section className="mt-6 bg-background rounded-lg shadow-sm p-6">
       <nav className="mb-6 text-sm text-muted-foreground">
         <Link href="/dashboard" className="hover:underline">Dashboard</Link>
         <span className="mx-2">/</span>
