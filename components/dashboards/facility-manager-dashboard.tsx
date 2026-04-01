@@ -222,6 +222,10 @@ export function FacilityManagerDashboard({ user }: { user: User }) {
       router.push("/dashboard/schedule");
       return;
     }
+    if (tile === "Open Requests") {
+      router.push("/dashboard/open-requests");
+      return;
+    }
     // Add navigation or dialog logic for other tiles here
   };
 
