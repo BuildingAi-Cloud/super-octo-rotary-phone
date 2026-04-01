@@ -11,7 +11,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
   return (
     <main className="min-h-screen bg-background p-4 md:p-8">
+      <div className="max-w-[1400px] w-full mx-auto">
         <section className="mt-6">{children}</section>
+      </div>
     </main>
   )
 }
