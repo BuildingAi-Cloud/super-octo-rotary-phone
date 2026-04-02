@@ -14,3 +14,6 @@ This page is automatically generated.
 - /api/governance/_storage
 - /api/governance
 - /api/otp
+- /api/owner-banks/[id]
+- /api/owner-banks/_storage
+- /api/owner-banks

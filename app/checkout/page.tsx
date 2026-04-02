@@ -13,7 +13,6 @@ function CheckoutContent() {
   const productId = searchParams.get("plan") || "professional"
   const [billingInterval, setBillingInterval] = useState<BillingInterval>((searchParams.get("interval") as BillingInterval) || "monthly")
   const [units, setUnits] = useState<number>(parseInt(searchParams.get("units") || "50", 10))
-  const unitSuffix = formatBillingSuffix(billingInterval)
   
   const product = getProductById(productId)
 
@@ -40,6 +39,7 @@ function CheckoutContent() {
   const totalPrice = (unitPriceInCents * safeUnits) / 100
   const approxMonthly = billingInterval === "yearly" ? totalPrice / 12 : totalPrice
   const billingLabel = billingInterval === "yearly" ? "Yearly Total" : "Monthly Total"
+  const unitSuffix = formatBillingSuffix(billingInterval)
 
   return (
     <div className="w-full max-w-4xl mx-auto">
