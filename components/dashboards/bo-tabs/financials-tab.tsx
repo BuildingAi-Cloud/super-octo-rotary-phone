@@ -2,6 +2,7 @@
 
 import React, { useState, useCallback, useEffect } from "react";
 import { Icons, SectionCard, KpiCard, SimpleBarChart, FilterChip, Badge } from "./bo-shared";
+import { useAuth } from "@/lib/auth-context";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -222,6 +223,7 @@ function formatDateTime(ts: string): string {
 // ─── Component ────────────────────────────────────────────────────────────────
 
 export default function FinancialsTab() {
+  const { user } = useAuth();
   const [period,       setPeriod]       = useState<Period>("quarterly");
   const [arrearsFilter,setArrearsFilter]= useState<"all" | "high" | "medium" | "low">("all");
   const [showLedger,   setShowLedger]   = useState(false);
@@ -247,12 +249,29 @@ export default function FinancialsTab() {
       if (ar) setArrears(JSON.parse(ar));
       const bg = localStorage.getItem("fin_budgets");
       if (bg) setBudgets(JSON.parse(bg));
-      const bk = localStorage.getItem("fin_owner_banks");
-      if (bk) setBanks(JSON.parse(bk));
-      const be = localStorage.getItem("fin_owner_bank_events");
-      if (be) setBankEvents(JSON.parse(be));
     } catch { /* ignore stale/corrupt data */ }
   }, []);
+
+  useEffect(() => {
+    let active = true;
+
+    async function loadOwnerBanks() {
+      if (!user || (user.role !== "building_owner" && user.role !== "admin")) return;
+      try {
+        const res = await fetch(`/api/owner-banks?ownerId=${encodeURIComponent(user.id)}&role=${encodeURIComponent(user.role)}`, { cache: "no-store" });
+        if (!res.ok) return;
+        const payload = (await res.json()) as { banks?: OwnerBankAccount[]; events?: BankEvent[] };
+        if (!active) return;
+        if (Array.isArray(payload.banks)) setBanks(payload.banks);
+        if (Array.isArray(payload.events)) setBankEvents(payload.events);
+      } catch {
+        // Keep local snapshot when API is not reachable.
+      }
+    }
+
+    void loadOwnerBanks();
+    return () => { active = false; };
+  }, [user]);
 
   const showToast = useCallback((msg: string) => {
     setToast(msg);
@@ -378,6 +397,24 @@ export default function FinancialsTab() {
       writeBanks(next);
       appendBankEvent(editingBankId, `Updated bank details${prevBank?.nickname ? ` for ${prevBank.nickname}` : ""}`);
       showToast("Bank account updated");
+
+      if (user && (user.role === "building_owner" || user.role === "admin")) {
+        void fetch(`/api/owner-banks/${editingBankId}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            ownerId: user.id,
+            role: user.role,
+            bankName,
+            accountHolder,
+            nickname,
+            accountType: bankForm.accountType,
+            routingLast4,
+            accountLast4,
+          }),
+        });
+      }
+
       resetBankForm();
       return;
     }
@@ -399,15 +436,59 @@ export default function FinancialsTab() {
     writeBanks([bank, ...banks]);
     appendBankEvent(id, "Bank account added and pending verification");
     showToast("Bank account added");
+
+    if (user && (user.role === "building_owner" || user.role === "admin")) {
+      void fetch("/api/owner-banks", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          ownerId: user.id,
+          role: user.role,
+          bankName,
+          accountHolder,
+          accountType: bankForm.accountType,
+          routingLast4,
+          accountLast4,
+          nickname,
+        }),
+      }).then(async (res) => {
+        if (!res.ok) return;
+        const payload = (await res.json()) as { bank?: OwnerBankAccount; events?: BankEvent[] };
+        if (payload.bank) {
+          setBanks((prev) => {
+            const merged = [payload.bank!, ...prev.filter((b) => b.id !== payload.bank!.id)];
+            try { localStorage.setItem("fin_owner_banks", JSON.stringify(merged)); } catch { /* noop */ }
+            return merged;
+          });
+        }
+        if (Array.isArray(payload.events)) {
+          setBankEvents(payload.events);
+          try { localStorage.setItem("fin_owner_bank_events", JSON.stringify(payload.events)); } catch { /* noop */ }
+        }
+      }).catch(() => {
+        // Keep optimistic local state.
+      });
+    }
+
     resetBankForm();
-  }, [appendBankEvent, bankForm, banks, editingBankId, resetBankForm, showToast, writeBanks]);
+  }, [appendBankEvent, bankForm, banks, editingBankId, resetBankForm, showToast, user, writeBanks]);
 
   const setDefaultBank = useCallback((bankId: string) => {
     const next = banks.map((b) => ({ ...b, isDefault: b.id === bankId, updatedAt: b.id === bankId ? new Date().toISOString() : b.updatedAt }));
     writeBanks(next);
     appendBankEvent(bankId, "Set as default payout bank");
     showToast("Default bank updated");
-  }, [appendBankEvent, banks, showToast, writeBanks]);
+
+    if (user && (user.role === "building_owner" || user.role === "admin")) {
+      void fetch(`/api/owner-banks/${bankId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ownerId: user.id, role: user.role, isDefault: true }),
+      }).catch(() => {
+        // Keep optimistic local state.
+      });
+    }
+  }, [appendBankEvent, banks, showToast, user, writeBanks]);
 
   const setBankStatus = useCallback((bankId: string, status: BankAccountStatus) => {
     const statusLabel: Record<BankAccountStatus, string> = {
@@ -428,7 +509,28 @@ export default function FinancialsTab() {
     writeBanks(next);
     appendBankEvent(bankId, statusLabel[status]);
     showToast(statusLabel[status]);
-  }, [appendBankEvent, banks, showToast, writeBanks]);
+
+    if (user && (user.role === "building_owner" || user.role === "admin")) {
+      void fetch(`/api/owner-banks/${bankId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ownerId: user.id, role: user.role, status }),
+      }).then(async (res) => {
+        if (!res.ok) return;
+        const payload = (await res.json()) as { banks?: OwnerBankAccount[]; events?: BankEvent[] };
+        if (Array.isArray(payload.banks)) {
+          setBanks(payload.banks);
+          try { localStorage.setItem("fin_owner_banks", JSON.stringify(payload.banks)); } catch { /* noop */ }
+        }
+        if (Array.isArray(payload.events)) {
+          setBankEvents(payload.events);
+          try { localStorage.setItem("fin_owner_bank_events", JSON.stringify(payload.events)); } catch { /* noop */ }
+        }
+      }).catch(() => {
+        // Keep optimistic local state.
+      });
+    }
+  }, [appendBankEvent, banks, showToast, user, writeBanks]);
 
   const beginEditBank = useCallback((bank: OwnerBankAccount) => {
     setEditingBankId(bank.id);
