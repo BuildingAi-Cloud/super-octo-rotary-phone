@@ -1,18 +1,251 @@
 "use client";
 
-import React, { useState } from "react";
-import { Icons, SectionCard, KpiCard, SimpleBarChart, HorizontalBar, FilterChip, Badge, StatusIndicator } from "./bo-shared";
+import React, { useState, useEffect, useCallback } from "react";
+import { Icons, SectionCard, KpiCard, SimpleBarChart, FilterChip, Badge, StatusIndicator } from "./bo-shared";
 
-const marketBenchmarks = [
-  { metric: "Avg Rent / sqft", yours: "$3.42", market: "$3.18", delta: "+7.5%", favorable: true },
-  { metric: "Occupancy Rate", yours: "96.4%", market: "93.8%", delta: "+2.6%", favorable: true },
-  { metric: "Operating Expense / sqft", yours: "$1.86", market: "$1.72", delta: "+8.1%", favorable: false },
-  { metric: "Cap Rate", yours: "6.8%", market: "6.2%", delta: "+0.6%", favorable: true },
-  { metric: "Utility Cost / unit", yours: "$142", market: "$128", delta: "+10.9%", favorable: false },
-  { metric: "Tenant Turnover Rate", yours: "11.8%", market: "14.2%", delta: "-2.4%", favorable: true },
-  { metric: "Avg Days to Lease", yours: "18", market: "24", delta: "-25%", favorable: true },
-  { metric: "Maintenance Cost / unit", yours: "$86", market: "$94", delta: "-8.5%", favorable: true },
+// ── Market Data ───────────────────────────────────────────────────────────────
+
+type MarketKey =
+  | "New York, NY"
+  | "Los Angeles, CA"
+  | "Chicago, IL"
+  | "Toronto, ON"
+  | "Miami, FL"
+  | "Seattle, WA"
+  | "Austin, TX"
+  | "Boston, MA"
+  | "San Francisco, CA"
+  | "Dallas, TX";
+
+export const ALL_MARKETS: MarketKey[] = [
+  "New York, NY", "Los Angeles, CA", "Chicago, IL", "Toronto, ON",
+  "Miami, FL", "Seattle, WA", "Austin, TX", "Boston, MA",
+  "San Francisco, CA", "Dallas, TX",
 ];
+
+const MARKET_COORDS: Record<MarketKey, [number, number]> = {
+  "New York, NY":      [40.71, -74.00],
+  "Los Angeles, CA":   [34.05, -118.24],
+  "Chicago, IL":       [41.85, -87.65],
+  "Toronto, ON":       [43.65, -79.38],
+  "Miami, FL":         [25.77, -80.19],
+  "Seattle, WA":       [47.61, -122.33],
+  "Austin, TX":        [30.27, -97.74],
+  "Boston, MA":        [42.36, -71.06],
+  "San Francisco, CA": [37.77, -122.42],
+  "Dallas, TX":        [32.78, -96.80],
+};
+
+// Per-market averages — [rentPerSqft, occupancy%, opexPerSqft, capRate%, utilityPerUnit, turnoverRate%, avgDaysToLease, maintPerUnit]
+const MARKET_AVGS: Record<MarketKey, number[]> = {
+  "New York, NY":      [4.85, 97.2, 2.14, 5.4, 168, 9.2,  12, 102],
+  "Los Angeles, CA":   [3.95, 95.8, 1.98, 5.8, 155, 12.4, 22,  98],
+  "Chicago, IL":       [2.85, 91.2, 1.58, 6.9, 118, 16.8, 28,  88],
+  "Toronto, ON":       [3.65, 98.4, 1.82, 4.8, 148,  8.6, 15,  94],
+  "Miami, FL":         [3.25, 94.2, 1.78, 6.2, 162, 14.2, 26,  92],
+  "Seattle, WA":       [3.55, 96.1, 1.92, 5.9, 145, 11.6, 19,  96],
+  "Austin, TX":        [2.95, 88.4, 1.52, 7.2, 112, 18.2, 32,  82],
+  "Boston, MA":        [4.12, 95.6, 2.02, 5.6, 158, 10.4, 16, 100],
+  "San Francisco, CA": [5.10, 93.8, 2.35, 4.9, 175, 13.6, 20, 108],
+  "Dallas, TX":        [2.65, 89.8, 1.45, 7.4, 108, 17.4, 30,  78],
+};
+
+// Per-market avg rents by unit type [Studio, 1BR, 2BR, 3BR, PH]
+const MARKET_RENTS: Record<MarketKey, number[]> = {
+  "New York, NY":      [2800, 3900, 5600, 7200, 12000],
+  "Los Angeles, CA":   [2200, 2850, 4100, 5600,  9200],
+  "Chicago, IL":       [1500, 2000, 2800, 3800,  7200],
+  "Toronto, ON":       [2100, 2700, 3800, 5200,  9800],
+  "Miami, FL":         [1900, 2500, 3600, 4800,  8400],
+  "Seattle, WA":       [1950, 2600, 3700, 5000,  8800],
+  "Austin, TX":        [1600, 2100, 2950, 4000,  7400],
+  "Boston, MA":        [2400, 3200, 4500, 6000, 10200],
+  "San Francisco, CA": [3100, 4200, 6000, 7800, 14000],
+  "Dallas, TX":        [1400, 1900, 2700, 3700,  7000],
+};
+
+const OWN_METRICS = [
+  { metric: "Avg Rent / sqft",          yours: "$3.42", yoursNum: 3.42,  fmt: (v: number) => `$${v.toFixed(2)}`, higherIsBetter: true  },
+  { metric: "Occupancy Rate",           yours: "96.4%", yoursNum: 96.4,  fmt: (v: number) => `${v}%`,           higherIsBetter: true  },
+  { metric: "Operating Expense / sqft", yours: "$1.86", yoursNum: 1.86,  fmt: (v: number) => `$${v.toFixed(2)}`, higherIsBetter: false },
+  { metric: "Cap Rate",                 yours: "6.8%",  yoursNum: 6.8,   fmt: (v: number) => `${v}%`,           higherIsBetter: true  },
+  { metric: "Utility Cost / unit",      yours: "$142",  yoursNum: 142,   fmt: (v: number) => `$${v}`,           higherIsBetter: false },
+  { metric: "Tenant Turnover Rate",     yours: "11.8%", yoursNum: 11.8,  fmt: (v: number) => `${v}%`,           higherIsBetter: false },
+  { metric: "Avg Days to Lease",        yours: "18",    yoursNum: 18,    fmt: (v: number) => `${v}`,            higherIsBetter: false },
+  { metric: "Maintenance Cost / unit",  yours: "$86",   yoursNum: 86,    fmt: (v: number) => `$${v}`,           higherIsBetter: false },
+];
+
+const OWN_RENTS = [1850, 2200, 3100, 4200, 6800];
+const UNIT_LABELS = ["Studio", "1BR", "2BR", "3BR", "PH"];
+
+function buildBenchmarks(market: MarketKey) {
+  return OWN_METRICS.map((m, i) => {
+    const mVal = MARKET_AVGS[market][i];
+    const delta = ((m.yoursNum - mVal) / mVal) * 100;
+    const favorable = m.higherIsBetter ? m.yoursNum >= mVal : m.yoursNum <= mVal;
+    return { metric: m.metric, yours: m.yours, market: m.fmt(mVal), delta: `${delta >= 0 ? "+" : ""}${delta.toFixed(1)}%`, favorable };
+  });
+}
+
+function nearestMarket(lat: number, lng: number): MarketKey {
+  let nearest: MarketKey = "New York, NY";
+  let minDist = Infinity;
+  for (const [key, [clat, clng]] of Object.entries(MARKET_COORDS) as [MarketKey, [number, number]][]) {
+    const d = Math.sqrt((lat - clat) ** 2 + (lng - clng) ** 2);
+    if (d < minDist) { minDist = d; nearest = key; }
+  }
+  return nearest;
+}
+
+type LocationMode = "auto" | "manual" | "disabled";
+type GeoStatus    = "idle" | "detecting" | "resolved" | "denied";
+
+const LS_MODE   = "buildsync_market_loc_mode";
+const LS_MARKET = "buildsync_market_loc_market";
+
+// ── Extracted sub-components (must live outside SmartInsightsTab so React
+//    doesn't remount them on every render cycle) ────────────────────────────
+
+function MarketDropdown({
+  value,
+  onChange,
+}: {
+  value: MarketKey;
+  onChange: (m: MarketKey) => void;
+}) {
+  return (
+    <select
+      value={value}
+      onChange={(e) => onChange(e.target.value as MarketKey)}
+      className="bg-background border border-border/40 rounded px-2 py-0.5 font-mono text-[10px] focus:outline-none focus:border-accent/60 text-foreground"
+    >
+      {ALL_MARKETS.map((m) => (
+        <option key={m} value={m}>{m}</option>
+      ))}
+    </select>
+  );
+}
+
+function LocationControl({
+  locationMode,
+  geoStatus,
+  selectedMarket,
+  onChangeMode,
+  onChangeMarket,
+  onRetryGps,
+}: {
+  locationMode: LocationMode;
+  geoStatus: GeoStatus;
+  selectedMarket: MarketKey;
+  onChangeMode: (m: LocationMode) => void;
+  onChangeMarket: (m: MarketKey) => void;
+  onRetryGps: () => void;
+}) {
+  const LockBtn = () => (
+    <button
+      onClick={() => onChangeMode("disabled")}
+      className="font-mono text-[10px] text-muted-foreground hover:text-red-400 transition-colors"
+      title="Disable for privacy"
+    >
+      <svg className="w-3 h-3" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+        <rect x="3" y="11" width="18" height="11" rx="2" />
+        <path d="M7 11V7a5 5 0 0110 0v4" />
+      </svg>
+    </button>
+  );
+
+  // Initial auto — waiting for useEffect to fire geolocation
+  if (locationMode === "auto" && geoStatus === "idle") {
+    return (
+      <div className="flex items-center gap-2 text-[10px] font-mono text-muted-foreground">
+        <span className="w-3 h-3 border border-accent border-t-transparent rounded-full animate-spin" />
+        Preparing…
+      </div>
+    );
+  }
+
+  if (locationMode === "auto" && geoStatus === "detecting") {
+    return (
+      <div className="flex items-center gap-2 text-[10px] font-mono text-muted-foreground">
+        <span className="w-3 h-3 border border-accent border-t-transparent rounded-full animate-spin" />
+        Detecting location…
+      </div>
+    );
+  }
+
+  if (locationMode === "auto" && geoStatus === "resolved") {
+    return (
+      <div className="flex items-center gap-2">
+        <span className="w-2 h-2 rounded-full bg-green-500 shrink-0" />
+        <span className="font-mono text-[10px] text-green-400">{selectedMarket}</span>
+        <span className="font-mono text-[10px] text-muted-foreground">GPS</span>
+        <button
+          onClick={() => onChangeMode("manual")}
+          className="font-mono text-[10px] text-muted-foreground hover:text-foreground underline underline-offset-2 transition-colors"
+        >
+          Change
+        </button>
+        <LockBtn />
+      </div>
+    );
+  }
+
+  if (locationMode === "auto" && geoStatus === "denied") {
+    return (
+      <div className="flex items-center gap-2 flex-wrap">
+        <span className="flex items-center gap-1 font-mono text-[10px] text-amber-400">
+          <svg className="w-3 h-3" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+            <path d="M12 9v4m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
+          </svg>
+          Location denied
+        </span>
+        <MarketDropdown value={selectedMarket} onChange={onChangeMarket} />
+        <LockBtn />
+      </div>
+    );
+  }
+
+  if (locationMode === "manual") {
+    return (
+      <div className="flex items-center gap-2 flex-wrap">
+        <span className="font-mono text-[10px] text-muted-foreground">Market:</span>
+        <MarketDropdown value={selectedMarket} onChange={onChangeMarket} />
+        <button
+          onClick={onRetryGps}
+          className="font-mono text-[10px] text-accent hover:text-accent/80 transition-colors"
+          title="Try GPS"
+        >
+          <svg className="w-3 h-3" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+            <circle cx="12" cy="12" r="3" />
+            <path d="M12 2v3m0 14v3M2 12h3m14 0h3" />
+          </svg>
+        </button>
+        <LockBtn />
+      </div>
+    );
+  }
+
+  // disabled
+  return (
+    <div className="flex items-center gap-2">
+      <span className="flex items-center gap-1.5 font-mono text-[10px] text-muted-foreground border border-border/30 rounded px-2 py-0.5">
+        <svg className="w-3 h-3" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+          <rect x="3" y="11" width="18" height="11" rx="2" />
+          <path d="M7 11V7a5 5 0 0110 0v4" />
+        </svg>
+        Location disabled
+      </span>
+      <button
+        onClick={onRetryGps}
+        className="font-mono text-[10px] text-accent hover:text-accent/80 underline underline-offset-2 transition-colors"
+      >
+        Enable
+      </button>
+    </div>
+  );
+}
+
+// ── Static tab data ───────────────────────────────────────────────────────────
 
 const predictiveAlerts = [
   { asset: "HVAC AHU-1 (Floor 3-6)", prediction: "Compressor failure within 60 days", confidence: 87, severity: "critical" as const, action: "Schedule replacement", savingsIfPrevented: "$18,400" },
@@ -33,36 +266,83 @@ const managementKpis = [
   { metric: "Amenity Utilization", value: "78%", target: "70%", score: 86, trend: "stable" as const },
 ];
 
-const rentCompChart = [
-  { label: "Studio", value: 1850, color: "bg-accent/60" },
-  { label: "1BR", value: 2200, color: "bg-accent/60" },
-  { label: "2BR", value: 3100, color: "bg-accent/60" },
-  { label: "3BR", value: 4200, color: "bg-accent/60" },
-  { label: "PH", value: 6800, color: "bg-accent/60" },
-];
-
-const marketRentChart = [
-  { label: "Studio", value: 1720, color: "bg-muted-foreground/30" },
-  { label: "1BR", value: 2050, color: "bg-muted-foreground/30" },
-  { label: "2BR", value: 2880, color: "bg-muted-foreground/30" },
-  { label: "3BR", value: 3900, color: "bg-muted-foreground/30" },
-  { label: "PH", value: 6200, color: "bg-muted-foreground/30" },
-];
-
 export default function SmartInsightsTab() {
   const [benchmarkSort, setBenchmarkSort] = useState<"all" | "favorable" | "unfavorable">("all");
 
-  const filteredBenchmarks = benchmarkSort === "all" ? marketBenchmarks : marketBenchmarks.filter((b) =>
-    benchmarkSort === "favorable" ? b.favorable : !b.favorable
+  // ── Location state (persisted) ───────────────────────────────────────────
+  const [locationMode, setLocationMode] = useState<LocationMode>(() => {
+    if (typeof window === "undefined") return "auto";
+    return (localStorage.getItem(LS_MODE) as LocationMode) || "auto";
+  });
+  const [geoStatus, setGeoStatus] = useState<GeoStatus>("idle");
+  const [selectedMarket, setSelectedMarket] = useState<MarketKey>(() => {
+    if (typeof window === "undefined") return "New York, NY";
+    return (localStorage.getItem(LS_MARKET) as MarketKey) || "New York, NY";
+  });
+
+  const handleChangeMode = useCallback((mode: LocationMode) => {
+    setLocationMode(mode);
+    localStorage.setItem(LS_MODE, mode);
+  }, []);
+
+  const handleChangeMarket = useCallback((market: MarketKey) => {
+    setSelectedMarket(market);
+    localStorage.setItem(LS_MARKET, market);
+    setLocationMode("manual");
+    localStorage.setItem(LS_MODE, "manual");
+  }, []);
+
+  const handleRetryGps = useCallback(() => {
+    handleChangeMode("auto");
+    setGeoStatus("idle");
+  }, [handleChangeMode]);
+
+  const detectLocation = useCallback(() => {
+    if (typeof navigator === "undefined" || !navigator.geolocation) {
+      setGeoStatus("denied");
+      handleChangeMode("manual");
+      return;
+    }
+    setGeoStatus("detecting");
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        const market = nearestMarket(pos.coords.latitude, pos.coords.longitude);
+        setSelectedMarket(market);
+        localStorage.setItem(LS_MARKET, market);
+        setGeoStatus("resolved");
+      },
+      () => {
+        setGeoStatus("denied");
+        handleChangeMode("manual");
+      },
+      { timeout: 8000 },
+    );
+  }, [handleChangeMode]);
+
+  useEffect(() => {
+    if (locationMode === "auto" && geoStatus === "idle") detectLocation();
+  }, [locationMode, geoStatus, detectLocation]);
+
+  // ── Derived benchmark data ───────────────────────────────────────────────
+  const activeMarket = locationMode === "disabled" ? null : selectedMarket;
+  const benchmarks   = activeMarket ? buildBenchmarks(activeMarket) : [];
+
+  const filteredBenchmarks = benchmarkSort === "all" ? benchmarks : benchmarks.filter((b) =>
+    benchmarkSort === "favorable" ? b.favorable : !b.favorable,
   );
 
   const overallMgmtScore = Math.round(managementKpis.reduce((sum, k) => sum + k.score, 0) / managementKpis.length);
+
+  const ownRentChart    = OWN_RENTS.map((v, i) => ({ label: UNIT_LABELS[i], value: v, color: "bg-accent/60" }));
+  const marketRentChart = activeMarket
+    ? MARKET_RENTS[activeMarket].map((v, i) => ({ label: UNIT_LABELS[i], value: v, color: "bg-muted-foreground/30" }))
+    : [];
 
   return (
     <div className="space-y-6">
       {/* Top-level KPIs */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-        <KpiCard label="Market Position" value="Top 15%" change="vs local comps" positive color="text-green-500" />
+        <KpiCard label="Market Position" value="Top 15%" change={activeMarket ? `vs ${activeMarket}` : "location disabled"} positive={!!activeMarket} color="text-green-500" />
         <KpiCard label="Predictive Alerts" value={String(predictiveAlerts.length)} change="1 Critical" positive={false} color="text-yellow-500" />
         <KpiCard label="Mgmt Performance" value={`${overallMgmtScore}/100`} change="+3 pts QoQ" positive color="text-accent" />
         <KpiCard label="Potential Savings" value="$85,300" change="If preventative" positive color="text-blue-500" />
@@ -72,20 +352,57 @@ export default function SmartInsightsTab() {
       <SectionCard
         title="Market Benchmarking"
         actions={
-          <div className="flex items-center gap-1">
-            {(["all", "favorable", "unfavorable"] as const).map((f) => (
-              <FilterChip key={f} label={f} active={benchmarkSort === f} onClick={() => setBenchmarkSort(f)} />
-            ))}
+          <div className="flex items-center gap-3 flex-wrap justify-end">
+            <LocationControl
+              locationMode={locationMode}
+              geoStatus={geoStatus}
+              selectedMarket={selectedMarket}
+              onChangeMode={handleChangeMode}
+              onChangeMarket={handleChangeMarket}
+              onRetryGps={handleRetryGps}
+            />
+            {activeMarket && (
+              <div className="flex items-center gap-1">
+                {(["all", "favorable", "unfavorable"] as const).map((f) => (
+                  <FilterChip key={f} label={f} active={benchmarkSort === f} onClick={() => setBenchmarkSort(f)} />
+                ))}
+              </div>
+            )}
           </div>
         }
       >
+        {/* Location info bar */}
+        {activeMarket && (
+          <div className="flex items-center gap-2 mb-3 px-1">
+            <svg className="w-3.5 h-3.5 text-accent shrink-0" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3" /><path d="M12 2v3m0 14v3M2 12h3m14 0h3" /></svg>
+            <span className="font-mono text-[10px] text-muted-foreground">
+              Comparing against{" "}
+              <span className="text-foreground font-medium">{activeMarket}</span>
+              {" "}local market averages
+            </span>
+          </div>
+        )}
+
+        {/* Disabled state */}
+        {!activeMarket && (
+          <div className="py-12 flex flex-col items-center gap-3 text-center">
+            <svg className="w-8 h-8 text-muted-foreground/40" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2" /><path d="M7 11V7a5 5 0 0110 0v4" /></svg>
+            <p className="font-mono text-xs text-muted-foreground">Location data disabled</p>
+            <p className="font-mono text-[10px] text-muted-foreground/60">Enable location or select a market to view benchmarks</p>
+          </div>
+        )}
+
+        {/* Benchmark table */}
+        {activeMarket && (
         <div className="overflow-x-auto">
           <table className="w-full text-xs font-mono">
             <thead>
               <tr className="border-b border-border/30">
                 <th className="text-left py-2 text-[10px] uppercase tracking-wider text-muted-foreground font-normal">Metric</th>
                 <th className="text-right py-2 text-[10px] uppercase tracking-wider text-muted-foreground font-normal">Your Building</th>
-                <th className="text-right py-2 text-[10px] uppercase tracking-wider text-muted-foreground font-normal">Market Avg</th>
+                <th className="text-right py-2 text-[10px] uppercase tracking-wider text-muted-foreground font-normal truncate max-w-[120px]">
+                  {activeMarket} Avg
+                </th>
                 <th className="text-right py-2 text-[10px] uppercase tracking-wider text-muted-foreground font-normal">Delta</th>
                 <th className="text-center py-2 text-[10px] uppercase tracking-wider text-muted-foreground font-normal">Position</th>
               </tr>
@@ -105,21 +422,24 @@ export default function SmartInsightsTab() {
             </tbody>
           </table>
         </div>
+        )}
       </SectionCard>
 
-      {/* Rent Comparison Chart */}
+      {/* Rent Comparison Chart — only when market is active */}
+      {activeMarket && (
       <div className="grid md:grid-cols-2 gap-6">
         <SectionCard title="Your Rents ($/mo)">
           <div className="h-28">
-            <SimpleBarChart data={rentCompChart} maxHeight={100} />
+            <SimpleBarChart data={ownRentChart} maxHeight={100} />
           </div>
         </SectionCard>
-        <SectionCard title="Market Avg Rents ($/mo)">
+        <SectionCard title={`${activeMarket} Avg Rents ($/mo)`}>
           <div className="h-28">
             <SimpleBarChart data={marketRentChart} maxHeight={100} />
           </div>
         </SectionCard>
       </div>
+      )}
 
       {/* Predictive Maintenance Alerts */}
       <SectionCard title="Predictive Maintenance Alerts">
