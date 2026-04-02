@@ -71,6 +71,8 @@ export default function OnboardingTab() {
   const [search, setSearch] = useState("");
   const [expanded, setExpanded] = useState<string | null>(null);
 
+  // The queue is filtered in two passes: first by move/workflow state, then by
+  // resident or unit search so operations staff can narrow quickly.
   const filtered = MOVE_RECORDS.filter((r) => {
     if (filter === "move-in") return r.type === "move-in";
     if (filter === "move-out") return r.type === "move-out";
@@ -139,6 +141,8 @@ export default function OnboardingTab() {
                 </button>
 
                 {expanded === r.id && (
+                  // Expanded rows expose the operational checklist and handoff
+                  // details needed to complete or close a move record.
                   <div className="px-4 pb-4 pt-2 border-t border-border/20 space-y-4">
                     {/* Checklist */}
                     <div>

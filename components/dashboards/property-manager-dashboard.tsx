@@ -2,12 +2,12 @@
 
 import React, { useState, useRef, useEffect } from "react";
 import type { User } from "@/lib/auth-context";
-import { DashboardHeader } from "./dashboard-header";
 import { ScrambleText } from "@/components/scramble-text";
 
 import CommunicationsTab from "./bm-tabs/communications-tab";
 import OnboardingTab from "./bm-tabs/onboarding-tab";
 import AmenitiesTab from "./bm-tabs/amenities-tab";
+import LeasingPipelineTab from "./bm-tabs/leasing-pipeline-tab";
 import PackagesTab from "./bm-tabs/packages-tab";
 import VisitorsTab from "./bm-tabs/visitors-tab";
 import KeysFobsTab from "./bm-tabs/keys-fobs-tab";
@@ -28,6 +28,7 @@ const TABS = [
   { id: "communications", label: "Comms Hub", section: "Tenant Relations" },
   { id: "onboarding", label: "Onboarding", section: "Tenant Relations" },
   { id: "amenities", label: "Amenities", section: "Tenant Relations" },
+  { id: "leasing-pipeline", label: "Leasing Pipeline", section: "Tenant Relations" },
   // Operational Logistics
   { id: "packages", label: "Packages", section: "Operations" },
   { id: "visitors", label: "Visitors", section: "Operations" },
@@ -58,6 +59,8 @@ const SECTION_COLORS: Record<string, string> = {
 };
 
 /* ─── Overview data ──────────────────────────────────────────────────────────── */
+// The PM overview mixes static operational context with a few interactive,
+// locally persisted workflows such as renewals and shift notes.
 const quickStats = [
   { label: "Leases Active", value: "184", detail: "96.4% occupancy" },
   { label: "Renewals Due", value: "12", detail: "next 90 days" },
@@ -73,16 +76,73 @@ const leasingPipeline = [
   { unit: "Unit 302", sqft: "1,100", status: "in_negotiation", applications: 2, askingRent: "$2,900" },
 ];
 
-const upcomingRenewals = [
-  { unit: "Unit 1204", tenant: "J. Martinez", expires: "May 31", currentRent: "$2,800", proposedRent: "$2,940", status: "pending" },
-  { unit: "Unit 605", tenant: "R. Chen", expires: "Jun 15", currentRent: "$2,200", proposedRent: "$2,310", status: "sent" },
-  { unit: "Unit 902", tenant: "K. Williams", expires: "Jun 30", currentRent: "$3,100", proposedRent: "$3,255", status: "accepted" },
+type RenewalStatus = "pending" | "sent" | "accepted" | "declined";
+
+interface RenewalItem {
+  id: string;
+  unit: string;
+  tenant: string;
+  expires: string;
+  currentRent: string;
+  proposedRent: string;
+  status: RenewalStatus;
+}
+
+const RENEWALS_STORAGE_KEY = "buildsync_pm_upcoming_renewals";
+
+const defaultUpcomingRenewals: RenewalItem[] = [
+  { id: "ren-1", unit: "Unit 1204", tenant: "J. Martinez", expires: "May 31", currentRent: "$2,800", proposedRent: "$2,940", status: "pending" },
+  { id: "ren-2", unit: "Unit 605", tenant: "R. Chen", expires: "Jun 15", currentRent: "$2,200", proposedRent: "$2,310", status: "sent" },
+  { id: "ren-3", unit: "Unit 902", tenant: "K. Williams", expires: "Jun 30", currentRent: "$3,100", proposedRent: "$3,255", status: "accepted" },
 ];
 
-const shiftNotes = [
-  { time: "11:00 AM", note: "FedEx delivery — 12 packages received, all scanned via ImageR", author: "Current Shift" },
-  { time: "9:30 AM", note: "Contractor ABC Plumbing checked in for Unit 605 repair", author: "Current Shift" },
-  { time: "8:00 AM", note: "Morning walkthrough complete — all areas clear", author: "Current Shift" },
+type ShiftNoteStatus = "open" | "in_progress" | "done";
+type ShiftNoteCategory = "ops" | "leasing" | "vendor" | "incident" | "admin";
+
+interface ShiftNote {
+  id: string;
+  time: string;
+  note: string;
+  author: string;
+  status: ShiftNoteStatus;
+  category: ShiftNoteCategory;
+  createdAt: string;
+  updatedAt: string;
+}
+
+const SHIFT_NOTES_STORAGE_KEY = "buildsync_pm_shift_notes";
+
+const defaultShiftNotes: ShiftNote[] = [
+  {
+    id: "note-1",
+    time: "11:00 AM",
+    note: "FedEx delivery — 12 packages received, all scanned via ImageR",
+    author: "Current Shift",
+    status: "open",
+    category: "ops",
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  },
+  {
+    id: "note-2",
+    time: "9:30 AM",
+    note: "Contractor ABC Plumbing checked in for Unit 605 repair",
+    author: "Current Shift",
+    status: "in_progress",
+    category: "vendor",
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  },
+  {
+    id: "note-3",
+    time: "8:00 AM",
+    note: "Morning walkthrough complete — all areas clear",
+    author: "Current Shift",
+    status: "done",
+    category: "ops",
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  },
 ];
 
 const LEASE_STATUS_COLORS: Record<string, string> = {
@@ -95,10 +155,94 @@ const RENEWAL_STATUS_COLORS: Record<string, string> = {
   pending: "bg-yellow-500/20 text-yellow-400",
   sent: "bg-blue-500/20 text-blue-400",
   accepted: "bg-green-500/20 text-green-400",
+  declined: "bg-red-500/20 text-red-400",
 };
 
 /* ─── Overview Tab (PM-specific) ─────────────────────────────────────────────── */
 function OverviewTab() {
+  // Renewals are stored separately so PMs can work the queue without affecting
+  // the rest of the overview cards.
+  const [renewals, setRenewals] = useState<RenewalItem[]>(defaultUpcomingRenewals);
+  const [renewalFilter, setRenewalFilter] = useState<RenewalStatus | "all">("all");
+  const [expandedRenewalId, setExpandedRenewalId] = useState<string | null>(null);
+
+  // Shift notes act like a handoff log between PM shifts and are intentionally
+  // capped to a small recent history in local storage.
+  const [shiftNotes, setShiftNotes] = useState<ShiftNote[]>(defaultShiftNotes);
+  const [showAddNote, setShowAddNote] = useState(false);
+  const [noteDraft, setNoteDraft] = useState("");
+
+  useEffect(() => {
+    try {
+      // Rehydrate the interactive overview state from local storage so PMs keep
+      // their renewal actions and handoff notes across refreshes.
+      const storedRenewals = localStorage.getItem(RENEWALS_STORAGE_KEY);
+      if (storedRenewals) {
+        const parsed = JSON.parse(storedRenewals) as RenewalItem[];
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          setRenewals(parsed);
+        }
+      }
+
+      const storedShiftNotes = localStorage.getItem(SHIFT_NOTES_STORAGE_KEY);
+      if (storedShiftNotes) {
+        const parsed = JSON.parse(storedShiftNotes) as ShiftNote[];
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          setShiftNotes(parsed);
+        }
+      }
+    } catch {
+      // Keep defaults when local storage is unavailable.
+    }
+  }, []);
+
+  const filteredRenewals = renewals.filter((r) => renewalFilter === "all" || r.status === renewalFilter);
+
+  const persistRenewals = (next: RenewalItem[]) => {
+    setRenewals(next);
+    try {
+      localStorage.setItem(RENEWALS_STORAGE_KEY, JSON.stringify(next));
+    } catch {
+      // Non-blocking.
+    }
+  };
+
+  const updateRenewalStatus = (id: string, status: RenewalStatus) => {
+    // Renewal actions are intentionally expressed as status changes so the UI,
+    // filters, and persistence layer all share the same source of truth.
+    const next = renewals.map((r) => r.id === id ? { ...r, status } : r);
+    persistRenewals(next);
+  };
+
+  const addShiftNote = () => {
+    const note = noteDraft.trim();
+    if (!note) return;
+
+    const now = new Date();
+    const next: ShiftNote[] = [
+      {
+        id: `note-${Date.now()}`,
+        time: now.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" }),
+        note,
+        author: "Current Shift",
+        status: "open",
+        category: "ops",
+        createdAt: now.toISOString(),
+        updatedAt: now.toISOString(),
+      },
+      ...shiftNotes,
+    ].slice(0, 20);
+
+    setShiftNotes(next);
+    setNoteDraft("");
+    setShowAddNote(false);
+    try {
+      localStorage.setItem(SHIFT_NOTES_STORAGE_KEY, JSON.stringify(next));
+    } catch {
+      // Non-blocking.
+    }
+  };
+
   return (
     <div className="space-y-6">
       {/* Quick Stats */}
@@ -153,11 +297,25 @@ function OverviewTab() {
         <div className="border border-border/40 bg-card/30 p-6">
           <div className="flex items-center justify-between mb-4">
             <h2 className="font-[var(--font-bebas)] text-xl tracking-wide">UPCOMING RENEWALS</h2>
-            <span className="font-mono text-[10px] text-muted-foreground">{upcomingRenewals.length} due</span>
+            <span className="font-mono text-[10px] text-muted-foreground">{renewals.filter((r) => r.status === "pending" || r.status === "sent").length} due</span>
           </div>
+
+          <div className="flex items-center gap-1.5 mb-3 flex-wrap">
+            {(["all", "pending", "sent", "accepted", "declined"] as const).map((f) => (
+              <button
+                key={f}
+                type="button"
+                onClick={() => setRenewalFilter(f)}
+                className={`px-2.5 py-1 text-[10px] font-mono uppercase tracking-widest rounded border transition-colors ${renewalFilter === f ? "border-accent text-accent bg-accent/10" : "border-border/40 text-muted-foreground hover:text-accent"}`}
+              >
+                {f}
+              </button>
+            ))}
+          </div>
+
           <div className="space-y-3">
-            {upcomingRenewals.map((r) => (
-              <div key={r.unit} className="border border-border/30 p-3">
+            {filteredRenewals.map((r) => (
+              <div key={r.id} className="border border-border/30 p-3">
                 <div className="flex items-center justify-between mb-1">
                   <span className="font-mono text-xs">{r.unit} — {r.tenant}</span>
                   <span className={`px-2 py-0.5 font-mono text-[10px] uppercase tracking-widest ${RENEWAL_STATUS_COLORS[r.status] ?? "bg-muted/40 text-muted-foreground"}`}>
@@ -168,8 +326,51 @@ function OverviewTab() {
                   <span>Expires {r.expires}</span>
                   <span>{r.currentRent} → {r.proposedRent}</span>
                 </div>
+
+                <div className="mt-2 pt-2 border-t border-border/20 flex items-center gap-2 flex-wrap">
+                  <button
+                    type="button"
+                    onClick={() => updateRenewalStatus(r.id, "sent")}
+                    className="px-2 py-0.5 text-[10px] font-mono border border-blue-500/40 text-blue-400 rounded hover:bg-blue-500/10 transition-colors"
+                  >
+                    Send Offer
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => updateRenewalStatus(r.id, "accepted")}
+                    className="px-2 py-0.5 text-[10px] font-mono border border-green-500/40 text-green-400 rounded hover:bg-green-500/10 transition-colors"
+                  >
+                    Mark Accepted
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => updateRenewalStatus(r.id, "declined")}
+                    className="px-2 py-0.5 text-[10px] font-mono border border-red-500/40 text-red-400 rounded hover:bg-red-500/10 transition-colors"
+                  >
+                    Mark Declined
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setExpandedRenewalId((v) => v === r.id ? null : r.id)}
+                    className="ml-auto px-2 py-0.5 text-[10px] font-mono border border-border/40 text-muted-foreground rounded hover:text-foreground transition-colors"
+                  >
+                    {expandedRenewalId === r.id ? "Hide" : "Details"}
+                  </button>
+                </div>
+
+                {expandedRenewalId === r.id && (
+                  <div className="mt-2 p-2 border border-border/20 rounded bg-background/50 font-mono text-[10px] text-muted-foreground">
+                    Suggested next step: {r.status === "pending" ? "Contact tenant and send offer" : r.status === "sent" ? "Follow up in 48h" : r.status === "accepted" ? "Prepare renewal doc package" : "Start backfill leasing plan"}
+                  </div>
+                )}
               </div>
             ))}
+
+            {filteredRenewals.length === 0 && (
+              <div className="border border-border/20 p-3 text-center font-mono text-xs text-muted-foreground">
+                No renewals in this filter.
+              </div>
+            )}
           </div>
         </div>
       </div>
@@ -178,11 +379,50 @@ function OverviewTab() {
       <div className="border border-border/40 bg-card/30 p-6">
         <div className="flex items-center justify-between mb-4">
           <h2 className="font-[var(--font-bebas)] text-xl tracking-wide">SHIFT LOG</h2>
-          <button className="font-mono text-[10px] uppercase tracking-widest text-accent hover:underline">+ Add Note</button>
+          <button
+            type="button"
+            onClick={() => setShowAddNote((v) => !v)}
+            className="font-mono text-[10px] uppercase tracking-widest text-accent hover:underline"
+          >
+            {showAddNote ? "Close" : "+ Add Note"}
+          </button>
         </div>
+
+        {showAddNote && (
+          <div className="mb-4 border border-border/30 rounded p-3 bg-background/50">
+            <label className="block font-mono text-[10px] uppercase tracking-widest text-muted-foreground mb-2">New shift note</label>
+            <textarea
+              value={noteDraft}
+              onChange={(e) => setNoteDraft(e.target.value)}
+              rows={3}
+              placeholder="Enter handover/operations update..."
+              className="w-full border border-border/40 bg-background rounded px-3 py-2 text-xs font-mono focus:outline-none focus:border-accent/60"
+            />
+            <div className="flex items-center gap-2 mt-2">
+              <button
+                type="button"
+                onClick={addShiftNote}
+                className="px-3 py-1.5 border border-accent/40 bg-accent/10 text-accent text-[10px] font-mono uppercase tracking-widest rounded hover:bg-accent/20 transition-colors"
+              >
+                Save Note
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setShowAddNote(false);
+                  setNoteDraft("");
+                }}
+                className="px-3 py-1.5 border border-border/40 text-muted-foreground text-[10px] font-mono uppercase tracking-widest rounded hover:text-foreground transition-colors"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        )}
+
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          {shiftNotes.map((note, i) => (
-            <div key={i} className="border-l-2 border-accent/40 pl-3 py-1">
+          {shiftNotes.map((note) => (
+            <div key={note.id} className="border-l-2 border-accent/40 pl-3 py-1">
               <p className="font-mono text-[10px] text-accent mb-1">{note.time}</p>
               <p className="font-mono text-xs text-foreground/80">{note.note}</p>
             </div>
@@ -200,6 +440,7 @@ function renderTab(tab: TabId) {
     case "communications": return <CommunicationsTab />;
     case "onboarding": return <OnboardingTab />;
     case "amenities": return <AmenitiesTab />;
+    case "leasing-pipeline": return <LeasingPipelineTab />;
     case "packages": return <PackagesTab />;
     case "visitors": return <VisitorsTab />;
     case "keys": return <KeysFobsTab />;
@@ -220,6 +461,8 @@ function renderTab(tab: TabId) {
 export function PropertyManagerDashboard({ user }: { user: User }) {
   const [activeTab, setActiveTab] = useState<TabId>("overview");
   const tabBarRef = useRef<HTMLDivElement>(null);
+  const tabRefs = useRef<Array<HTMLButtonElement | null>>([]);
+  const sections = [...new Set(TABS.map((tab) => tab.section))];
 
   useEffect(() => {
     if (!tabBarRef.current) return;
@@ -229,12 +472,41 @@ export function PropertyManagerDashboard({ user }: { user: User }) {
     }
   }, [activeTab]);
 
+  const handleTabKeyDown = (event: React.KeyboardEvent<HTMLButtonElement>, tabs: readonly (typeof TABS)[number][], index: number) => {
+    if (event.key !== "ArrowRight" && event.key !== "ArrowLeft" && event.key !== "Home" && event.key !== "End") {
+      return;
+    }
+
+    event.preventDefault();
+
+    let nextIndex = index;
+    if (event.key === "ArrowRight") {
+      nextIndex = (index + 1) % tabs.length;
+    } else if (event.key === "ArrowLeft") {
+      nextIndex = (index - 1 + tabs.length) % tabs.length;
+    } else if (event.key === "Home") {
+      nextIndex = 0;
+    } else if (event.key === "End") {
+      nextIndex = tabs.length - 1;
+    }
+
+    const nextTab = tabs[nextIndex];
+    setActiveTab(nextTab.id);
+    tabRefs.current[nextIndex]?.focus();
+  };
+
   const activeSection = TABS.find((t) => t.id === activeTab)?.section || "";
+  const visibleTabs = TABS.filter((tab) => tab.section === activeSection);
+
+  const setSection = (section: string) => {
+    const firstTab = TABS.find((tab) => tab.section === section);
+    if (firstTab) {
+      setActiveTab(firstTab.id);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-background text-foreground">
-      <DashboardHeader user={user} />
-
       {/* ─── Title Banner ──────────────────────────────────────────── */}
       <div className="border-b border-border/30 bg-background/90 backdrop-blur-md">
         <div className="max-w-screen-2xl mx-auto px-4 md:px-6 py-3 flex items-center justify-between">
@@ -247,30 +519,61 @@ export function PropertyManagerDashboard({ user }: { user: User }) {
             </p>
           </div>
           <span className="hidden md:block font-mono text-[10px] uppercase tracking-widest px-2 py-0.5 border border-purple-500/40 text-purple-400">
-            16 Tabs
+            17 Tabs
           </span>
         </div>
       </div>
 
       {/* ─── Sticky Tab Bar ──────────────────────────────────────── */}
       <div className="sticky top-14 md:top-16 z-40 bg-background/80 backdrop-blur-md border-b border-border/30">
+        <div className="flex overflow-x-auto scrollbar-hide gap-2 px-4 md:px-6 py-2 border-b border-border/20">
+          {sections.map((section) => {
+            const isActiveSection = activeSection === section;
+            return (
+              <button
+                key={section}
+                type="button"
+                onClick={() => setSection(section)}
+                className={`flex-shrink-0 px-3 py-1.5 text-[10px] font-mono uppercase tracking-widest rounded-md border transition-colors ${
+                  isActiveSection
+                    ? "border-accent text-accent bg-accent/10"
+                    : "border-border/40 text-muted-foreground hover:text-accent hover:border-accent/40"
+                }`}
+              >
+                {section}
+              </button>
+            );
+          })}
+        </div>
+
         <div
           ref={tabBarRef}
-          className="flex overflow-x-auto scrollbar-hide gap-0.5 px-4 md:px-6 py-2"
+          role="tablist"
+          aria-label="Property manager tabs"
+          className="flex overflow-x-auto scrollbar-hide gap-1 px-4 md:px-6 pt-2"
         >
-          {TABS.map((tab) => {
+          {visibleTabs.map((tab, index) => {
             const isActive = activeTab === tab.id;
             const sectionColor = SECTION_COLORS[tab.section] || "border-border/40";
             return (
               <button
                 key={tab.id}
                 type="button"
+                role="tab"
                 data-tab={tab.id}
+                id={`pm-tab-${tab.id}`}
+                aria-selected={isActive}
+                aria-controls={`pm-panel-${tab.id}`}
+                tabIndex={isActive ? 0 : -1}
+                ref={(el) => {
+                  tabRefs.current[index] = el;
+                }}
                 onClick={() => setActiveTab(tab.id)}
-                className={`flex-shrink-0 px-3 md:px-4 py-1.5 text-[10px] md:text-xs font-mono uppercase tracking-wider rounded-md border transition-all whitespace-nowrap ${
+                onKeyDown={(event) => handleTabKeyDown(event, visibleTabs, index)}
+                className={`flex-shrink-0 border-x border-t px-3 md:px-4 py-1.5 text-[10px] md:text-xs font-mono uppercase tracking-wider rounded-t-md border-b-2 transition-all whitespace-nowrap ${
                   isActive
-                    ? "border-accent bg-accent/10 text-accent"
-                    : `${sectionColor} text-muted-foreground hover:text-accent hover:border-accent/40`
+                    ? "border-accent border-b-background bg-background text-accent"
+                    : `${sectionColor} border-b-border/40 bg-card/20 text-muted-foreground hover:text-accent hover:border-accent/40`
                 }`}
                 title={tab.section}
               >
@@ -283,13 +586,18 @@ export function PropertyManagerDashboard({ user }: { user: User }) {
         {/* Section indicator */}
         <div className="px-4 md:px-6 pb-1">
           <span className="text-[9px] font-mono uppercase tracking-widest text-muted-foreground/60">
-            {activeSection}
+            {activeSection} • {visibleTabs.findIndex((tab) => tab.id === activeTab) + 1}/{visibleTabs.length}
           </span>
         </div>
       </div>
 
       {/* ─── Tab Content ─────────────────────────────────────────── */}
-      <main className="px-4 md:px-6 py-6 max-w-[1440px] mx-auto">
+      <main
+        id={`pm-panel-${activeTab}`}
+        role="tabpanel"
+        aria-labelledby={`pm-tab-${activeTab}`}
+        className="px-4 md:px-6 py-6 max-w-[1440px] mx-auto"
+      >
         {renderTab(activeTab)}
       </main>
     </div>

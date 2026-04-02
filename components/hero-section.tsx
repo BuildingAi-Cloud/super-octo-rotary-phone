@@ -1,6 +1,8 @@
 "use client"
 
+import Link from "next/link"
 import { useEffect, useRef } from "react"
+import { motion } from "framer-motion"
 import { ScrambleTextOnHover } from "@/components/scramble-text"
 import { SplitFlapText, SplitFlapMuteToggle, SplitFlapAudioProvider } from "@/components/split-flap-text"
 import { AnimatedNoise } from "@/components/animated-noise"
@@ -34,68 +36,61 @@ export function HeroSection() {
   }, [])
 
   return (
-    <section ref={sectionRef} id="hero" className="relative min-h-screen flex items-center pl-6 md:pl-28 pr-6 md:pr-12">
+    <section ref={sectionRef} id="hero" className="relative min-h-[calc(100svh-5rem)] max-w-screen-xl mx-auto flex items-center justify-start px-3 md:px-6 pt-8 md:pt-10 pb-16 md:pb-20">
       <AnimatedNoise opacity={0.03} />
 
       {/* Left vertical labels */}
-      <div className="absolute left-4 md:left-6 top-1/2 -translate-y-1/2">
+      <div className="hidden lg:block absolute left-6 top-1/2 -translate-y-1/2">
         <span className="font-mono text-[10px] uppercase tracking-[0.3em] text-muted-foreground -rotate-90 origin-left block whitespace-nowrap">
           SECURE
         </span>
       </div>
 
-      {/* Main content */}
-      <div ref={contentRef} className="flex-1 w-full">
+      {/* Main content aligned to the same horizontal gutter as header. */}
+      <div ref={contentRef} className="w-full max-w-[920px] text-left">
         <SplitFlapAudioProvider>
-          <div className="relative">
+          <div className="relative mb-10 md:mb-12">
             <SplitFlapText text="BUILDSYNC" speed={80} />
-            <div className="mt-4">
+            <div className="mt-6 flex justify-start">
               <SplitFlapMuteToggle />
             </div>
           </div>
         </SplitFlapAudioProvider>
 
-        <h2 className="font-[var(--font-bebas)] text-muted-foreground/60 text-[clamp(1rem,3vw,2rem)] mt-4 tracking-wide">
+        <h2 className="font-[var(--font-bebas)] text-muted-foreground/90 text-[clamp(2rem,4vw,3.25rem)] tracking-wide leading-[1.06]">
           Intelligent Facility Management
         </h2>
 
-        <p className="mt-12 max-w-md font-mono text-sm text-muted-foreground leading-relaxed">
+        <p className="mt-7 md:mt-8 font-mono text-sm md:text-base text-muted-foreground leading-8 max-w-[640px]">
           The trusted platform for facility managers, building owners, and property managers. Privacy-first security, operational excellence, and smart building automation.
         </p>
 
-        <div className="mt-16 flex flex-col md:flex-row items-center gap-8">
-          <div className="relative">
-            <select
-              className="border border-foreground/20 px-6 py-3 font-mono text-xs uppercase tracking-widest text-foreground bg-background rounded-md focus:outline-none focus:ring-2 focus:ring-accent"
-              defaultValue="residential"
-              aria-label="Get Started Sector"
+        {/* CTA Section - Improved layout */}
+        <div className="mt-8 md:mt-10">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-start gap-3 md:gap-4">
+            <motion.a
+              href="#solutions"
+              className="w-full sm:w-auto group inline-flex items-center justify-center gap-3 border border-foreground/30 px-7 md:px-9 py-3 md:py-3.5 font-mono text-xs md:text-sm uppercase tracking-wider text-foreground/90 hover:text-foreground hover:bg-foreground/5 hover:border-foreground/60 transition-all duration-300 rounded-lg"
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
             >
-              <option value="residential">Residential (default)</option>
-              <option value="commercial">Commercial</option>
-              <option value="institutional">Institutional</option>
-              <option value="public-sector">Public Sector</option>
-            </select>
-            <span className="ml-3 font-mono text-xs text-muted-foreground">Get Started</span>
+              <ScrambleTextOnHover text="Explore Solutions" as="span" duration={0.6} />
+              <BitmapChevron className="transition-transform duration-[400ms] ease-in-out group-hover:rotate-45 w-4 h-4" />
+            </motion.a>
+            <motion.a
+              href="#insights"
+              className="w-full sm:w-auto font-mono text-xs md:text-sm uppercase tracking-wider text-muted-foreground/70 hover:text-foreground transition-colors duration-200"
+              whileHover={{ scale: 1.02 }}
+            >
+              Latest Insights →
+            </motion.a>
           </div>
-          <a
-            href="#solutions"
-            className="group inline-flex items-center gap-3 border border-foreground/20 px-6 py-3 font-mono text-xs uppercase tracking-widest text-foreground hover:border-accent hover:text-accent transition-all duration-200"
-          >
-            <ScrambleTextOnHover text="Explore Solutions" as="span" duration={0.6} />
-            <BitmapChevron className="transition-transform duration-[400ms] ease-in-out group-hover:rotate-45" />
-          </a>
-          <a
-            href="#insights"
-            className="font-mono text-xs uppercase tracking-widest text-muted-foreground hover:text-foreground transition-colors duration-200"
-          >
-            Latest Insights
-          </a>
         </div>
       </div>
 
-      {/* Floating info tag */}
-      <div className="absolute bottom-8 right-8 md:bottom-12 md:right-12">
-        <div className="border border-border px-4 py-2 font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+      {/* Floating info tag - repositioned */}
+      <div className="hidden lg:block absolute bottom-8 right-8">
+        <div className="border border-border/50 px-4 py-2 font-mono text-[10px] uppercase tracking-widest text-muted-foreground bg-background/40 backdrop-blur-sm rounded-sm">
           ISO 27001 / SOC 2 Certified
         </div>
       </div>

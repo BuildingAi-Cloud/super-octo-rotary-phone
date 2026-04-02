@@ -3,20 +3,22 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useAuth } from "@/lib/auth-context";
 import type { UserRole } from "@/lib/auth-context";
-import { Icons, Badge, SectionCard, EmptyState } from "./bm-shared";
+import { Badge, SectionCard, EmptyState } from "./bm-shared";
 import { addableRoles, ROLE_TEMPLATES } from "@/lib/rbac";
 import {
   listUsers,
   addUser,
   removeUser,
+  updateUserDetails,
   createInvite,
   listInvites,
   revokeInvite,
-  bulkImportCsv,
+  bulkUpsertUsersCsv,
   type StoredUser,
   type Invite,
   type CsvImportResult,
 } from "@/lib/user-management-store";
+import { bulkUpsertLeasingUnitsCsv, listLeasingUnits, updateLeasingUnit } from "@/lib/lease-management-store";
 
 // ── Sub-views ────────────────────────────────────────────────────────────────
 
@@ -27,8 +29,12 @@ export default function UserDirectoryTab() {
   const [view, setView] = useState<SubView>("directory");
   const [users, setUsers] = useState<StoredUser[]>([]);
   const [invites, setInvites] = useState<Invite[]>([]);
+  const [leasingUnits, setLeasingUnits] = useState(() => listLeasingUnits());
   const [search, setSearch] = useState("");
   const [roleFilter, setRoleFilter] = useState<UserRole | "all">("all");
+  const [editingUserId, setEditingUserId] = useState<string | null>(null);
+  const [assignmentUnit, setAssignmentUnit] = useState("");
+  const [assignmentMsg, setAssignmentMsg] = useState<{ type: "ok" | "err"; text: string } | null>(null);
 
   // Add form
   const [addName, setAddName] = useState("");
@@ -46,6 +52,7 @@ export default function UserDirectoryTab() {
   // CSV import
   const fileRef = useRef<HTMLInputElement>(null);
   const [csvResult, setCsvResult] = useState<CsvImportResult | null>(null);
+  const [csvTarget, setCsvTarget] = useState<"users" | "spaces">("users");
   const [csvRole, setCsvRole] = useState<UserRole>("resident");
 
   const allowedRoles = user ? addableRoles(user.role) : [];
@@ -53,11 +60,13 @@ export default function UserDirectoryTab() {
   function refresh() {
     setUsers(listUsers());
     setInvites(listInvites());
+    setLeasingUnits(listLeasingUnits());
   }
 
   useEffect(() => { refresh(); }, []);
 
   if (!user) return null;
+  const actor = user;
 
   // ── Filters ────────────────────────────────────────────────────────────────
 
@@ -81,7 +90,7 @@ export default function UserDirectoryTab() {
   function handleAdd(e: React.FormEvent) {
     e.preventDefault();
     if (!addRole) { setAddMsg({ type: "err", text: "Select a role" }); return; }
-    const res = addUser({ email: addEmail, name: addName, role: addRole, unit: addUnit || undefined }, user);
+    const res = addUser({ email: addEmail, name: addName, role: addRole, unit: addUnit || undefined }, actor);
     if (!res.success) { setAddMsg({ type: "err", text: res.error || "Failed" }); return; }
     setAddMsg({ type: "ok", text: `Added ${addName} as ${ROLE_TEMPLATES[addRole].label}` });
     setAddName(""); setAddEmail(""); setAddRole(""); setAddUnit("");
@@ -91,7 +100,7 @@ export default function UserDirectoryTab() {
   function handleInvite(e: React.FormEvent) {
     e.preventDefault();
     if (!invRole) { setInvMsg({ type: "err", text: "Select a role" }); return; }
-    const res = createInvite({ email: invEmail, role: invRole }, user);
+    const res = createInvite({ email: invEmail, role: invRole }, actor);
     if (!res.success) { setInvMsg({ type: "err", text: res.error || "Failed" }); return; }
     setInvMsg({ type: "ok", text: `Invite sent! Code: ${res.invite?.code}` });
     setInvEmail(""); setInvRole("");
@@ -104,7 +113,9 @@ export default function UserDirectoryTab() {
     const reader = new FileReader();
     reader.onload = () => {
       const text = reader.result as string;
-      const result = bulkImportCsv(text, csvRole, user);
+      const result = csvTarget === "users"
+        ? bulkUpsertUsersCsv(text, csvRole, actor)
+        : bulkUpsertLeasingUnitsCsv(text, actor);
       setCsvResult(result);
       refresh();
     };
@@ -118,15 +129,69 @@ export default function UserDirectoryTab() {
     setTimeout(() => setCopiedId(null), 2000);
   }
 
+  function handleDownloadTemplate() {
+    const template = csvTarget === "users"
+      ? "name,email,unit,role,buildingId\nAmy Torres,amy@building.com,15A,resident,parkview-tower\nJake Miller,jake@building.com,7C,tenant,parkview-tower\nLisa Wang,lisa@building.com,22D,resident,parkview-tower\n"
+      : "unit,building,buildingId,buildingType,floor,sqft,status,currentTenant,tenantEmail,askingRent,currentRent,paymentCollectionMode,invoiceTerms,paymentSchedule\nSuite 2205,Parkview Tower,parkview-tower,commercial,22,1800,leased,David Kim,david.kim@example.com,4500,4500,flexible,Net 15,on_invoice\nSuite 1902,Parkview Tower,parkview-tower,commercial,19,1200,vacant,,,3800,,flexible,Net 30,monthly\n";
+
+    const blob = new Blob([template], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = csvTarget === "users" ? "users-import-template.csv" : "spaces-import-template.csv";
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  }
+
   function handleRemove(id: string) {
     if (!window.confirm("Remove this user?")) return;
-    removeUser(id, user);
+    removeUser(id, actor);
     refresh();
   }
 
   function handleRevoke(id: string) {
-    revokeInvite(id, user);
+    revokeInvite(id, actor);
     refresh();
+  }
+
+  function startAssignmentEdit(target: StoredUser) {
+    setEditingUserId(target.id);
+    setAssignmentUnit(target.unit || "");
+    setAssignmentMsg(null);
+  }
+
+  function cancelAssignmentEdit() {
+    setEditingUserId(null);
+    setAssignmentUnit("");
+    setAssignmentMsg(null);
+  }
+
+  function handleAssignmentSave(target: StoredUser) {
+    const selectedLease = leasingUnits.find((unit) => unit.id === assignmentUnit);
+    if (!selectedLease) {
+      setAssignmentMsg({ type: "err", text: "Select a lease unit to map this user." });
+      return;
+    }
+
+    const userUpdate = updateUserDetails(target.id, { unit: selectedLease.unit, buildingId: selectedLease.buildingId }, actor);
+    if (!userUpdate.success) {
+      setAssignmentMsg({ type: "err", text: userUpdate.error || "Could not update user assignment." });
+      return;
+    }
+
+    updateLeasingUnit(selectedLease.id, {
+      tenantEmail: target.email,
+      currentTenant: target.name,
+      buildingId: selectedLease.buildingId,
+      unit: selectedLease.unit,
+    });
+
+    setAssignmentMsg({ type: "ok", text: `Mapped ${target.name} to ${selectedLease.unit}.` });
+    refresh();
+    setEditingUserId(null);
+    setAssignmentUnit("");
   }
 
   // ── Render ─────────────────────────────────────────────────────────────────
@@ -204,12 +269,14 @@ export default function UserDirectoryTab() {
                     <th className="text-left py-2 px-2">Email</th>
                     <th className="text-left py-2 px-2">Role</th>
                     <th className="text-left py-2 px-2">Unit</th>
+                    <th className="text-left py-2 px-2">Lease Mapping</th>
                     <th className="text-right py-2 px-2">Actions</th>
                   </tr>
                 </thead>
                 <tbody>
                   {filtered.map((u) => {
                     const isStaff = staffRoles.includes(u.role);
+                    const mappedLease = leasingUnits.find((lease) => lease.tenantEmail?.toLowerCase() === u.email.toLowerCase());
                     return (
                       <tr key={u.id} className="border-b border-border/10 hover:bg-card/20 transition-colors">
                         <td className="py-2 px-2">{u.name}</td>
@@ -220,13 +287,60 @@ export default function UserDirectoryTab() {
                           </Badge>
                         </td>
                         <td className="py-2 px-2 text-muted-foreground">{u.unit || "-"}</td>
+                        <td className="py-2 px-2 text-muted-foreground">
+                          {editingUserId === u.id ? (
+                            <div className="space-y-2 max-w-[220px]">
+                              <select
+                                className="w-full bg-background border border-border/40 rounded-md px-2 py-2 font-mono text-[10px]"
+                                value={assignmentUnit}
+                                onChange={(e) => setAssignmentUnit(e.target.value)}
+                              >
+                                <option value="">Select unit...</option>
+                                {leasingUnits.map((lease) => (
+                                  <option key={lease.id} value={lease.id}>{lease.building} - {lease.unit}</option>
+                                ))}
+                              </select>
+                              <div className="flex items-center gap-2">
+                                <button
+                                  onClick={() => handleAssignmentSave(u)}
+                                  className="text-[10px] uppercase text-accent hover:underline"
+                                >
+                                  Save
+                                </button>
+                                <button
+                                  onClick={cancelAssignmentEdit}
+                                  className="text-[10px] uppercase text-muted-foreground hover:text-foreground"
+                                >
+                                  Cancel
+                                </button>
+                              </div>
+                            </div>
+                          ) : mappedLease ? (
+                            <div>
+                              <p>{mappedLease.building} / {mappedLease.unit}</p>
+                              <p className="text-[10px] uppercase tracking-widest text-muted-foreground">{mappedLease.paymentCollectionMode === "owner_direct" ? "Owner direct" : "Portal billing"}</p>
+                            </div>
+                          ) : (
+                            <span>-</span>
+                          )}
+                        </td>
                         <td className="py-2 px-2 text-right">
-                          <button
-                            onClick={() => handleRemove(u.id)}
-                            className="text-red-500/60 hover:text-red-500 transition-colors text-[10px] font-mono uppercase"
-                          >
-                            Remove
-                          </button>
+                          <div className="flex items-center justify-end gap-3">
+                            {(u.role === "resident" || u.role === "tenant") && (
+                              <button
+                                onClick={() => startAssignmentEdit(u)}
+                                className="text-accent hover:text-accent/80 transition-colors text-[10px] font-mono uppercase"
+                              >
+                                {mappedLease ? "Remap" : "Map Lease"}
+                              </button>
+                            )}
+                            <button
+                              onClick={() => handleRemove(u.id)}
+                              className="text-red-500/60 hover:text-red-500 transition-colors text-[10px] font-mono uppercase"
+                            >
+                              Remove
+                            </button>
+                          </div>
                         </td>
                       </tr>
                     );
@@ -234,6 +348,10 @@ export default function UserDirectoryTab() {
                 </tbody>
               </table>
             </div>
+          )}
+
+          {assignmentMsg && (
+            <p className={`mt-4 font-mono text-xs ${assignmentMsg.type === "ok" ? "text-green-400" : "text-red-500"}`}>{assignmentMsg.text}</p>
           )}
         </SectionCard>
       )}
@@ -324,15 +442,21 @@ export default function UserDirectoryTab() {
       {view === "import" && (
         <SectionCard title="Bulk Import from CSV">
           <p className="font-mono text-xs text-muted-foreground mb-4">
-            Upload an Excel or CSV export from your accounting system to add residents in bulk.
-            Required columns: <span className="text-foreground">name</span>, <span className="text-foreground">email</span>.
-            Optional: <span className="text-foreground">unit</span>, <span className="text-foreground">role</span>.
+            Upload CSV files to bulk <span className="text-foreground">create/update residents, tenants, and commercial spaces</span>.
           </p>
 
           <div className="max-w-lg space-y-4">
             <div>
+              <label className="block font-mono text-[10px] uppercase tracking-widest text-muted-foreground mb-1">Import Target</label>
+              <select className="w-full bg-background border border-border/40 rounded-md px-3 py-2 font-mono text-xs" value={csvTarget} onChange={(e) => setCsvTarget(e.target.value as "users" | "spaces")}>
+                <option value="users">Residents / Tenants / Staff (Upsert by email)</option>
+                <option value="spaces">Commercial / Leasing Spaces (Upsert by building+unit)</option>
+              </select>
+            </div>
+
+            <div>
               <label className="block font-mono text-[10px] uppercase tracking-widest text-muted-foreground mb-1">Default Role</label>
-              <select className="w-full bg-background border border-border/40 rounded-md px-3 py-2 font-mono text-xs" value={csvRole} onChange={(e) => setCsvRole(e.target.value as UserRole)}>
+              <select disabled={csvTarget !== "users"} className="w-full bg-background border border-border/40 rounded-md px-3 py-2 font-mono text-xs disabled:opacity-50" value={csvRole} onChange={(e) => setCsvRole(e.target.value as UserRole)}>
                 {allowedRoles.map((r) => (
                   <option key={r} value={r}>{ROLE_TEMPLATES[r].label}</option>
                 ))}
@@ -348,25 +472,42 @@ export default function UserDirectoryTab() {
                 onChange={handleCsvUpload}
                 className="w-full bg-background border border-border/40 rounded-md px-3 py-2 font-mono text-xs file:mr-4 file:py-1 file:px-3 file:border file:border-accent/40 file:rounded file:bg-accent/10 file:text-accent file:font-mono file:text-[10px] file:uppercase file:tracking-widest file:cursor-pointer"
               />
+              <button
+                type="button"
+                onClick={handleDownloadTemplate}
+                className="mt-2 px-3 py-1.5 border border-border/40 text-foreground font-mono text-[10px] uppercase tracking-widest hover:border-accent/60 hover:text-accent transition-colors"
+              >
+                Download Template
+              </button>
             </div>
 
             {/* Sample template */}
             <div className="border border-border/20 rounded-md p-3 bg-card/10">
               <p className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground mb-2">Sample CSV Format</p>
-              <pre className="font-mono text-[10px] text-muted-foreground whitespace-pre">{`name,email,unit,role
+              {csvTarget === "users" ? (
+                <pre className="font-mono text-[10px] text-muted-foreground whitespace-pre">{`name,email,unit,role,buildingId
 Amy Torres,amy@building.com,15A,resident
 Jake Miller,jake@building.com,7C,tenant
 Lisa Wang,lisa@building.com,22D,resident`}</pre>
+              ) : (
+                <pre className="font-mono text-[10px] text-muted-foreground whitespace-pre">{`unit,building,buildingId,buildingType,floor,sqft,status,currentTenant,tenantEmail,askingRent,currentRent,paymentCollectionMode,invoiceTerms,paymentSchedule
+Suite 2205,Parkview Tower,parkview-tower,commercial,22,1800,leased,David Kim,david.kim@example.com,4500,4500,flexible,Net 15,on_invoice
+Suite 1902,Parkview Tower,parkview-tower,commercial,19,1200,vacant,, ,3800,,flexible,Net 30,monthly`}</pre>
+              )}
             </div>
 
             {/* Import results */}
             {csvResult && (
               <div className="border border-border/20 rounded-md p-4 bg-card/10 space-y-2">
                 <p className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">Import Results</p>
-                <div className="grid grid-cols-3 gap-3 text-center">
+                <div className="grid grid-cols-4 gap-3 text-center">
                   <div>
                     <p className="text-lg font-[var(--font-bebas)] text-green-400">{csvResult.added}</p>
                     <p className="text-[10px] font-mono text-muted-foreground">Added</p>
+                  </div>
+                  <div>
+                    <p className="text-lg font-[var(--font-bebas)] text-blue-400">{csvResult.updated}</p>
+                    <p className="text-[10px] font-mono text-muted-foreground">Updated</p>
                   </div>
                   <div>
                     <p className="text-lg font-[var(--font-bebas)] text-yellow-400">{csvResult.skipped}</p>

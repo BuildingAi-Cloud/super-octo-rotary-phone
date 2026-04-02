@@ -1,6 +1,6 @@
 
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useAuth, type UserRole } from "@/lib/auth-context";
@@ -30,53 +30,61 @@ const roleOptions: { value: UserRole; label: string; description: string; pricin
 ];
 
 export default function SignUpPage() {
-    const handleRoleSelect = (selectedRole: UserRole) => {
-      setRole(selectedRole);
-      setStep(2);
-    };
-
-    const handleSubmit = async (e: React.FormEvent) => {
-      e.preventDefault();
-      if (!role) return;
-      setError("");
-      setIsLoading(true);
-      let timeoutId: NodeJS.Timeout | null = null;
-      try {
-        // Timeout fallback: reset loading after 10 seconds
-        timeoutId = setTimeout(() => {
-          setIsLoading(false);
-          setError("Request timed out. Please try again.");
-        }, 10000);
-        const result = await signUp({
-          email,
-          password,
-          name,
-          role,
-          company: company || undefined,
-        });
-        if (timeoutId) clearTimeout(timeoutId);
-        if (result.success) {
-          setStep(3);
-        } else {
-          setError(result.error || "An error occurred");
-        }
-      } catch (error: unknown) {
-        const message = error instanceof Error ? error.message : "An unexpected error occurred"
-        setError(message);
-      } finally {
-        setIsLoading(false);
-      }
-    };
   const router = useRouter();
-  const { signUp } = useAuth();
+  const { signUp, user, isLoading: authLoading } = useAuth();
   const [step, setStep] = useState<1 | 2 | 3>(1);
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [company, setCompany] = useState("");
-  const [role, setRole] = useState<UserRole | "">("");
+  const [role, setRole] = useState<UserRole | "">();
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+
+  // Redirect authenticated users to dashboard (pre-login page protection).
+  useEffect(() => {
+    if (!authLoading && user) {
+      router.push("/dashboard")
+    }
+  }, [user, authLoading, router])
+
+  const handleRoleSelect = (selectedRole: UserRole) => {
+    setRole(selectedRole);
+    setStep(2);
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!role) return;
+    setError("");
+    setIsLoading(true);
+    let timeoutId: NodeJS.Timeout | null = null;
+    try {
+      // Timeout fallback: reset loading after 10 seconds
+      timeoutId = setTimeout(() => {
+        setIsLoading(false);
+        setError("Request timed out. Please try again.");
+      }, 10000);
+      const result = await signUp({
+        email,
+        password,
+        name,
+        role,
+        company: company || undefined,
+      });
+      if (timeoutId) clearTimeout(timeoutId);
+      if (result.success) {
+        setStep(3);
+      } else {
+        setError(result.error || "An error occurred");
+      }
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : "An unexpected error occurred"
+      setError(message);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
     return (
           <main className="relative min-h-screen flex items-center justify-center p-6">

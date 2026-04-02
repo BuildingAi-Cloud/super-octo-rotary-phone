@@ -51,6 +51,7 @@ export interface WebLLMState {
 export function useWebLLM() {
   const engineRef = useRef<WebWorkerMLCEngine | null>(null);
   const abortRef = useRef(false);
+  const systemPromptRef = useRef("");
 
   const [state, setState] = useState<WebLLMState>({
     messages: [],
@@ -175,6 +176,11 @@ export function useWebLLM() {
       const contextMessages = state.messages
         .filter((m) => !m.isError)
         .map((m) => ({ role: m.role as "user" | "assistant" | "system", content: m.content }));
+
+      if (systemPromptRef.current) {
+        contextMessages.unshift({ role: "system", content: systemPromptRef.current });
+      }
+
       contextMessages.push({ role: "user", content: userInput.trim() });
 
       // Stream the response
@@ -239,5 +245,9 @@ export function useWebLLM() {
     setState((prev) => ({ ...prev, messages: [], error: null }));
   }, []);
 
-  return { state, sendMessage, abort, clearMessages, setModel };
+  const setSystemPrompt = useCallback((prompt: string) => {
+    systemPromptRef.current = prompt.trim();
+  }, []);
+
+  return { state, sendMessage, abort, clearMessages, setModel, setSystemPrompt };
 }

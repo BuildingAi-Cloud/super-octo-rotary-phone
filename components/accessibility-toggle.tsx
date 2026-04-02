@@ -15,6 +15,14 @@ export function AccessibilityToggle() {
   const menuRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
+    const saved = JSON.parse(localStorage.getItem("buildsync_accessibility_options") || "[]")
+    if (Array.isArray(saved)) {
+      const valid = saved.filter((key) => OPTIONS.some((opt) => opt.key === key))
+      setSelected(valid)
+    }
+  }, [])
+
+  useEffect(() => {
     function handleClick(e: MouseEvent) {
       if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
         setOpen(false)
@@ -27,7 +35,9 @@ export function AccessibilityToggle() {
   useEffect(() => {
     OPTIONS.forEach(opt => {
       document.body.classList.toggle(opt.key, selected.includes(opt.key))
+      document.documentElement.classList.toggle(opt.key, selected.includes(opt.key))
     })
+    localStorage.setItem("buildsync_accessibility_options", JSON.stringify(selected))
   }, [selected])
 
   function handleToggle(optKey: string, optLabel: string) {
@@ -55,9 +65,11 @@ export function AccessibilityToggle() {
         type="button"
       >
         <span className="sr-only">Accessibility options</span>
-        <svg className="w-5 h-5 text-accent" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24" aria-hidden="true">
-          <circle cx="12" cy="12" r="10" />
-          <path d="M12 7v4m0 0v4m0-4h4m-4 0H8" />
+        <svg className="w-5 h-5 text-accent" viewBox="0 0 24 24" aria-hidden="true">
+          <path
+            fill="currentColor"
+            d="M12 2.75a2.25 2.25 0 1 1 0 4.5 2.25 2.25 0 0 1 0-4.5Zm-6.5 7a1 1 0 0 1 1-1h10.999a1 1 0 1 1 0 2H13.2v3.65l1.9 6.14a1 1 0 1 1-1.91.59L12 17.3l-1.19 3.84a1 1 0 1 1-1.91-.59l1.9-6.14v-3.65H6.5a1 1 0 0 1-1-1Z"
+          />
         </svg>
       </button>
       {open && (

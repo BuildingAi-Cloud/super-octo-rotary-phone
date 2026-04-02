@@ -1,8 +1,7 @@
 "use client"
 
-import React, { useState, useMemo, useCallback } from "react";
+import React, { useState, useMemo, useCallback, useEffect, useRef } from "react";
 import { type User } from "@/lib/auth-context";
-import { DashboardHeader } from "./dashboard-header";
 import { AnimatedNoise } from "@/components/animated-noise";
 import FacilityManagerSchedule from "@/components/dashboards/facility-manager-schedule";
 import { Dialog, DialogContent, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
@@ -65,21 +64,21 @@ const Icons = {
 
 // ─── CONFIG ─────────────────────────────────────────────────────────────────────
 const TABS = [
-  { key: "dashboard", label: "Overview" },
-  { key: "work_orders", label: "Work Orders" },
-  { key: "preventative_maintenance", label: "Preventative" },
-  { key: "equipment_directory", label: "Equipment" },
-  { key: "alerts", label: "IoT Alerts" },
-  { key: "vendors", label: "Vendors" },
-  { key: "compliance", label: "Compliance" },
-  { key: "assets", label: "Assets" },
-  { key: "space", label: "Space" },
-  { key: "reports", label: "Reports" },
-  { key: "documents", label: "Documents" },
-  { key: "workflows", label: "Workflows" },
-  { key: "vendor_database", label: "Vendor DB" },
-  { key: "integrations", label: "Integrations" },
-  { key: "audit_log", label: "Audit Log" },
+  { key: "dashboard", label: "Overview", section: "Core" },
+  { key: "work_orders", label: "Work Orders", section: "Core" },
+  { key: "preventative_maintenance", label: "Preventative", section: "Core" },
+  { key: "equipment_directory", label: "Equipment", section: "Core" },
+  { key: "alerts", label: "IoT Alerts", section: "Core" },
+  { key: "vendors", label: "Vendors", section: "Operations" },
+  { key: "assets", label: "Assets", section: "Operations" },
+  { key: "space", label: "Space", section: "Operations" },
+  { key: "workflows", label: "Workflows", section: "Operations" },
+  { key: "vendor_database", label: "Vendor DB", section: "Operations" },
+  { key: "compliance", label: "Compliance", section: "Admin" },
+  { key: "reports", label: "Reports", section: "Admin" },
+  { key: "documents", label: "Documents", section: "Admin" },
+  { key: "integrations", label: "Integrations", section: "Systems" },
+  { key: "audit_log", label: "Audit Log", section: "Systems" },
 ] as const;
 
 type TabKey = (typeof TABS)[number]["key"];
@@ -1029,13 +1028,54 @@ function AuditLogTab({ entries: initialEntries }: { entries: AuditEntry[] }) {
 export function FacilityManagerDashboard({ user }: { user: User }) {
   const iotEnabled = user && (user as Record<string, unknown>).iotEnabled !== false;
   const [activeTab, setActiveTab] = useState<TabKey>("dashboard");
+  const tabRefs = useRef<Array<HTMLButtonElement | null>>([]);
 
-  const visibleTabs = useMemo(() => {
+  const enabledTabs = useMemo(() => {
     return TABS.filter((tab) => {
       if (tab.key === "alerts" && !iotEnabled) return false;
       return true;
     });
   }, [iotEnabled]);
+
+  useEffect(() => {
+    if (!enabledTabs.some((tab) => tab.key === activeTab)) {
+      setActiveTab(enabledTabs[0]?.key ?? "dashboard");
+    }
+  }, [enabledTabs, activeTab]);
+
+  const sections = useMemo(() => [...new Set(enabledTabs.map((tab) => tab.section))], [enabledTabs]);
+  const activeSection = enabledTabs.find((tab) => tab.key === activeTab)?.section || sections[0] || "Core";
+  const visibleTabs = enabledTabs.filter((tab) => tab.section === activeSection);
+
+  const setSection = (section: string) => {
+    const firstTab = enabledTabs.find((tab) => tab.section === section);
+    if (firstTab) {
+      setActiveTab(firstTab.key);
+    }
+  };
+
+  const handleTabKeyDown = (event: React.KeyboardEvent<HTMLButtonElement>, tabs: readonly (typeof TABS)[number][], index: number) => {
+    if (event.key !== "ArrowRight" && event.key !== "ArrowLeft" && event.key !== "Home" && event.key !== "End") {
+      return;
+    }
+
+    event.preventDefault();
+
+    let nextIndex = index;
+    if (event.key === "ArrowRight") {
+      nextIndex = (index + 1) % tabs.length;
+    } else if (event.key === "ArrowLeft") {
+      nextIndex = (index - 1 + tabs.length) % tabs.length;
+    } else if (event.key === "Home") {
+      nextIndex = 0;
+    } else if (event.key === "End") {
+      nextIndex = tabs.length - 1;
+    }
+
+    const nextTab = tabs[nextIndex];
+    setActiveTab(nextTab.key);
+    tabRefs.current[nextIndex]?.focus();
+  };
 
   const handleNavigateTab = useCallback((tab: TabKey) => {
     setActiveTab(tab);
@@ -1048,24 +1088,42 @@ export function FacilityManagerDashboard({ user }: { user: User }) {
       <div className="grid-bg fixed inset-0 opacity-20 pointer-events-none" aria-hidden="true" />
 
       <div className="relative z-10">
-        {/* Sticky Header */}
-        <DashboardHeader user={user} />
-
         {/* Sticky Tab Bar */}
-        <nav
-          className="sticky top-14 md:top-16 z-40 border-b border-border/30 bg-background/95 backdrop-blur-md"
-          role="tablist"
-          aria-label="Dashboard sections"
-        >
+        <div className="sticky top-14 md:top-16 z-40 border-b border-border/30 bg-background/95 backdrop-blur-md">
           <div className="max-w-screen-2xl mx-auto overflow-x-auto scrollbar-hide">
-            <div className="flex min-w-max px-4 md:px-6">
-              {visibleTabs.map((tab) => (
+            <div className="flex min-w-max px-4 md:px-6 gap-2 py-2 border-b border-border/20">
+              {sections.map((section) => {
+                const isActiveSection = activeSection === section;
+                return (
+                  <button
+                    key={section}
+                    type="button"
+                    onClick={() => setSection(section)}
+                    className={`flex-shrink-0 px-3 py-1.5 text-[10px] font-mono uppercase tracking-widest rounded-md border transition-colors ${
+                      isActiveSection
+                        ? "border-accent text-accent bg-accent/10"
+                        : "border-border/40 text-muted-foreground hover:text-accent hover:border-accent/40"
+                    }`}
+                  >
+                    {section}
+                  </button>
+                );
+              })}
+            </div>
+
+            <nav className="flex min-w-max px-4 md:px-6" role="tablist" aria-label="Facility manager tabs">
+              {visibleTabs.map((tab, index) => (
                 <button
                   key={tab.key}
                   role="tab"
                   type="button"
                   aria-selected={activeTab === tab.key}
                   aria-controls={`tabpanel-${tab.key}`}
+                  tabIndex={activeTab === tab.key ? 0 : -1}
+                  ref={(el) => {
+                    tabRefs.current[index] = el;
+                  }}
+                  onKeyDown={(event) => handleTabKeyDown(event, visibleTabs, index)}
                   className={`py-3 px-3 md:px-4 font-mono text-[10px] md:text-xs uppercase tracking-widest border-b-2 transition-colors duration-200 whitespace-nowrap ${
                     activeTab === tab.key
                       ? "border-accent text-accent"
@@ -1076,9 +1134,14 @@ export function FacilityManagerDashboard({ user }: { user: User }) {
                   {tab.label}
                 </button>
               ))}
-            </div>
+            </nav>
           </div>
-        </nav>
+          <div className="max-w-screen-2xl mx-auto px-4 md:px-6 pb-2">
+            <span className="text-[9px] font-mono uppercase tracking-widest text-muted-foreground/60">
+              {activeSection} • {visibleTabs.findIndex((tab) => tab.key === activeTab) + 1}/{visibleTabs.length}
+            </span>
+          </div>
+        </div>
 
         {/* Tab Content */}
         <div

@@ -2,12 +2,12 @@
 
 import React, { useState, useRef, useEffect } from "react";
 import type { User } from "@/lib/auth-context";
-import { DashboardHeader } from "./dashboard-header";
 
 import OverviewTab from "./bm-tabs/overview-tab";
 import CommunicationsTab from "./bm-tabs/communications-tab";
 import OnboardingTab from "./bm-tabs/onboarding-tab";
 import AmenitiesTab from "./bm-tabs/amenities-tab";
+import LeasingPipelineTab from "./bm-tabs/leasing-pipeline-tab";
 import PackagesTab from "./bm-tabs/packages-tab";
 import VisitorsTab from "./bm-tabs/visitors-tab";
 import KeysFobsTab from "./bm-tabs/keys-fobs-tab";
@@ -23,6 +23,8 @@ import GovernancePanel from "@/components/governance/GovernancePanel";
 import IntegrationsHub from "./integrations-hub";
 
 /* ─── Tab definitions grouped by section ─────────────────────────────────────── */
+// This metadata drives both the section switcher and the inner tab rail, so
+// adding a BM feature usually starts by registering it here.
 const TABS = [
   // Overview (Super-User)
   { id: "overview", label: "Overview", section: "Overview" },
@@ -30,6 +32,7 @@ const TABS = [
   { id: "communications", label: "Comms Hub", section: "Resident & Tenant" },
   { id: "onboarding", label: "Onboarding", section: "Resident & Tenant" },
   { id: "amenities", label: "Amenities", section: "Resident & Tenant" },
+  { id: "leasing-pipeline", label: "Leasing Pipeline", section: "Resident & Tenant" },
   // Operational Logistics
   { id: "packages", label: "Packages", section: "Operations" },
   { id: "visitors", label: "Visitors", section: "Operations" },
@@ -63,11 +66,14 @@ const SECTION_COLORS: Record<string, string> = {
 };
 
 function renderTab(tab: TabId) {
+  // Centralized tab-to-component mapping keeps the visible tab list and the
+  // rendered panel aligned in one place.
   switch (tab) {
     case "overview": return <OverviewTab />;
     case "communications": return <CommunicationsTab />;
     case "onboarding": return <OnboardingTab />;
     case "amenities": return <AmenitiesTab />;
+    case "leasing-pipeline": return <LeasingPipelineTab />;
     case "packages": return <PackagesTab />;
     case "visitors": return <VisitorsTab />;
     case "keys": return <KeysFobsTab />;
@@ -85,9 +91,11 @@ function renderTab(tab: TabId) {
   }
 }
 
-export function BuildingManagerDashboard({ user }: { user: User }) {
+export function BuildingManagerDashboard({ user: __user }: { user: User }) {
   const [activeTab, setActiveTab] = useState<TabId>("overview");
   const tabBarRef = useRef<HTMLDivElement>(null);
+  const tabRefs = useRef<Array<HTMLButtonElement | null>>([]);
+  const sections = [...new Set(TABS.map((tab) => tab.section))];
 
   // Scroll active tab into view on mount and on change
   useEffect(() => {
@@ -98,31 +106,95 @@ export function BuildingManagerDashboard({ user }: { user: User }) {
     }
   }, [activeTab]);
 
+  const handleTabKeyDown = (event: React.KeyboardEvent<HTMLButtonElement>, tabs: readonly (typeof TABS)[number][], index: number) => {
+    if (event.key !== "ArrowRight" && event.key !== "ArrowLeft" && event.key !== "Home" && event.key !== "End") {
+      return;
+    }
+
+    event.preventDefault();
+
+    let nextIndex = index;
+    if (event.key === "ArrowRight") {
+      nextIndex = (index + 1) % tabs.length;
+    } else if (event.key === "ArrowLeft") {
+      nextIndex = (index - 1 + tabs.length) % tabs.length;
+    } else if (event.key === "Home") {
+      nextIndex = 0;
+    } else if (event.key === "End") {
+      nextIndex = tabs.length - 1;
+    }
+
+    const nextTab = tabs[nextIndex];
+    setActiveTab(nextTab.id);
+    tabRefs.current[nextIndex]?.focus();
+  };
+
+  // The active tab determines which section is highlighted and which subset of
+  // tabs should be visible in the secondary tab rail.
   const activeSection = TABS.find((t) => t.id === activeTab)?.section || "";
+  const visibleTabs = TABS.filter((tab) => tab.section === activeSection);
+
+  const setSection = (section: string) => {
+    // Switching sections always lands on the first tab in that section so the
+    // panel never points at a hidden tab.
+    const firstTab = TABS.find((tab) => tab.section === section);
+    if (firstTab) {
+      setActiveTab(firstTab.id);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-background text-foreground">
-      <DashboardHeader user={user} role="building_manager" />
-
       {/* ─── Sticky Tab Bar ─────────────────────────────────── */}
       <div className="sticky top-14 md:top-16 z-40 bg-background/80 backdrop-blur-md border-b border-border/30">
+        <div className="flex overflow-x-auto scrollbar-hide gap-2 px-4 md:px-6 py-2 border-b border-border/20">
+          {sections.map((section) => {
+            const isActiveSection = activeSection === section;
+            return (
+              <button
+                key={section}
+                type="button"
+                onClick={() => setSection(section)}
+                className={`flex-shrink-0 px-3 py-1.5 text-[10px] font-mono uppercase tracking-widest rounded-md border transition-colors ${
+                  isActiveSection
+                    ? "border-accent text-accent bg-accent/10"
+                    : "border-border/40 text-muted-foreground hover:text-accent hover:border-accent/40"
+                }`}
+              >
+                {section}
+              </button>
+            );
+          })}
+        </div>
+
         <div
           ref={tabBarRef}
-          className="flex overflow-x-auto scrollbar-hide gap-0.5 px-4 md:px-6 py-2"
+          role="tablist"
+          aria-label="Building manager tabs"
+          className="flex overflow-x-auto scrollbar-hide gap-1 px-4 md:px-6 pt-2"
         >
-          {TABS.map((tab) => {
+          {visibleTabs.map((tab, index) => {
             const isActive = activeTab === tab.id;
             const sectionColor = SECTION_COLORS[tab.section] || "border-border/40";
             return (
               <button
                 key={tab.id}
                 type="button"
+                role="tab"
                 data-tab={tab.id}
+                id={`bm-tab-${tab.id}`}
+                aria-selected={isActive}
+                aria-controls={`bm-panel-${tab.id}`}
+                tabIndex={isActive ? 0 : -1}
+                ref={(el) => {
+                  tabRefs.current[index] = el;
+                }}
                 onClick={() => setActiveTab(tab.id)}
-                className={`flex-shrink-0 px-3 md:px-4 py-1.5 text-[10px] md:text-xs font-mono uppercase tracking-wider rounded-md border transition-all whitespace-nowrap ${
+                onKeyDown={(event) => handleTabKeyDown(event, visibleTabs, index)}
+                className={`flex-shrink-0 border-x border-t px-3 md:px-4 py-1.5 text-[10px] md:text-xs font-mono uppercase tracking-wider rounded-t-md border-b-2 transition-all whitespace-nowrap ${
                   isActive
-                    ? `border-accent bg-accent/10 text-accent`
-                    : `${sectionColor} text-muted-foreground hover:text-accent hover:border-accent/40`
+                    ? "border-accent border-b-background bg-background text-accent"
+                    : `${sectionColor} border-b-border/40 bg-card/20 text-muted-foreground hover:text-accent hover:border-accent/40`
                 }`}
                 title={tab.section}
               >
@@ -135,13 +207,18 @@ export function BuildingManagerDashboard({ user }: { user: User }) {
         {/* Section indicator */}
         <div className="px-4 md:px-6 pb-1">
           <span className="text-[9px] font-mono uppercase tracking-widest text-muted-foreground/60">
-            {activeSection}
+            {activeSection} • {visibleTabs.findIndex((tab) => tab.id === activeTab) + 1}/{visibleTabs.length}
           </span>
         </div>
       </div>
 
       {/* ─── Tab Content ──────────────────────────────────── */}
-      <main className="px-4 md:px-6 py-6 max-w-[1440px] mx-auto">
+      <main
+        id={`bm-panel-${activeTab}`}
+        role="tabpanel"
+        aria-labelledby={`bm-tab-${activeTab}`}
+        className="px-4 md:px-6 py-6 max-w-[1440px] mx-auto"
+      >
         {renderTab(activeTab)}
       </main>
     </div>

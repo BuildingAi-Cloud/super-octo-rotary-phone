@@ -89,18 +89,18 @@ export function PrinciplesSection() {
     }, sectionRef)
 
     return () => ctx.revert()
-  }, [])
+  }, [principles])
 
   return (
-    <section ref={sectionRef} id="principles" className="relative py-32 pl-6 md:pl-28 pr-6 md:pr-12">
+    <section ref={sectionRef} id="principles" className="relative py-16 md:py-28 max-w-screen-xl mx-auto px-3 md:px-6">
       {/* Section header */}
-      <div ref={headerRef} className="mb-24">
+      <div ref={headerRef} className="max-w-7xl mx-auto mb-16 md:mb-24">
         <span className="font-mono text-[10px] uppercase tracking-[0.3em] text-accent">03 / Pillars</span>
-        <h2 className="mt-4 font-[var(--font-bebas)] text-5xl md:text-7xl tracking-tight">CORE PILLARS</h2>
+        <h2 className="mt-4 font-[var(--font-bebas)] text-4xl md:text-6xl lg:text-7xl tracking-tight">CORE PILLARS</h2>
       </div>
 
       {/* Staggered principles */}
-      <div ref={principlesRef} className="space-y-24 md:space-y-32">
+      <div ref={principlesRef} className="max-w-7xl mx-auto space-y-16 md:space-y-24">
         {principles.map((principle, index) => (
           <article
             key={index}

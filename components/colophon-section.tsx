@@ -73,16 +73,16 @@ export function ColophonSection() {
     <section
       ref={sectionRef}
       id="colophon"
-      className="relative py-32 pl-6 md:pl-28 pr-6 md:pr-12 border-t border-border/30"
+      className="relative py-16 md:py-28 max-w-screen-xl mx-auto px-3 md:px-6 border-t border-border/30"
     >
       {/* Section header */}
-      <div ref={headerRef} className="mb-16">
+      <div ref={headerRef} className="max-w-7xl mx-auto mb-12 md:mb-16">
         <span className="font-mono text-[10px] uppercase tracking-[0.3em] text-accent">04 / {t("connect", "Connect")}</span>
-        <h2 className="mt-4 font-[var(--font-bebas)] text-5xl md:text-7xl tracking-tight">{t("getStarted", "GET STARTED")}</h2>
+        <h2 className="mt-4 font-[var(--font-bebas)] text-4xl md:text-6xl lg:text-7xl tracking-tight">{t("getStarted", "GET STARTED")}</h2>
       </div>
 
       {/* Multi-column layout */}
-      <div ref={gridRef} className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-8 md:gap-12">
+      <div ref={gridRef} className="max-w-7xl mx-auto grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-6 md:gap-8">
         {/* Resources */}
         <div className="col-span-1">
           <h4 className="font-mono text-[9px] uppercase tracking-[0.3em] text-muted-foreground mb-4">{t("resources", "Resources")}</h4>
