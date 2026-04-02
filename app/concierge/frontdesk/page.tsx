@@ -1,11 +1,20 @@
-import React from "react";
+import { OpsWorkspacePage } from "@/components/concierge/ops-workspace-page";
+
 export default function ConciergeFrontDeskPage() {
   return (
-    <main className="min-h-screen py-16 px-4 md:px-12 bg-background">
-      <h1 className="font-[var(--font-bebas)] text-4xl md:text-6xl tracking-tight mb-8">Front Desk</h1>
-      <div className="bg-card/80 p-8 rounded-lg shadow-lg max-w-2xl mx-auto">
-        <p className="font-mono text-sm text-muted-foreground">Front desk overview and quick actions coming soon.</p>
-      </div>
-    </main>
+    <OpsWorkspacePage
+      title="Front Desk"
+      subtitle="Track desk handoffs, key pickups, and high-priority resident requests in one queue."
+      storageKey="buildsync_concierge_frontdesk"
+      fields={[
+        { key: "resident", label: "Resident", placeholder: "Name", required: true },
+        { key: "request", label: "Request", placeholder: "Package, key, access help", required: true },
+        { key: "priority", label: "Priority", placeholder: "low / medium / high", required: true },
+      ]}
+      initialRecords={[
+        { resident: "A. Torres", request: "Temporary elevator booking", priority: "high" },
+        { resident: "L. Wang", request: "Package hold extension", priority: "medium" },
+      ]}
+    />
   );
 }

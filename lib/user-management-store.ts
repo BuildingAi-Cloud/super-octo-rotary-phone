@@ -6,7 +6,7 @@
  */
 
 import type { UserRole, User } from "@/lib/auth-context";
-import { canAddUser, ROLE_TEMPLATES } from "@/lib/rbac";
+import { canAddUser } from "@/lib/rbac";
 import { logAudit } from "@/lib/audit";
 
 const USERS_KEY = "buildsync_users";
@@ -125,6 +125,27 @@ export function updateUserRole(userId: string, newRole: UserRole, actor: User): 
   saveUsers(users);
   logAudit("user_role_changed", { userId, newRole, changedBy: actor.email }, actor.email);
   return { success: true };
+}
+
+/** Update editable directory fields such as unit/building assignment */
+export function updateUserDetails(
+  userId: string,
+  updates: Pick<StoredUser, "unit" | "buildingId">,
+  actor: User,
+): { success: boolean; error?: string; user?: StoredUser } {
+  const users = getUsers();
+  const idx = users.findIndex((u) => u.id === userId);
+  if (idx === -1) return { success: false, error: "User not found" };
+
+  users[idx] = {
+    ...users[idx],
+    unit: updates.unit,
+    buildingId: updates.buildingId,
+  };
+
+  saveUsers(users);
+  logAudit("user_assignment_changed", { userId, unit: updates.unit, buildingId: updates.buildingId, changedBy: actor.email }, actor.email);
+  return { success: true, user: users[idx] };
 }
 
 /** Remove a user */
@@ -250,6 +271,7 @@ export function revokeInvite(inviteId: string, actor: User): { success: boolean 
 export interface CsvImportResult {
   total: number;
   added: number;
+  updated: number;
   skipped: number;
   errors: { row: number; email: string; reason: string }[];
 }
@@ -264,7 +286,7 @@ export function bulkImportCsv(
   actor: User,
   buildingId?: string,
 ): CsvImportResult {
-  const result: CsvImportResult = { total: 0, added: 0, skipped: 0, errors: [] };
+  const result: CsvImportResult = { total: 0, added: 0, updated: 0, skipped: 0, errors: [] };
 
   const lines = csvText.trim().split(/\r?\n/);
   if (lines.length < 2) {
@@ -317,5 +339,101 @@ export function bulkImportCsv(
   }
 
   logAudit("bulk_import", { total: result.total, added: result.added, skipped: result.skipped }, actor.email);
+  return result;
+}
+
+/**
+ * Parse CSV text and upsert users by email.
+ * If email exists -> update selected fields; otherwise create a new user.
+ * Expected headers: name, email, unit, role, company, buildingId (role/company/unit/buildingId optional)
+ */
+export function bulkUpsertUsersCsv(
+  csvText: string,
+  defaultRole: UserRole,
+  actor: User,
+  defaultBuildingId?: string,
+): CsvImportResult {
+  const result: CsvImportResult = { total: 0, added: 0, updated: 0, skipped: 0, errors: [] };
+
+  const lines = csvText.trim().split(/\r?\n/);
+  if (lines.length < 2) {
+    result.errors.push({ row: 0, email: "", reason: "CSV must have a header row and at least one data row" });
+    return result;
+  }
+
+  const headers = lines[0].toLowerCase().split(",").map((h) => h.trim());
+  const nameIdx = headers.indexOf("name");
+  const emailIdx = headers.indexOf("email");
+  const unitIdx = headers.indexOf("unit");
+  const roleIdx = headers.indexOf("role");
+  const companyIdx = headers.indexOf("company");
+  const buildingIdx = headers.indexOf("buildingid");
+
+  if (nameIdx === -1 || emailIdx === -1) {
+    result.errors.push({ row: 0, email: "", reason: "CSV must have 'name' and 'email' columns" });
+    return result;
+  }
+
+  const users = getUsers();
+
+  for (let i = 1; i < lines.length; i++) {
+    const cols = lines[i].split(",").map((c) => c.trim());
+    const name = cols[nameIdx] || "";
+    const email = cols[emailIdx] || "";
+    const unit = unitIdx >= 0 ? cols[unitIdx] || undefined : undefined;
+    const company = companyIdx >= 0 ? cols[companyIdx] || undefined : undefined;
+    const csvBuildingId = buildingIdx >= 0 ? cols[buildingIdx] || undefined : undefined;
+    const rowRole = roleIdx >= 0 && cols[roleIdx] ? (cols[roleIdx] as UserRole) : defaultRole;
+
+    result.total++;
+
+    if (!name || !email) {
+      result.errors.push({ row: i + 1, email, reason: "Missing name or email" });
+      result.skipped++;
+      continue;
+    }
+
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      result.errors.push({ row: i + 1, email, reason: "Invalid email format" });
+      result.skipped++;
+      continue;
+    }
+
+    if (!canAddUser(actor.role, rowRole)) {
+      result.errors.push({ row: i + 1, email, reason: `${actor.role} cannot assign ${rowRole}` });
+      result.skipped++;
+      continue;
+    }
+
+    const existingIndex = users.findIndex((u) => u.email.toLowerCase() === email.toLowerCase());
+    if (existingIndex === -1) {
+      users.push({
+        id: crypto.randomUUID(),
+        email,
+        name,
+        role: rowRole,
+        company,
+        password: "12345678",
+        addedBy: actor.id,
+        buildingId: csvBuildingId || defaultBuildingId,
+        unit,
+      });
+      result.added++;
+      continue;
+    }
+
+    users[existingIndex] = {
+      ...users[existingIndex],
+      name,
+      role: rowRole,
+      company: company || users[existingIndex].company,
+      unit: unit || users[existingIndex].unit,
+      buildingId: csvBuildingId || defaultBuildingId || users[existingIndex].buildingId,
+    };
+    result.updated++;
+  }
+
+  saveUsers(users);
+  logAudit("bulk_upsert_users", { total: result.total, added: result.added, updated: result.updated, skipped: result.skipped }, actor.email);
   return result;
 }

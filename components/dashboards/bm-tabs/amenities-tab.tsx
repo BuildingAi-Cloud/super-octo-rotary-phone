@@ -29,6 +29,8 @@ interface AmenityPolicy {
 
 const POLICY_STORAGE_KEY = "buildsync_amenity_policies";
 
+// Defaults provide a full editable policy surface even before any building-
+// specific settings have been customized.
 const DEFAULT_POLICIES: AmenityPolicy[] = [
   { amenityId: "am1", openTime: "09:00", closeTime: "23:00", maxGuests: 50, advanceNoticeDays: 7, cleanupMinutes: 30, rules: ["No amplified music after 22:00", "Access card required for entry", "Deposit forfeited if room not cleaned", "No open flames"] },
   { amenityId: "am2", openTime: "09:00", closeTime: "23:00", maxGuests: 50, advanceNoticeDays: 7, cleanupMinutes: 30, rules: ["No amplified music after 22:00", "Deposit forfeited if room not cleaned"] },
@@ -83,6 +85,8 @@ function loadPolicies(): Record<string, AmenityPolicy> {
 }
 
 function buildPolicyMap(): Record<string, AmenityPolicy> {
+  // Start from the default policy template, then overlay any saved edits so
+  // every amenity always has a complete policy object.
   const stored = loadPolicies();
   const map: Record<string, AmenityPolicy> = {};
   for (const p of DEFAULT_POLICIES) {
@@ -108,6 +112,8 @@ function PolicyEditor({
   policy: AmenityPolicy;
   onSave: (updated: AmenityPolicy) => void;
 }) {
+  // The editor works against a local draft so managers can make several policy
+  // changes before writing the final result back to the tab-level state.
   const [draft, setDraft] = useState<AmenityPolicy>({ ...policy, rules: [...policy.rules] });
   const [newRule, setNewRule] = useState("");
   const [saved, setSaved] = useState(false);
@@ -277,10 +283,14 @@ export default function AmenitiesTab() {
   const [policies, setPolicies] = useState<Record<string, AmenityPolicy>>(buildPolicyMap);
 
   useEffect(() => {
+    // Policies are restored on mount to keep amenity rules stable across page
+    // reloads and to match the selected building's most recent edits.
     setPolicies(buildPolicyMap());
   }, []);
 
   function handleSavePolicy(updated: AmenityPolicy) {
+    // The tab owns the persisted policy map so both the inventory cards and the
+    // dedicated policy editor stay in sync.
     const next = { ...policies, [updated.amenityId]: updated };
     setPolicies(next);
     savePolicies(next);

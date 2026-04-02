@@ -1,7 +1,12 @@
 "use client";
 import { useState } from "react";
+import Link from "next/link";
+import { useAuth } from "@/lib/auth-context";
+
+const CONCIERGE_SETTINGS_ROLES = ["admin", "building_owner", "building_manager", "property_manager", "concierge"] as const;
 
 export default function CommunicationSettingsPage() {
+  const { user, isLoading } = useAuth();
   const [slackConnected, setSlackConnected] = useState(false);
   const [discordConnected, setDiscordConnected] = useState(false);
   const [smtpMode, setSmtpMode] = useState<"default" | "custom">("default");
@@ -11,6 +16,44 @@ export default function CommunicationSettingsPage() {
   const [smtpPort, setSmtpPort] = useState("");
   const [smtpUser, setSmtpUser] = useState("");
   const [smtpPass, setSmtpPass] = useState("");
+
+  if (isLoading) {
+    return (
+      <main className="flex items-center justify-center min-h-screen">
+        <p className="font-mono text-sm text-muted-foreground">Loading settings...</p>
+      </main>
+    );
+  }
+
+  if (!user) {
+    return (
+      <main className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold mb-4">Sign In Required</h1>
+          <p className="text-muted-foreground">Please sign in to access communication settings.</p>
+        </div>
+      </main>
+    );
+  }
+
+  const canManageConciergeIntegrations = CONCIERGE_SETTINGS_ROLES.includes(user.role as (typeof CONCIERGE_SETTINGS_ROLES)[number]);
+
+  if (!canManageConciergeIntegrations) {
+    return (
+      <main className="flex items-center justify-center min-h-screen px-6">
+        <div className="text-center max-w-xl">
+          <h1 className="text-2xl font-bold mb-4">Access Restricted</h1>
+          <p className="text-muted-foreground mb-4">Your role has personal settings only. Communication integrations require concierge or manager access.</p>
+          <Link
+            href="/concierge/settings"
+            className="inline-flex items-center px-4 py-2 text-xs font-mono uppercase tracking-widest border border-accent text-accent rounded-md hover:bg-accent/10 transition-colors"
+          >
+            Back to Concierge Settings
+          </Link>
+        </div>
+      </main>
+    );
+  }
 
   // Placeholder handlers for integration actions
   const handleConnectSlack = () => setSlackConnected(true);
@@ -37,6 +80,11 @@ export default function CommunicationSettingsPage() {
   return (
     <main className="min-h-screen py-24 px-6 md:px-28 bg-background">
       <section className="max-w-2xl mx-auto">
+        <div className="mb-4">
+          <Link href="/concierge/settings" className="font-mono text-xs uppercase tracking-widest text-muted-foreground hover:text-accent transition-colors">
+            ← Back to Concierge Settings
+          </Link>
+        </div>
         <h1 className="font-[var(--font-bebas)] text-4xl md:text-6xl tracking-tight mb-8">Communication Integrations</h1>
         <div className="space-y-8">
           {/* Slack Integration */}

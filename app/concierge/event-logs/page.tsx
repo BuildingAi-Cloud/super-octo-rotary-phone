@@ -1,10 +1,16 @@
+import { OpsWorkspacePage } from "@/components/concierge/ops-workspace-page";
+
 export default function ConciergeEventLogsPage() {
   return (
-    <main className="min-h-screen py-24 px-6 md:px-28 bg-background">
-      <h1 className="font-[var(--font-bebas)] text-4xl md:text-6xl tracking-tight mb-8">Event Logs</h1>
-      <div className="bg-card/80 p-8 rounded-lg shadow-lg max-w-2xl mx-auto">
-        <p className="font-mono text-sm text-muted-foreground">Event logs and activity tracking coming soon.</p>
-      </div>
-    </main>
+    <OpsWorkspacePage
+      title="Event Logs"
+      subtitle="Capture notable front-of-house events with concise operational context."
+      storageKey="buildsync_concierge_event_logs"
+      fields={[
+        { key: "event", label: "Event", placeholder: "Fire drill check-in", required: true },
+        { key: "severity", label: "Severity", placeholder: "info / warning / critical", required: true },
+        { key: "owner", label: "Logged By", placeholder: "Staff name", required: true },
+      ]}
+    />
   );
 }

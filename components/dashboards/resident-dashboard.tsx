@@ -5,7 +5,6 @@ import { useTranslation } from "react-i18next"
 import { useState } from "react"
 import { amenityStore, addBooking, getBookingsForUser } from "@/lib/amenity-store"
 import { type User } from "@/lib/auth-context"
-import { DashboardHeader } from "./dashboard-header"
 import { AnimatedNoise } from "@/components/animated-noise"
 import { ScrambleText } from "@/components/scramble-text"
 import GovernancePanel from "@/components/governance/GovernancePanel"
@@ -52,8 +51,6 @@ export default function ResidentDashboard({ user }: ResidentDashboardProps) {
       <div className="grid-bg fixed inset-0 opacity-20" aria-hidden="true" />
 
       <div className="relative z-10">
-        <DashboardHeader user={user} />
-
         <div className="p-6 md:p-8">
           {/* Welcome section */}
           <div className="mb-6">

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth-context";
 import Link from "next/link";
@@ -11,11 +11,18 @@ import { BitmapChevron } from "@/components/bitmap-chevron";
 
 export default function SignInPage() {
   const router = useRouter();
-  const { signIn } = useAuth();
+  const { signIn, user, isLoading: authLoading } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+
+  // Redirect authenticated users to dashboard (pre-login page protection).
+  useEffect(() => {
+    if (!authLoading && user) {
+      router.push("/dashboard")
+    }
+  }, [user, authLoading, router])
 
   // Actually call signIn from useAuth and check credentials
   const handleSignIn = async (e: React.FormEvent) => {

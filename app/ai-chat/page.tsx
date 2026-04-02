@@ -5,6 +5,9 @@ import { useState, useRef, useEffect, useCallback } from "react";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { useWebLLM, AVAILABLE_MODELS } from "@/components/ai-chat/use-webllm";
 import type { ModelId } from "@/components/ai-chat/use-webllm";
+import { BackButton } from "@/components/back-button";
+import { useAuth, getRoleDisplayName, type UserRole } from "@/lib/auth-context";
+import { useRouter } from "next/navigation";
 
 interface Conversation {
   id: string;
@@ -13,8 +16,25 @@ interface Conversation {
   messageCount: number;
 }
 
+const ROLE_SCOPE_GUIDANCE: Record<UserRole, string> = {
+  facility_manager: "Focus on facility operations: work orders, maintenance planning, vendors, incidents, safety, and operational KPIs.",
+  building_manager: "Focus on building manager workflows: resident operations, lease operations, violations, packages, access control, and concierge coordination.",
+  building_owner: "Focus on owner-level outcomes: portfolio risk, revenue, occupancy, compliance, and strategic governance decisions.",
+  property_manager: "Focus on property management workflows: leasing, renewals, resident communications, compliance, and performance across managed properties.",
+  resident: "Focus on resident workflows: requests, amenities, documents, and community information only.",
+  tenant: "Focus on tenant workflows: lease info, payment options, service requests, amenity bookings, and tenant communications.",
+  concierge: "Focus on concierge/front-desk workflows: visitors, packages, reservations, communications, and resident support operations.",
+  staff: "Focus on staff workflows: assigned tasks, building operations support, and internal execution steps.",
+  security: "Focus on security workflows: incident handling, access logs, surveillance coordination, and escalation procedures.",
+  vendor: "Focus on vendor workflows: assigned jobs, compliance documents, scheduling, and service delivery updates.",
+  admin: "Focus on platform administration, access governance, audit posture, and cross-role configuration controls.",
+  guest: "Focus on high-level public information only and avoid restricted operational details.",
+};
+
 export default function AIChatPage() {
-  const { state, sendMessage, abort, clearMessages, setModel } = useWebLLM();
+  const { state, sendMessage, abort, clearMessages, setModel, setSystemPrompt } = useWebLLM();
+  const { user, isLoading } = useAuth();
+  const router = useRouter();
   const [input, setInput] = useState("");
   const [conversations, setConversations] = useState<Conversation[]>([
     { id: "1", title: "New Conversation", createdAt: new Date(), messageCount: 0 },
@@ -26,6 +46,24 @@ export default function AIChatPage() {
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [state.messages]);
+
+  useEffect(() => {
+    if (!isLoading && !user) {
+      router.push("/signin");
+    }
+  }, [isLoading, user, router]);
+
+  useEffect(() => {
+    if (!user) return;
+    const roleScope = ROLE_SCOPE_GUIDANCE[user.role];
+    setSystemPrompt([
+      "You are BuildSync AI assistant.",
+      `Current access type: ${getRoleDisplayName(user.role)} (${user.role}).`,
+      roleScope,
+      "Do not provide guidance outside this access scope unless user explicitly asks for a cross-role comparison.",
+      "When user asks out-of-scope operational questions, acknowledge limitation and redirect to in-scope workflow.",
+    ].join(" "));
+  }, [user, setSystemPrompt]);
 
   // Update sidebar conversation title from first user message
   useEffect(() => {
@@ -85,6 +123,16 @@ export default function AIChatPage() {
 
   const activeConv = conversations.find((c) => c.id === activeId);
 
+  if (isLoading) {
+    return (
+      <div className="h-screen flex items-center justify-center bg-background text-foreground">
+        <p className="font-mono text-xs text-muted-foreground">Loading chat access...</p>
+      </div>
+    );
+  }
+
+  if (!user) return null;
+
   return (
     <div className="h-screen flex flex-col bg-background text-foreground overflow-hidden">
       {/* Header — matches DashboardHeader layout */}
@@ -96,20 +144,13 @@ export default function AIChatPage() {
             </span>
             <span className="hidden md:block h-4 w-px bg-border" />
             <span className="hidden md:block font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
-              AI Chat
+              AI Chat · {getRoleDisplayName(user.role)} Scope
             </span>
           </Link>
           <div className="flex items-center gap-4">
             <ThemeToggle />
-            <Link
-              href="/"
-              className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground hover:text-accent transition-colors flex items-center gap-1.5"
-            >
-              <svg className="w-3 h-3" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 19.5 3 12m0 0 7.5-7.5M3 12h18" />
-              </svg>
-              Back
-            </Link>
+            {/* Reuse the same back behavior as the main app header for consistency. */}
+            <BackButton fallbackHref="/dashboard" className="inline-flex items-center justify-center w-9 h-9 border border-border text-muted-foreground hover:border-accent hover:text-accent transition-colors" />
           </div>
         </div>
       </header>
@@ -213,7 +254,7 @@ export default function AIChatPage() {
                 {activeConv?.title ?? "New Conversation"}
               </p>
               <p className="font-mono text-[10px] text-muted-foreground">
-                {state.messages.length} messages
+                {state.messages.length} messages · scope: {getRoleDisplayName(user.role)}
               </p>
             </div>
             {state.messages.length > 0 && (

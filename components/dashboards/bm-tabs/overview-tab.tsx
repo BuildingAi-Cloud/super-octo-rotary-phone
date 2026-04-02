@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import { useRouter } from "next/navigation";
 
 /* ─── Demo Data ──────────────────────────────────────────────────────────────── */
 
@@ -46,16 +47,32 @@ const RENEWAL_STATUS_COLORS: Record<string, string> = {
 /* ─── Overview Tab ───────────────────────────────────────────────────────────── */
 
 export default function OverviewTab() {
+  const router = useRouter();
+
+  const handleStatClick = (label: string) => {
+    if (label === "Leases Active") {
+      router.push("/dashboard/active-leases");
+    }
+  };
+
   return (
     <div className="space-y-6">
       {/* Quick Stats */}
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
         {quickStats.map((stat, i) => (
-          <div key={i} className="border border-border/40 bg-card/30 p-4">
+          <button
+            key={i}
+            onClick={() => handleStatClick(stat.label)}
+            className={`border border-border/40 bg-card/30 p-4 text-left transition-colors ${
+              stat.label === "Leases Active"
+                ? "hover:bg-card/50 hover:border-accent/40 cursor-pointer"
+                : ""
+            }`}
+          >
             <span className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">{stat.label}</span>
             <p className="mt-2 font-[var(--font-bebas)] text-3xl">{stat.value}</p>
             <p className="font-mono text-[10px] text-muted-foreground">{stat.detail}</p>
-          </div>
+          </button>
         ))}
       </div>
 

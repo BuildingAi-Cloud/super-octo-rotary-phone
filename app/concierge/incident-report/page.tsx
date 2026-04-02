@@ -1,10 +1,16 @@
+import { OpsWorkspacePage } from "@/components/concierge/ops-workspace-page";
+
 export default function ConciergeIncidentReportPage() {
   return (
-    <main className="min-h-screen py-24 px-6 md:px-28 bg-background">
-      <h1 className="font-[var(--font-bebas)] text-4xl md:text-6xl tracking-tight mb-8">Incident Report</h1>
-      <div className="bg-card/80 p-8 rounded-lg shadow-lg max-w-2xl mx-auto">
-        <p className="font-mono text-sm text-muted-foreground">Incident reporting and management coming soon.</p>
-      </div>
-    </main>
+    <OpsWorkspacePage
+      title="Incident Report"
+      subtitle="Log concierge incidents for escalation, audit, and service recovery actions."
+      storageKey="buildsync_concierge_incidents"
+      fields={[
+        { key: "incident", label: "Incident", placeholder: "Visitor dispute in lobby", required: true },
+        { key: "unit", label: "Unit / Area", placeholder: "Lobby or Unit 9C", required: true },
+        { key: "status", label: "Status", placeholder: "open / resolved", required: true },
+      ]}
+    />
   );
 }

@@ -2,7 +2,6 @@
 
 import React, { useState } from "react";
 import { type User } from "@/lib/auth-context";
-import { DashboardHeader } from "./dashboard-header";
 import { AnimatedNoise } from "@/components/animated-noise";
 import { ScrambleText } from "@/components/scramble-text";
 import FinancialsTab from "./bo-tabs/financials-tab";
@@ -91,8 +90,6 @@ export function BuildingOwnerDashboard({ user }: BuildingOwnerDashboardProps) {
       <div className="grid-bg fixed inset-0 opacity-20" aria-hidden="true" />
 
       <div className="relative z-10">
-        <DashboardHeader user={user} />
-
         {/* ── Pulse Banner ─────────────────────────────────────────────── */}
         <div className={`sticky top-14 md:top-16 z-40 border-b border-border/30 bg-background/90 backdrop-blur-md`}>
           <div className="max-w-screen-2xl mx-auto px-4 md:px-6 py-3 flex items-center gap-4">

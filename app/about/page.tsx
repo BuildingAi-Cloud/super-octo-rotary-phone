@@ -1,8 +1,33 @@
 "use client"
+import { useEffect } from "react"
+import { useRouter } from "next/navigation"
+import { useAuth } from "@/lib/auth-context"
 import { PrinciplesSection } from "@/components/principles-section"
 import { WorkSection } from "@/components/work-section"
 
 export default function AboutPage() {
+  const router = useRouter()
+  const { user, isLoading } = useAuth()
+
+  // Redirect authenticated users to dashboard (pre-login page protection).
+  useEffect(() => {
+    if (!isLoading && user) {
+      router.push("/dashboard")
+    }
+  }, [user, isLoading, router])
+
+  if (isLoading) {
+    return (
+      <main className="min-h-screen flex items-center justify-center">
+        <div className="h-8 w-8 border-2 border-accent border-t-transparent animate-spin" />
+      </main>
+    )
+  }
+
+  if (user) {
+    return null
+  }
+
   return (
     <main className="min-h-screen flex flex-col gap-0">
       {/* Hero Section */}
