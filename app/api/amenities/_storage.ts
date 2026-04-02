@@ -10,6 +10,7 @@ import {
   type AmenityRules,
   type AmenityStatus,
 } from "@/lib/amenity-store"
+import { getSupabaseServerConfig } from "@/lib/runtime-server"
 
 const DEFAULT_POLICY: AmenityPolicy = "auto_approve"
 const DEFAULT_STATUS: AmenityStatus = "available"
@@ -21,13 +22,12 @@ interface SupabaseConfig {
 }
 
 function getSupabaseConfig(): SupabaseConfig | null {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL
-  const key = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-  if (!url || !key) return null
+  const supabase = getSupabaseServerConfig()
+  if (!supabase) return null
 
   return {
-    url,
-    key,
+    url: supabase.url,
+    key: supabase.key,
     table: process.env.SUPABASE_AMENITIES_TABLE || "amenities",
   }
 }

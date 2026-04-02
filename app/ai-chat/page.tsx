@@ -31,6 +31,110 @@ const ROLE_SCOPE_GUIDANCE: Record<UserRole, string> = {
   guest: "Focus on high-level public information only and avoid restricted operational details.",
 };
 
+const ARCHITECT_PERSONA_PROMPT = [
+  "Identity: You are the BuildSync Intelligence Layer, also known as The Silent Architect.",
+  "Voice profile: minimalist, architectural, objective, precise, measured, fluid, and essential.",
+  "Do not use emojis, hype language, playful chatbot phrasing, or conversational filler.",
+  "Do not start with niceties such as 'I'd be happy to help'. Start immediately with the answer.",
+  "Apply a no-waste rule: remove any word that does not add data or clarity.",
+  "Use short factual sentences for critical data, then longer context only when needed.",
+  "Preferred vocabulary: synthesize, integrity, optimizing, protocol.",
+  "Avoid vocabulary: delve, dive in, helpful assistant, I think.",
+  "When confidence is limited, use: 'Analytical data is currently limited on this point.'",
+  "When inference is data-backed, use phrasing like 'Data indicates...'.",
+  "When uncertain, use this exact phrase: 'Analytical data is currently limited on this point.'",
+  "Prefer predictive guidance over reactive answers by ending with a practical next step.",
+  "If discussing cost, budget, payment, or financial impact, format core values in a markdown table.",
+  "If discussing timeline, schedule, sequence, or execution plan, format actions as a numbered list.",
+  "When local or document data is referenced, always include a 'Source' line naming the origin path or system section.",
+  "For major recommendations, append a compact transparency footer with 'Rationale:' and 'Source:' lines.",
+  "Prioritize financial health and structural integrity impacts before secondary recommendations.",
+].join(" ");
+
+function extractTransparency(content: string) {
+  const lines = content.split("\n").map((line) => line.trim()).filter(Boolean);
+  const rationale = lines.filter((line) => /^rationale\s*:/i.test(line));
+  const sources = lines.filter((line) => /^source\s*:/i.test(line));
+  return { rationale, sources };
+}
+
+function renderAssistantContent(content: string) {
+  const blocks = content.split(/\n\s*\n/).map((block) => block.trim()).filter(Boolean);
+
+  return blocks.map((block, index) => {
+    const lines = block.split("\n").map((line) => line.trim()).filter(Boolean);
+    if (lines.length === 0) return null;
+
+    const orderedList = lines.every((line) => /^\d+\.\s+/.test(line));
+    if (orderedList) {
+      return (
+        <ol key={`ol-${index}`} className="list-decimal pl-5 space-y-1">
+          {lines.map((line, i) => (
+            <li key={`ol-item-${index}-${i}`}>{line.replace(/^\d+\.\s+/, "")}</li>
+          ))}
+        </ol>
+      );
+    }
+
+    const bulletList = lines.every((line) => /^[-*]\s+/.test(line));
+    if (bulletList) {
+      return (
+        <ul key={`ul-${index}`} className="list-disc pl-5 space-y-1">
+          {lines.map((line, i) => (
+            <li key={`ul-item-${index}-${i}`}>{line.replace(/^[-*]\s+/, "")}</li>
+          ))}
+        </ul>
+      );
+    }
+
+    // Simple markdown table parser for AI-generated financial summaries.
+    const looksLikeTable = lines.length >= 2 && lines.every((line) => line.includes("|")) && /^\|?\s*[-:]+/.test(lines[1].replace(/\|/g, ""));
+    if (looksLikeTable) {
+      const parseCells = (line: string) =>
+        line
+          .split("|")
+          .map((cell) => cell.trim())
+          .filter((cell, idx, arr) => !(idx === 0 && cell === "") && !(idx === arr.length - 1 && cell === ""));
+
+      const headers = parseCells(lines[0]);
+      const rows = lines.slice(2).map(parseCells).filter((cells) => cells.length > 0);
+
+      return (
+        <div key={`table-${index}`} className="overflow-x-auto border border-border/30">
+          <table className="w-full text-xs border-collapse">
+            <thead className="bg-accent/10">
+              <tr>
+                {headers.map((header, i) => (
+                  <th key={`th-${index}-${i}`} className="text-left font-semibold px-2 py-2 border-b border-border/30">
+                    {header}
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {rows.map((row, rowIdx) => (
+                <tr key={`tr-${index}-${rowIdx}`} className="odd:bg-muted/10">
+                  {row.map((cell, cellIdx) => (
+                    <td key={`td-${index}-${rowIdx}-${cellIdx}`} className="px-2 py-2 border-b border-border/20 align-top">
+                      {cell}
+                    </td>
+                  ))}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      );
+    }
+
+    return (
+      <p key={`p-${index}`} className="whitespace-pre-wrap break-words">
+        {block}
+      </p>
+    );
+  });
+}
+
 export default function AIChatPage() {
   const { state, sendMessage, abort, clearMessages, setModel, setSystemPrompt } = useWebLLM();
   const { user, isLoading } = useAuth();
@@ -39,6 +143,7 @@ export default function AIChatPage() {
   const [conversations, setConversations] = useState<Conversation[]>([
     { id: "1", title: "New Conversation", createdAt: new Date(), messageCount: 0 },
   ]);
+  const [expandedWhy, setExpandedWhy] = useState<Record<string, boolean>>({});
   const [activeId] = useState("1");
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -57,11 +162,12 @@ export default function AIChatPage() {
     if (!user) return;
     const roleScope = ROLE_SCOPE_GUIDANCE[user.role];
     setSystemPrompt([
-      "You are BuildSync AI assistant.",
+      ARCHITECT_PERSONA_PROMPT,
       `Current access type: ${getRoleDisplayName(user.role)} (${user.role}).`,
       roleScope,
       "Do not provide guidance outside this access scope unless user explicitly asks for a cross-role comparison.",
       "When user asks out-of-scope operational questions, acknowledge limitation and redirect to in-scope workflow.",
+      "Always keep response sections scannable with short headers when complexity is medium or high.",
     ].join(" "));
   }, [user, setSystemPrompt]);
 
@@ -175,9 +281,9 @@ export default function AIChatPage() {
                   d="M9.813 15.904 9 18.75l-.813-2.846a4.5 4.5 0 0 0-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 0 0 3.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 0 0 3.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 0 0-3.09 3.09ZM18.259 8.715 18 9.75l-.259-1.035a3.375 3.375 0 0 0-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 0 0 2.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 0 0 2.456 2.456L21.75 6l-1.035.259a3.375 3.375 0 0 0-2.456 2.456Z"
                 />
               </svg>
-              <span className="font-mono text-xs font-semibold text-foreground">WebLLM Chat</span>
+              <span className="font-mono text-xs font-semibold text-foreground">BuildSync Intelligence</span>
             </div>
-            <p className="font-mono text-[10px] text-muted-foreground">AI Models Running in Browser</p>
+            <p className="font-mono text-[10px] text-muted-foreground">The Architect · Calm Operational Guidance</p>
           </div>
 
           {/* Model selector */}
@@ -384,7 +490,65 @@ export default function AIChatPage() {
                         : "bg-muted/20 border-border text-foreground"
                     }`}
                   >
-                    {msg.content}
+                    {msg.role === "assistant" && !msg.isError ? (
+                      <div className="space-y-3">{renderAssistantContent(msg.content)}</div>
+                    ) : (
+                      msg.content
+                    )}
+
+                    {msg.role === "assistant" && !msg.isError && !msg.isStreaming && (
+                      <div className="mt-3 pt-2 border-t border-border/20">
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setExpandedWhy((prev) => ({
+                              ...prev,
+                              [msg.id]: !prev[msg.id],
+                            }))
+                          }
+                          className="font-mono text-[10px] uppercase tracking-[0.22em] text-muted-foreground hover:text-accent transition-colors"
+                        >
+                          Why?
+                        </button>
+
+                        {expandedWhy[msg.id] && (
+                          <div className="mt-2 text-[11px] space-y-2 text-muted-foreground">
+                            {(() => {
+                              const { rationale, sources } = extractTransparency(msg.content);
+                              return (
+                                <>
+                                  <div>
+                                    <p className="font-semibold text-foreground/90 mb-1">Rationale</p>
+                                    {rationale.length > 0 ? (
+                                      <ul className="list-disc pl-4 space-y-1">
+                                        {rationale.map((line, i) => (
+                                          <li key={`rationale-${msg.id}-${i}`}>{line.replace(/^rationale\s*:/i, "").trim()}</li>
+                                        ))}
+                                      </ul>
+                                    ) : (
+                                      <p>Analytical rationale was not explicitly provided in this response.</p>
+                                    )}
+                                  </div>
+                                  <div>
+                                    <p className="font-semibold text-foreground/90 mb-1">Sources</p>
+                                    {sources.length > 0 ? (
+                                      <ul className="list-disc pl-4 space-y-1">
+                                        {sources.map((line, i) => (
+                                          <li key={`source-${msg.id}-${i}`}>{line.replace(/^source\s*:/i, "").trim()}</li>
+                                        ))}
+                                      </ul>
+                                    ) : (
+                                      <p>No explicit source references were listed.</p>
+                                    )}
+                                  </div>
+                                </>
+                              );
+                            })()}
+                          </div>
+                        )}
+                      </div>
+                    )}
+
                     {msg.isStreaming && (
                       <span className="inline-block w-1.5 h-4 bg-accent ml-1 animate-pulse align-middle" />
                     )}
@@ -400,14 +564,23 @@ export default function AIChatPage() {
                   <span className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground block mb-1 px-1">
                     AI
                   </span>
-                  <div className="bg-muted/20 border border-border px-4 py-3 flex items-center gap-1.5">
-                    {[0, 1, 2].map((i) => (
-                      <span
-                        key={i}
-                        className="w-1.5 h-1.5 bg-accent rounded-full animate-bounce"
-                        style={{ animationDelay: `${i * 0.15}s` }}
-                      />
-                    ))}
+                  <div className="bg-muted/20 border border-border px-4 py-3 flex items-center gap-3">
+                    <div className="relative w-9 h-5">
+                      {[0, 1, 2].map((i) => (
+                        <span
+                          key={`liquid-${i}`}
+                          className="absolute top-1/2 -translate-y-1/2 w-2.5 h-2.5 rounded-full bg-accent/80 animate-pulse"
+                          style={{
+                            left: `${i * 10}px`,
+                            animationDelay: `${i * 0.2}s`,
+                            filter: "blur(0.15px)",
+                          }}
+                        />
+                      ))}
+                    </div>
+                    <span className="font-mono text-[11px] text-muted-foreground">
+                      Running architectural analysis...
+                    </span>
                   </div>
                 </div>
               </div>

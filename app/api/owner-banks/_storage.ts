@@ -1,3 +1,5 @@
+import { getSupabaseServerConfig } from "@/lib/runtime-server"
+
 export type BankAccountType = "checking" | "savings"
 export type BankAccountStatus = "active" | "pending_verification" | "archived"
 
@@ -32,13 +34,12 @@ interface SupabaseConfig {
 }
 
 function getSupabaseConfig(): SupabaseConfig | null {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL
-  const key = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-  if (!url || !key) return null
+  const supabase = getSupabaseServerConfig()
+  if (!supabase) return null
 
   return {
-    url,
-    key,
+    url: supabase.url,
+    key: supabase.key,
     banksTable: process.env.SUPABASE_OWNER_BANKS_TABLE || "owner_banks",
     eventsTable: process.env.SUPABASE_OWNER_BANK_EVENTS_TABLE || "owner_bank_events",
   }

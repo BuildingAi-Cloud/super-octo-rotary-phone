@@ -1,0 +1,45 @@
+services:
+  license-init:
+    image: ghcr.io/buildsync/app:latest
+    env_file:
+      - .env
+    command: ["node", "/app/license-init.mjs"]
+    volumes:
+      - license_state:/var/lib/buildsync/license-state
+      - ${LOCAL_DOCS_PATH}:/data/properties:ro
+
+  buildsync-app:
+    image: ghcr.io/buildsync/app:latest
+    ports:
+      - "3000:3000"
+    env_file:
+      - .env
+    depends_on:
+      license-init:
+        condition: service_completed_successfully
+      - db
+      - ollama
+    volumes:
+      - ${LOCAL_DOCS_PATH}:/data/properties:ro
+      - license_state:/var/lib/buildsync/license-state
+
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: buildsync
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: buildsync
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+  ollama:
+    image: ollama/ollama:latest
+    restart: unless-stopped
+    volumes:
+      - ollama_data:/root/.ollama
+
+volumes:
+  pgdata:
+  ollama_data:
+  license_state:

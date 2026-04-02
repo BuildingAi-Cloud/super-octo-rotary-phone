@@ -11,6 +11,7 @@ import {
   type VoteOption,
   type MeetingAgendaItem,
 } from "@/lib/governance-store"
+import { getSupabaseServerConfig } from "@/lib/runtime-server"
 
 // ---------------------------------------------------------------------------
 // Supabase REST helpers (mirrors app/api/amenities/_storage.ts)
@@ -22,10 +23,9 @@ interface SupabaseConfig {
 }
 
 function getSupabaseConfig(): SupabaseConfig | null {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL
-  const key = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-  if (!url || !key) return null
-  return { url, key }
+  const supabase = getSupabaseServerConfig()
+  if (!supabase) return null
+  return { url: supabase.url, key: supabase.key }
 }
 
 async function supabaseRequest(path: string, init?: RequestInit) {

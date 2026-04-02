@@ -3,6 +3,10 @@
   "version": "0.20.0",
   "private": true,
   "packageManager": "pnpm@9.15.0",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
   "scripts": {
     "build": "next build",
     "dev": "next dev",
@@ -10,7 +14,11 @@
     "start": "next start",
     "test": "jest --passWithNoTests",
     "update-api-reference": "node update-api-reference.js",
-    "clean:next-lock": "rm -f .next/dev/lock .next/lock || true"
+    "clean:next-lock": "rm -f .next/dev/lock .next/lock || true",
+    "onprem:up": "docker compose -f apps/on-prem-app/docker-compose.yml --env-file apps/on-prem-app/.env.example up -d",
+    "onprem:down": "docker compose -f apps/on-prem-app/docker-compose.yml down",
+    "env:cloud": "cp .env.example .env && sed -i 's/^AI_MODE=.*/AI_MODE=cloud/' .env",
+    "env:local": "cp .env.example .env && sed -i 's/^AI_MODE=.*/AI_MODE=local/' .env"
   },
   "dependencies": {
     "@capacitor/core": "^7.6.0",
