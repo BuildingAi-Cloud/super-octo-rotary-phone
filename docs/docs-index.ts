@@ -1,6 +1,17 @@
-import { docsSignIn, docsSignUp, docsDashboard, docsSettings, docsAuditLog, docsAccessibility, docsUserHierarchy, docsOnboardingHierarchy, docsIntegrations } from "./entries";
+import {
+  docsSignIn,
+  docsSignUp,
+  docsDashboard,
+  docsSettings,
+  docsAuditLog,
+  docsAccessibility,
+  docsUserHierarchy,
+  docsOnboardingHierarchy,
+  docsIntegrations,
+  markdownDocs,
+} from "./entries";
 
-export default [
+export const inlineDocs = [
   docsSignIn,
   docsSignUp,
   docsDashboard,
@@ -11,3 +22,9 @@ export default [
   docsAuditLog,
   docsAccessibility,
 ];
+
+export { markdownDocs };
+
+const docsIndex = [...inlineDocs, ...markdownDocs];
+
+export default docsIndex;
