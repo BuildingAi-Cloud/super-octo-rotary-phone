@@ -64,7 +64,10 @@ export default function OrgAdminPanel({ user }: { user: User }) {
 
   // ── Team list ──────────────────────────────────────────────────────────────
 
-  const filteredUsers = users.filter((u) => {
+  // Only show users whose roles this actor can manage (enforces hierarchy in the directory view)
+  const manageableUsers = users.filter((u) => u.id !== user.id && allowedRoles.includes(u.role));
+
+  const filteredUsers = manageableUsers.filter((u) => {
     const matchesSearch =
       u.name.toLowerCase().includes(search.toLowerCase()) ||
       u.email.toLowerCase().includes(search.toLowerCase());
@@ -191,7 +194,7 @@ export default function OrgAdminPanel({ user }: { user: User }) {
               onChange={(e) => setFilterRole(e.target.value as UserRole | "all")}
             >
               <option value="all">All Roles</option>
-              {(Object.keys(ROLE_TEMPLATES) as UserRole[]).map((r) => (
+              {allowedRoles.map((r) => (
                 <option key={r} value={r}>{ROLE_TEMPLATES[r].label}</option>
               ))}
             </select>

@@ -39,7 +39,7 @@ BuildSync enforces a structured onboarding hierarchy — each role can only add 
 | Who | Can Add | Permission Level |
 |-----|---------|-----------------|
 | **Organization Admin / Building Owner (Tier 1)** | Building Manager, Facility Manager | Full Manager Access |
-| **Building Manager (Tier 3 — Super User)** | Security, Concierge, Staff, Residents, Tenants | Operational / Resident Portal Access |
+| **Building Manager (Tier 3 — Super User)** | Residents, Tenants, Concierge, Security, Staff | Operational / Resident Portal Access |
 | **Facility Manager (Tier 2 — Technical Lead)** | Vendors, Contractors, Maintenance Staff | Work-Order Only Access |
 
 ### Three Onboarding Flows
