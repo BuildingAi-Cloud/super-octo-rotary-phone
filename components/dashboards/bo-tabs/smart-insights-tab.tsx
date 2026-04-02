@@ -103,6 +103,148 @@ type GeoStatus    = "idle" | "detecting" | "resolved" | "denied";
 const LS_MODE   = "buildsync_market_loc_mode";
 const LS_MARKET = "buildsync_market_loc_market";
 
+// ── Extracted sub-components (must live outside SmartInsightsTab so React
+//    doesn't remount them on every render cycle) ────────────────────────────
+
+function MarketDropdown({
+  value,
+  onChange,
+}: {
+  value: MarketKey;
+  onChange: (m: MarketKey) => void;
+}) {
+  return (
+    <select
+      value={value}
+      onChange={(e) => onChange(e.target.value as MarketKey)}
+      className="bg-background border border-border/40 rounded px-2 py-0.5 font-mono text-[10px] focus:outline-none focus:border-accent/60 text-foreground"
+    >
+      {ALL_MARKETS.map((m) => (
+        <option key={m} value={m}>{m}</option>
+      ))}
+    </select>
+  );
+}
+
+function LocationControl({
+  locationMode,
+  geoStatus,
+  selectedMarket,
+  onChangeMode,
+  onChangeMarket,
+  onRetryGps,
+}: {
+  locationMode: LocationMode;
+  geoStatus: GeoStatus;
+  selectedMarket: MarketKey;
+  onChangeMode: (m: LocationMode) => void;
+  onChangeMarket: (m: MarketKey) => void;
+  onRetryGps: () => void;
+}) {
+  const LockBtn = () => (
+    <button
+      onClick={() => onChangeMode("disabled")}
+      className="font-mono text-[10px] text-muted-foreground hover:text-red-400 transition-colors"
+      title="Disable for privacy"
+    >
+      <svg className="w-3 h-3" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+        <rect x="3" y="11" width="18" height="11" rx="2" />
+        <path d="M7 11V7a5 5 0 0110 0v4" />
+      </svg>
+    </button>
+  );
+
+  // Initial auto — waiting for useEffect to fire geolocation
+  if (locationMode === "auto" && geoStatus === "idle") {
+    return (
+      <div className="flex items-center gap-2 text-[10px] font-mono text-muted-foreground">
+        <span className="w-3 h-3 border border-accent border-t-transparent rounded-full animate-spin" />
+        Preparing…
+      </div>
+    );
+  }
+
+  if (locationMode === "auto" && geoStatus === "detecting") {
+    return (
+      <div className="flex items-center gap-2 text-[10px] font-mono text-muted-foreground">
+        <span className="w-3 h-3 border border-accent border-t-transparent rounded-full animate-spin" />
+        Detecting location…
+      </div>
+    );
+  }
+
+  if (locationMode === "auto" && geoStatus === "resolved") {
+    return (
+      <div className="flex items-center gap-2">
+        <span className="w-2 h-2 rounded-full bg-green-500 shrink-0" />
+        <span className="font-mono text-[10px] text-green-400">{selectedMarket}</span>
+        <span className="font-mono text-[10px] text-muted-foreground">GPS</span>
+        <button
+          onClick={() => onChangeMode("manual")}
+          className="font-mono text-[10px] text-muted-foreground hover:text-foreground underline underline-offset-2 transition-colors"
+        >
+          Change
+        </button>
+        <LockBtn />
+      </div>
+    );
+  }
+
+  if (locationMode === "auto" && geoStatus === "denied") {
+    return (
+      <div className="flex items-center gap-2 flex-wrap">
+        <span className="flex items-center gap-1 font-mono text-[10px] text-amber-400">
+          <svg className="w-3 h-3" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+            <path d="M12 9v4m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
+          </svg>
+          Location denied
+        </span>
+        <MarketDropdown value={selectedMarket} onChange={onChangeMarket} />
+        <LockBtn />
+      </div>
+    );
+  }
+
+  if (locationMode === "manual") {
+    return (
+      <div className="flex items-center gap-2 flex-wrap">
+        <span className="font-mono text-[10px] text-muted-foreground">Market:</span>
+        <MarketDropdown value={selectedMarket} onChange={onChangeMarket} />
+        <button
+          onClick={onRetryGps}
+          className="font-mono text-[10px] text-accent hover:text-accent/80 transition-colors"
+          title="Try GPS"
+        >
+          <svg className="w-3 h-3" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+            <circle cx="12" cy="12" r="3" />
+            <path d="M12 2v3m0 14v3M2 12h3m14 0h3" />
+          </svg>
+        </button>
+        <LockBtn />
+      </div>
+    );
+  }
+
+  // disabled
+  return (
+    <div className="flex items-center gap-2">
+      <span className="flex items-center gap-1.5 font-mono text-[10px] text-muted-foreground border border-border/30 rounded px-2 py-0.5">
+        <svg className="w-3 h-3" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+          <rect x="3" y="11" width="18" height="11" rx="2" />
+          <path d="M7 11V7a5 5 0 0110 0v4" />
+        </svg>
+        Location disabled
+      </span>
+      <button
+        onClick={onRetryGps}
+        className="font-mono text-[10px] text-accent hover:text-accent/80 underline underline-offset-2 transition-colors"
+      >
+        Enable
+      </button>
+    </div>
+  );
+}
+
 // ── Static tab data ───────────────────────────────────────────────────────────
 
 const predictiveAlerts = [
@@ -138,35 +280,44 @@ export default function SmartInsightsTab() {
     return (localStorage.getItem(LS_MARKET) as MarketKey) || "New York, NY";
   });
 
-  const saveMode = (mode: LocationMode) => {
+  const handleChangeMode = useCallback((mode: LocationMode) => {
     setLocationMode(mode);
     localStorage.setItem(LS_MODE, mode);
-  };
-  const saveMarket = (market: MarketKey) => {
+  }, []);
+
+  const handleChangeMarket = useCallback((market: MarketKey) => {
     setSelectedMarket(market);
     localStorage.setItem(LS_MARKET, market);
-  };
+    setLocationMode("manual");
+    localStorage.setItem(LS_MODE, "manual");
+  }, []);
+
+  const handleRetryGps = useCallback(() => {
+    handleChangeMode("auto");
+    setGeoStatus("idle");
+  }, [handleChangeMode]);
 
   const detectLocation = useCallback(() => {
     if (typeof navigator === "undefined" || !navigator.geolocation) {
       setGeoStatus("denied");
-      saveMode("manual");
+      handleChangeMode("manual");
       return;
     }
     setGeoStatus("detecting");
     navigator.geolocation.getCurrentPosition(
       (pos) => {
         const market = nearestMarket(pos.coords.latitude, pos.coords.longitude);
-        saveMarket(market);
+        setSelectedMarket(market);
+        localStorage.setItem(LS_MARKET, market);
         setGeoStatus("resolved");
       },
       () => {
         setGeoStatus("denied");
-        saveMode("manual");
+        handleChangeMode("manual");
       },
       { timeout: 8000 },
     );
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [handleChangeMode]);
 
   useEffect(() => {
     if (locationMode === "auto" && geoStatus === "idle") detectLocation();
@@ -175,7 +326,6 @@ export default function SmartInsightsTab() {
   // ── Derived benchmark data ───────────────────────────────────────────────
   const activeMarket = locationMode === "disabled" ? null : selectedMarket;
   const benchmarks   = activeMarket ? buildBenchmarks(activeMarket) : [];
-  const marketRents  = activeMarket ? MARKET_RENTS[activeMarket] : null;
 
   const filteredBenchmarks = benchmarkSort === "all" ? benchmarks : benchmarks.filter((b) =>
     benchmarkSort === "favorable" ? b.favorable : !b.favorable,
@@ -183,118 +333,10 @@ export default function SmartInsightsTab() {
 
   const overallMgmtScore = Math.round(managementKpis.reduce((sum, k) => sum + k.score, 0) / managementKpis.length);
 
-  const ownRentChart    = OWN_RENTS.map((v, i)  => ({ label: UNIT_LABELS[i], value: v, color: "bg-accent/60" }));
-  const marketRentChart = marketRents
-    ? marketRents.map((v, i) => ({ label: UNIT_LABELS[i], value: v, color: "bg-muted-foreground/30" }))
+  const ownRentChart    = OWN_RENTS.map((v, i) => ({ label: UNIT_LABELS[i], value: v, color: "bg-accent/60" }));
+  const marketRentChart = activeMarket
+    ? MARKET_RENTS[activeMarket].map((v, i) => ({ label: UNIT_LABELS[i], value: v, color: "bg-muted-foreground/30" }))
     : [];
-
-  // ── Location control UI ──────────────────────────────────────────────────
-  const LocationControl = () => {
-    // Auto mode + detecting
-    if (locationMode === "auto" && geoStatus === "detecting") {
-      return (
-        <div className="flex items-center gap-2 text-[10px] font-mono text-muted-foreground">
-          <span className="w-3 h-3 border border-accent border-t-transparent rounded-full animate-spin" />
-          Detecting location…
-        </div>
-      );
-    }
-
-    // Auto mode + resolved
-    if (locationMode === "auto" && geoStatus === "resolved") {
-      return (
-        <div className="flex items-center gap-2">
-          <span className="w-2 h-2 rounded-full bg-green-500 shrink-0" />
-          <span className="font-mono text-[10px] text-green-400">{selectedMarket}</span>
-          <span className="font-mono text-[10px] text-muted-foreground">GPS</span>
-          <button
-            onClick={() => { saveMode("manual"); }}
-            className="font-mono text-[10px] text-muted-foreground hover:text-foreground underline underline-offset-2 transition-colors"
-          >
-            Change
-          </button>
-          <button
-            onClick={() => { saveMode("disabled"); }}
-            className="font-mono text-[10px] text-muted-foreground hover:text-red-400 transition-colors"
-            title="Disable for privacy"
-          >
-            {/* lock icon */}
-            <svg className="w-3 h-3" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2" /><path d="M7 11V7a5 5 0 0110 0v4" /></svg>
-          </button>
-        </div>
-      );
-    }
-
-    // Auto mode denied (permission refused — show same as manual)
-    if (locationMode === "auto" && geoStatus === "denied") {
-      return (
-        <div className="flex items-center gap-2 flex-wrap">
-          <span className="flex items-center gap-1 font-mono text-[10px] text-amber-400">
-            <svg className="w-3 h-3" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M12 9v4m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" /></svg>
-            Location denied
-          </span>
-          <MarketDropdown />
-          <button
-            onClick={() => { saveMode("disabled"); }}
-            className="font-mono text-[10px] text-muted-foreground hover:text-red-400 transition-colors"
-            title="Disable for privacy"
-          >
-            <svg className="w-3 h-3" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2" /><path d="M7 11V7a5 5 0 0110 0v4" /></svg>
-          </button>
-        </div>
-      );
-    }
-
-    // Manual mode
-    if (locationMode === "manual") {
-      return (
-        <div className="flex items-center gap-2 flex-wrap">
-          <span className="font-mono text-[10px] text-muted-foreground">Market:</span>
-          <MarketDropdown />
-          <button
-            onClick={() => { saveMode("auto"); setGeoStatus("idle"); }}
-            className="font-mono text-[10px] text-accent hover:text-accent/80 transition-colors"
-            title="Try GPS"
-          >
-            <svg className="w-3 h-3" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3" /><path d="M12 2v3m0 14v3M2 12h3m14 0h3" /><path d="M4.22 4.22l2.12 2.12m11.32 11.32l2.12 2.12M4.22 19.78l2.12-2.12m11.32-11.32l2.12-2.12" /></svg>
-          </button>
-          <button
-            onClick={() => { saveMode("disabled"); }}
-            className="font-mono text-[10px] text-muted-foreground hover:text-red-400 transition-colors"
-            title="Disable for privacy"
-          >
-            <svg className="w-3 h-3" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2" /><path d="M7 11V7a5 5 0 0110 0v4" /></svg>
-          </button>
-        </div>
-      );
-    }
-
-    // Disabled mode
-    return (
-      <div className="flex items-center gap-2">
-        <span className="flex items-center gap-1.5 font-mono text-[10px] text-muted-foreground border border-border/30 rounded px-2 py-0.5">
-          <svg className="w-3 h-3" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2" /><path d="M7 11V7a5 5 0 0110 0v4" /></svg>
-          Location disabled
-        </span>
-        <button
-          onClick={() => { saveMode("auto"); setGeoStatus("idle"); }}
-          className="font-mono text-[10px] text-accent hover:text-accent/80 underline underline-offset-2 transition-colors"
-        >
-          Enable
-        </button>
-      </div>
-    );
-  };
-
-  const MarketDropdown = () => (
-    <select
-      value={selectedMarket}
-      onChange={(e) => { saveMarket(e.target.value as MarketKey); saveMode("manual"); }}
-      className="bg-background border border-border/40 rounded px-2 py-0.5 font-mono text-[10px] focus:outline-none focus:border-accent/60 text-foreground"
-    >
-      {ALL_MARKETS.map((m) => <option key={m} value={m}>{m}</option>)}
-    </select>
-  );
 
   return (
     <div className="space-y-6">
@@ -311,7 +353,14 @@ export default function SmartInsightsTab() {
         title="Market Benchmarking"
         actions={
           <div className="flex items-center gap-3 flex-wrap justify-end">
-            <LocationControl />
+            <LocationControl
+              locationMode={locationMode}
+              geoStatus={geoStatus}
+              selectedMarket={selectedMarket}
+              onChangeMode={handleChangeMode}
+              onChangeMarket={handleChangeMarket}
+              onRetryGps={handleRetryGps}
+            />
             {activeMarket && (
               <div className="flex items-center gap-1">
                 {(["all", "favorable", "unfavorable"] as const).map((f) => (
