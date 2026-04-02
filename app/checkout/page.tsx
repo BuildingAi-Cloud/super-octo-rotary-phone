@@ -1,7 +1,7 @@
 "use client"
 
 import { useSearchParams } from "next/navigation"
-import { Suspense, useMemo, useState } from "react"
+import { Suspense, useState } from "react"
 import Link from "next/link"
 import { Checkout } from "@/components/checkout"
 import { getProductById, formatBillingSuffix, getUnitPriceInCents, type BillingInterval } from "@/lib/products"
@@ -39,7 +39,7 @@ function CheckoutContent() {
   const totalPrice = (unitPriceInCents * safeUnits) / 100
   const approxMonthly = billingInterval === "yearly" ? totalPrice / 12 : totalPrice
   const billingLabel = billingInterval === "yearly" ? "Yearly Total" : "Monthly Total"
-  const unitSuffix = useMemo(() => formatBillingSuffix(billingInterval), [billingInterval])
+  const unitSuffix = formatBillingSuffix(billingInterval)
 
   return (
     <div className="w-full max-w-4xl mx-auto">
