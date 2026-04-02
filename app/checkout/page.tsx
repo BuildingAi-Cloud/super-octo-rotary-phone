@@ -1,17 +1,18 @@
 "use client"
 
 import { useSearchParams } from "next/navigation"
-import { Suspense } from "react"
+import { Suspense, useState } from "react"
 import Link from "next/link"
 import { Checkout } from "@/components/checkout"
-import { getProductById, formatPrice } from "@/lib/products"
+import { getProductById, formatBillingSuffix, getUnitPriceInCents, type BillingInterval } from "@/lib/products"
 import { AnimatedNoise } from "@/components/animated-noise"
 import { BitmapChevron } from "@/components/bitmap-chevron"
 
 function CheckoutContent() {
   const searchParams = useSearchParams()
   const productId = searchParams.get("plan") || "professional"
-  const units = parseInt(searchParams.get("units") || "50", 10)
+  const [billingInterval, setBillingInterval] = useState<BillingInterval>((searchParams.get("interval") as BillingInterval) || "monthly")
+  const [units, setUnits] = useState<number>(parseInt(searchParams.get("units") || "50", 10))
   
   const product = getProductById(productId)
 
@@ -33,7 +34,12 @@ function CheckoutContent() {
     )
   }
 
-  const totalPrice = (product.priceInCents * units) / 100
+  const safeUnits = Number.isFinite(units) ? Math.max(10, Math.min(1000, units)) : 50
+  const unitPriceInCents = getUnitPriceInCents(product, billingInterval)
+  const totalPrice = (unitPriceInCents * safeUnits) / 100
+  const approxMonthly = billingInterval === "yearly" ? totalPrice / 12 : totalPrice
+  const billingLabel = billingInterval === "yearly" ? "Yearly Total" : "Monthly Total"
+  const unitSuffix = formatBillingSuffix(billingInterval)
 
   return (
     <div className="w-full max-w-4xl mx-auto">
@@ -49,19 +55,55 @@ function CheckoutContent() {
                 <p className="font-mono text-[10px] text-muted-foreground">{product.description}</p>
               </div>
               <p className="font-mono text-sm text-foreground">
-                {formatPrice(product.priceInCents)}{product.period}
+                ${(unitPriceInCents / 100).toFixed(2)}{unitSuffix}
               </p>
+            </div>
+
+            <div className="border-t border-border/30 pt-4">
+              <p className="font-mono text-xs text-muted-foreground mb-2">Billing Cycle</p>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => setBillingInterval("monthly")}
+                  className={`px-3 py-1.5 text-[10px] font-mono uppercase tracking-wider border rounded transition-colors ${billingInterval === "monthly" ? "border-accent text-accent bg-accent/10" : "border-border/40 text-muted-foreground hover:text-foreground"}`}
+                >
+                  Monthly
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setBillingInterval("yearly")}
+                  className={`px-3 py-1.5 text-[10px] font-mono uppercase tracking-wider border rounded transition-colors ${billingInterval === "yearly" ? "border-accent text-accent bg-accent/10" : "border-border/40 text-muted-foreground hover:text-foreground"}`}
+                >
+                  Yearly
+                </button>
+                {billingInterval === "yearly" && (
+                  <span className="font-mono text-[10px] text-green-500">15% savings</span>
+                )}
+              </div>
             </div>
             
             <div className="flex justify-between items-center border-t border-border/30 pt-4">
               <p className="font-mono text-xs text-muted-foreground">Units</p>
-              <p className="font-mono text-sm text-foreground">{units}</p>
+              <input
+                type="number"
+                min={10}
+                max={1000}
+                value={safeUnits}
+                onChange={(e) => setUnits(parseInt(e.target.value || "50", 10))}
+                className="w-24 border border-border/40 bg-background rounded px-2 py-1 font-mono text-sm text-right"
+              />
             </div>
             
             <div className="flex justify-between items-center border-t border-border/30 pt-4">
-              <p className="font-mono text-xs text-foreground uppercase tracking-widest">Monthly Total</p>
+              <p className="font-mono text-xs text-foreground uppercase tracking-widest">{billingLabel}</p>
               <p className="font-[var(--font-bebas)] text-2xl text-accent">${totalPrice.toFixed(2)}</p>
             </div>
+            {billingInterval === "yearly" && (
+              <div className="flex justify-between items-center border-t border-border/30 pt-3">
+                <p className="font-mono text-[10px] text-muted-foreground uppercase tracking-widest">Effective Monthly</p>
+                <p className="font-mono text-sm text-green-500">${approxMonthly.toFixed(2)}</p>
+              </div>
+            )}
           </div>
 
           <div className="border-t border-border/30 pt-6">
@@ -87,7 +129,7 @@ function CheckoutContent() {
         {/* Stripe Checkout */}
         <div className="border border-border/40 bg-card/30 p-6">
           <h2 className="font-[var(--font-bebas)] text-2xl tracking-wide mb-6">PAYMENT</h2>
-          <Checkout productId={productId} />
+          <Checkout productId={productId} interval={billingInterval} units={safeUnits} />
         </div>
       </div>
     </div>
