@@ -50,6 +50,39 @@ interface TxForm {
   date: string;
 }
 
+type BankAccountType = "checking" | "savings";
+type BankAccountStatus = "active" | "pending_verification" | "archived";
+
+interface OwnerBankAccount {
+  id: string;
+  bankName: string;
+  accountHolder: string;
+  accountType: BankAccountType;
+  routingLast4: string;
+  accountLast4: string;
+  nickname: string;
+  status: BankAccountStatus;
+  isDefault: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+interface BankEvent {
+  id: string;
+  bankId: string;
+  message: string;
+  at: string;
+}
+
+interface BankForm {
+  bankName: string;
+  accountHolder: string;
+  accountType: BankAccountType;
+  routingLast4: string;
+  accountLast4: string;
+  nickname: string;
+}
+
 // ─── Seed Transactions ────────────────────────────────────────────────────────
 
 let _tid = 0;
@@ -173,6 +206,19 @@ const EMPTY_FORM: TxForm = {
   date: new Date().toISOString().slice(0, 10),
 };
 
+const EMPTY_BANK_FORM: BankForm = {
+  bankName: "",
+  accountHolder: "",
+  accountType: "checking",
+  routingLast4: "",
+  accountLast4: "",
+  nickname: "",
+};
+
+function formatDateTime(ts: string): string {
+  return new Date(ts).toLocaleString();
+}
+
 // ─── Component ────────────────────────────────────────────────────────────────
 
 export default function FinancialsTab() {
@@ -185,6 +231,11 @@ export default function FinancialsTab() {
   const [budgets,      setBudgets]      = useState<Partial<Record<TxCategory, number>>>(DEFAULT_BUDGETS);
   const [editBudget,   setEditBudget]   = useState<TxCategory | null>(null);
   const [form,         setForm]         = useState<TxForm>(EMPTY_FORM);
+  const [banks,        setBanks]        = useState<OwnerBankAccount[]>([]);
+  const [bankEvents,   setBankEvents]   = useState<BankEvent[]>([]);
+  const [showAddBank,  setShowAddBank]  = useState(false);
+  const [editingBankId,setEditingBankId]= useState<string | null>(null);
+  const [bankForm,     setBankForm]     = useState<BankForm>(EMPTY_BANK_FORM);
   const [toast,        setToast]        = useState<string | null>(null);
 
   // Persist to localStorage
@@ -196,6 +247,10 @@ export default function FinancialsTab() {
       if (ar) setArrears(JSON.parse(ar));
       const bg = localStorage.getItem("fin_budgets");
       if (bg) setBudgets(JSON.parse(bg));
+      const bk = localStorage.getItem("fin_owner_banks");
+      if (bk) setBanks(JSON.parse(bk));
+      const be = localStorage.getItem("fin_owner_bank_events");
+      if (be) setBankEvents(JSON.parse(be));
     } catch { /* ignore stale/corrupt data */ }
   }, []);
 
@@ -269,6 +324,126 @@ export default function FinancialsTab() {
   }, [showToast]);
 
   const periodLabel = period === "ytd" ? "Year-to-Date" : period === "quarterly" ? "Last Quarter" : "This Month";
+
+  const writeBanks = useCallback((next: OwnerBankAccount[]) => {
+    setBanks(next);
+    try { localStorage.setItem("fin_owner_banks", JSON.stringify(next)); } catch { /* noop */ }
+  }, []);
+
+  const appendBankEvent = useCallback((bankId: string, message: string) => {
+    const evt: BankEvent = {
+      id: `be${Date.now()}${Math.random().toString(16).slice(2, 6)}`,
+      bankId,
+      message,
+      at: new Date().toISOString(),
+    };
+    setBankEvents((prev) => {
+      const next = [evt, ...prev].slice(0, 50);
+      try { localStorage.setItem("fin_owner_bank_events", JSON.stringify(next)); } catch { /* noop */ }
+      return next;
+    });
+  }, []);
+
+  const resetBankForm = useCallback(() => {
+    setBankForm(EMPTY_BANK_FORM);
+    setEditingBankId(null);
+    setShowAddBank(false);
+  }, []);
+
+  const upsertBank = useCallback(() => {
+    const bankName = bankForm.bankName.trim();
+    const accountHolder = bankForm.accountHolder.trim();
+    const nickname = bankForm.nickname.trim() || `${bankName || "Bank"} (${bankForm.accountLast4 || "****"})`;
+    const routingLast4 = bankForm.routingLast4.replace(/\D/g, "").slice(-4);
+    const accountLast4 = bankForm.accountLast4.replace(/\D/g, "").slice(-4);
+
+    if (!bankName || !accountHolder || routingLast4.length !== 4 || accountLast4.length !== 4) {
+      showToast("Enter bank name, holder, and last 4 digits for routing/account");
+      return;
+    }
+
+    const now = new Date().toISOString();
+    if (editingBankId) {
+      const prevBank = banks.find((b) => b.id === editingBankId);
+      const next = banks.map((b) => b.id === editingBankId ? {
+        ...b,
+        bankName,
+        accountHolder,
+        nickname,
+        accountType: bankForm.accountType,
+        routingLast4,
+        accountLast4,
+        updatedAt: now,
+      } : b);
+      writeBanks(next);
+      appendBankEvent(editingBankId, `Updated bank details${prevBank?.nickname ? ` for ${prevBank.nickname}` : ""}`);
+      showToast("Bank account updated");
+      resetBankForm();
+      return;
+    }
+
+    const id = `bank${Date.now()}`;
+    const bank: OwnerBankAccount = {
+      id,
+      bankName,
+      accountHolder,
+      accountType: bankForm.accountType,
+      routingLast4,
+      accountLast4,
+      nickname,
+      status: "pending_verification",
+      isDefault: banks.length === 0,
+      createdAt: now,
+      updatedAt: now,
+    };
+    writeBanks([bank, ...banks]);
+    appendBankEvent(id, "Bank account added and pending verification");
+    showToast("Bank account added");
+    resetBankForm();
+  }, [appendBankEvent, bankForm, banks, editingBankId, resetBankForm, showToast, writeBanks]);
+
+  const setDefaultBank = useCallback((bankId: string) => {
+    const next = banks.map((b) => ({ ...b, isDefault: b.id === bankId, updatedAt: b.id === bankId ? new Date().toISOString() : b.updatedAt }));
+    writeBanks(next);
+    appendBankEvent(bankId, "Set as default payout bank");
+    showToast("Default bank updated");
+  }, [appendBankEvent, banks, showToast, writeBanks]);
+
+  const setBankStatus = useCallback((bankId: string, status: BankAccountStatus) => {
+    const statusLabel: Record<BankAccountStatus, string> = {
+      active: "Bank verified and active",
+      pending_verification: "Bank moved to pending verification",
+      archived: "Bank archived",
+    };
+
+    let next = banks.map((b) => b.id === bankId ? { ...b, status, updatedAt: new Date().toISOString() } : b);
+    const activeAvailable = next.filter((b) => b.status === "active");
+    if (!next.some((b) => b.isDefault && b.status === "active") && activeAvailable.length > 0) {
+      next = next.map((b, i) => ({ ...b, isDefault: b.id === activeAvailable[0].id && i >= 0 }));
+    }
+    if (next.length > 0 && !next.some((b) => b.isDefault) && status !== "archived") {
+      next = next.map((b, i) => ({ ...b, isDefault: i === 0 }));
+    }
+
+    writeBanks(next);
+    appendBankEvent(bankId, statusLabel[status]);
+    showToast(statusLabel[status]);
+  }, [appendBankEvent, banks, showToast, writeBanks]);
+
+  const beginEditBank = useCallback((bank: OwnerBankAccount) => {
+    setEditingBankId(bank.id);
+    setBankForm({
+      bankName: bank.bankName,
+      accountHolder: bank.accountHolder,
+      accountType: bank.accountType,
+      routingLast4: bank.routingLast4,
+      accountLast4: bank.accountLast4,
+      nickname: bank.nickname,
+    });
+    setShowAddBank(true);
+  }, []);
+
+  const defaultBank = banks.find((b) => b.isDefault);
 
   return (
     <div className="space-y-6">
@@ -559,6 +734,223 @@ export default function FinancialsTab() {
           ))}
         </div>
       </SectionCard>
+
+      {/* ── Owner Bank Accounts + Tracking ───────────────────────────────── */}
+      <div className="grid md:grid-cols-2 gap-6">
+        <SectionCard
+          title="Owner Payout Banks"
+          actions={
+            <button
+              onClick={() => {
+                if (showAddBank && !editingBankId) {
+                  resetBankForm();
+                  return;
+                }
+                setEditingBankId(null);
+                setBankForm(EMPTY_BANK_FORM);
+                setShowAddBank((v) => !v);
+              }}
+              className="font-mono text-[10px] px-2 py-1 border border-accent/40 rounded text-accent hover:bg-accent/10 transition-colors"
+            >
+              {showAddBank && !editingBankId ? "Close" : "Add Bank"}
+            </button>
+          }
+        >
+          <div className="space-y-3">
+            {showAddBank && (
+              <div className="border border-border/30 rounded-md p-3 bg-card/40 space-y-3">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                  <input
+                    type="text"
+                    value={bankForm.bankName}
+                    onChange={(e) => setBankForm((f) => ({ ...f, bankName: e.target.value }))}
+                    placeholder="Bank name"
+                    className="w-full bg-background border border-border/40 rounded px-2 py-1.5 font-mono text-xs focus:outline-none focus:border-accent/60"
+                  />
+                  <input
+                    type="text"
+                    value={bankForm.accountHolder}
+                    onChange={(e) => setBankForm((f) => ({ ...f, accountHolder: e.target.value }))}
+                    placeholder="Account holder"
+                    className="w-full bg-background border border-border/40 rounded px-2 py-1.5 font-mono text-xs focus:outline-none focus:border-accent/60"
+                  />
+                  <select
+                    value={bankForm.accountType}
+                    onChange={(e) => setBankForm((f) => ({ ...f, accountType: e.target.value as BankAccountType }))}
+                    className="w-full bg-background border border-border/40 rounded px-2 py-1.5 font-mono text-xs focus:outline-none focus:border-accent/60"
+                  >
+                    <option value="checking">Checking</option>
+                    <option value="savings">Savings</option>
+                  </select>
+                  <input
+                    type="text"
+                    inputMode="numeric"
+                    maxLength={4}
+                    value={bankForm.routingLast4}
+                    onChange={(e) => setBankForm((f) => ({ ...f, routingLast4: e.target.value.replace(/\D/g, "").slice(0, 4) }))}
+                    placeholder="Routing last 4"
+                    className="w-full bg-background border border-border/40 rounded px-2 py-1.5 font-mono text-xs focus:outline-none focus:border-accent/60"
+                  />
+                  <input
+                    type="text"
+                    inputMode="numeric"
+                    maxLength={4}
+                    value={bankForm.accountLast4}
+                    onChange={(e) => setBankForm((f) => ({ ...f, accountLast4: e.target.value.replace(/\D/g, "").slice(0, 4) }))}
+                    placeholder="Account last 4"
+                    className="w-full bg-background border border-border/40 rounded px-2 py-1.5 font-mono text-xs focus:outline-none focus:border-accent/60"
+                  />
+                  <input
+                    type="text"
+                    value={bankForm.nickname}
+                    onChange={(e) => setBankForm((f) => ({ ...f, nickname: e.target.value }))}
+                    placeholder="Nickname (optional)"
+                    className="w-full bg-background border border-border/40 rounded px-2 py-1.5 font-mono text-xs focus:outline-none focus:border-accent/60"
+                  />
+                </div>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={upsertBank}
+                    className="font-mono text-[10px] px-3 py-1.5 border border-accent/40 rounded text-accent bg-accent/10 hover:bg-accent/20 transition-colors"
+                  >
+                    {editingBankId ? "Update Bank" : "Save Bank"}
+                  </button>
+                  <button
+                    onClick={resetBankForm}
+                    className="font-mono text-[10px] px-3 py-1.5 border border-border/40 rounded text-muted-foreground hover:text-foreground transition-colors"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {banks.length === 0 && (
+              <p className="font-mono text-xs text-muted-foreground text-center py-6 border border-dashed border-border/30 rounded-md">
+                No payout bank linked yet. Add one or more bank accounts.
+              </p>
+            )}
+
+            {banks.map((bank) => (
+              <div key={bank.id} className="border border-border/30 rounded-md p-3 space-y-2">
+                <div className="flex items-start justify-between gap-2">
+                  <div className="min-w-0">
+                    <p className="font-mono text-xs truncate">{bank.nickname || bank.bankName}</p>
+                    <p className="font-mono text-[10px] text-muted-foreground truncate">
+                      {bank.bankName} · {bank.accountType} · ****{bank.accountLast4} · RT ****{bank.routingLast4}
+                    </p>
+                    <p className="font-mono text-[10px] text-muted-foreground truncate">Holder: {bank.accountHolder}</p>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    {bank.isDefault && <Badge className="border-accent/40 text-accent">default</Badge>}
+                    <Badge
+                      className={
+                        bank.status === "active"
+                          ? "border-green-500/40 text-green-500"
+                          : bank.status === "pending_verification"
+                          ? "border-yellow-500/40 text-yellow-500"
+                          : "border-border/40 text-muted-foreground"
+                      }
+                    >
+                      {bank.status.replace("_", " ")}
+                    </Badge>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2 flex-wrap">
+                  {!bank.isDefault && bank.status === "active" && (
+                    <button
+                      onClick={() => setDefaultBank(bank.id)}
+                      className="font-mono text-[10px] px-2 py-0.5 border border-accent/40 rounded text-accent hover:bg-accent/10 transition-colors"
+                    >
+                      Set Default
+                    </button>
+                  )}
+                  {bank.status !== "active" && (
+                    <button
+                      onClick={() => setBankStatus(bank.id, "active")}
+                      className="font-mono text-[10px] px-2 py-0.5 border border-green-500/40 rounded text-green-500 hover:bg-green-500/10 transition-colors"
+                    >
+                      Verify
+                    </button>
+                  )}
+                  {bank.status !== "pending_verification" && (
+                    <button
+                      onClick={() => setBankStatus(bank.id, "pending_verification")}
+                      className="font-mono text-[10px] px-2 py-0.5 border border-yellow-500/40 rounded text-yellow-500 hover:bg-yellow-500/10 transition-colors"
+                    >
+                      Mark Pending
+                    </button>
+                  )}
+                  {bank.status !== "archived" && (
+                    <button
+                      onClick={() => setBankStatus(bank.id, "archived")}
+                      className="font-mono text-[10px] px-2 py-0.5 border border-border/40 rounded text-muted-foreground hover:text-foreground transition-colors"
+                    >
+                      Archive
+                    </button>
+                  )}
+                  <button
+                    onClick={() => beginEditBank(bank)}
+                    className="font-mono text-[10px] px-2 py-0.5 border border-border/40 rounded text-muted-foreground hover:text-foreground transition-colors"
+                  >
+                    Edit
+                  </button>
+                  <span className="ml-auto font-mono text-[9px] text-muted-foreground">
+                    Updated {formatDateTime(bank.updatedAt)}
+                  </span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </SectionCard>
+
+        <SectionCard title="Bank Tracking">
+          <div className="space-y-3">
+            <div className="grid grid-cols-2 gap-2">
+              <div className="border border-border/20 rounded p-2.5">
+                <p className="font-mono text-[9px] text-muted-foreground uppercase">Linked Banks</p>
+                <p className="font-[var(--font-bebas)] text-xl">{banks.length}</p>
+              </div>
+              <div className="border border-border/20 rounded p-2.5">
+                <p className="font-mono text-[9px] text-muted-foreground uppercase">Active Banks</p>
+                <p className="font-[var(--font-bebas)] text-xl text-green-500">{banks.filter((b) => b.status === "active").length}</p>
+              </div>
+            </div>
+
+            <div className="border border-border/20 rounded p-2.5">
+              <p className="font-mono text-[9px] text-muted-foreground uppercase mb-1">Default Payout Destination</p>
+              {defaultBank ? (
+                <p className="font-mono text-xs">
+                  {defaultBank.bankName} · ****{defaultBank.accountLast4} ({defaultBank.accountType})
+                </p>
+              ) : (
+                <p className="font-mono text-xs text-muted-foreground">No default bank set</p>
+              )}
+            </div>
+
+            <div className="border border-border/20 rounded p-2.5">
+              <p className="font-mono text-[9px] text-muted-foreground uppercase mb-2">Bank Activity Timeline</p>
+              {bankEvents.length === 0 ? (
+                <p className="font-mono text-xs text-muted-foreground">No bank updates tracked yet</p>
+              ) : (
+                <div className="space-y-1.5 max-h-56 overflow-y-auto">
+                  {bankEvents.map((evt) => {
+                    const bank = banks.find((b) => b.id === evt.bankId);
+                    return (
+                      <div key={evt.id} className="text-[10px] font-mono border-b border-border/10 pb-1.5 last:border-0">
+                        <p className="text-foreground">{evt.message}</p>
+                        <p className="text-muted-foreground">
+                          {bank ? `${bank.bankName} • ` : ""}{formatDateTime(evt.at)}
+                        </p>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          </div>
+        </SectionCard>
+      </div>
 
       {/* ── Transaction Ledger ────────────────────────────────────────────── */}
       <SectionCard
