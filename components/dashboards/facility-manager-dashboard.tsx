@@ -1026,7 +1026,7 @@ function AuditLogTab({ entries: initialEntries }: { entries: AuditEntry[] }) {
 // ─── MAIN DASHBOARD ─────────────────────────────────────────────────────────────
 
 export function FacilityManagerDashboard({ user }: { user: User }) {
-  const iotEnabled = user && (user as Record<string, unknown>).iotEnabled !== false;
+  const iotEnabled = (user as User & { iotEnabled?: boolean }).iotEnabled !== false;
   const [activeTab, setActiveTab] = useState<TabKey>("dashboard");
   const tabRefs = useRef<Array<HTMLButtonElement | null>>([]);
 

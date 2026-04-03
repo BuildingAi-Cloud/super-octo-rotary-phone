@@ -103,7 +103,7 @@ export function ReportsTab() {
       {activeSection === "energy" && (
         <div>
           <h3 className="font-[var(--font-bebas)] text-lg tracking-wider mb-3">Energy Consumption (kWh)</h3>
-          <SectionCard>
+          <SectionCard title="Energy Consumption">
             <SimpleBarChart data={ENERGY_DATA} maxValue={Math.max(...ENERGY_DATA.map((d) => d.value))} formatValue={(v) => `${(v / 1000).toFixed(0)}k kWh`} />
           </SectionCard>
           <div className="grid grid-cols-3 gap-3 mt-3">
@@ -127,7 +127,7 @@ export function ReportsTab() {
       {activeSection === "work_orders" && (
         <div>
           <h3 className="font-[var(--font-bebas)] text-lg tracking-wider mb-3">Work Order Distribution</h3>
-          <SectionCard>
+          <SectionCard title="Work Order Distribution">
             <SimpleBarChart data={WORK_ORDER_TYPES} maxValue={Math.max(...WORK_ORDER_TYPES.map((d) => d.value))} formatValue={(v) => `${v} orders`} />
           </SectionCard>
           <div className="mt-3 border border-border/30 rounded-lg p-3 bg-card/30">
@@ -141,7 +141,7 @@ export function ReportsTab() {
       {activeSection === "vendors" && (
         <div>
           <h3 className="font-[var(--font-bebas)] text-lg tracking-wider mb-3">Vendor Avg. Response Time (hours)</h3>
-          <SectionCard>
+          <SectionCard title="Vendor Response Time">
             <SimpleBarChart data={VENDOR_RESPONSE} maxValue={Math.max(...VENDOR_RESPONSE.map((d) => d.value))} formatValue={(v) => `${v}h`} />
           </SectionCard>
           <div className="mt-3 grid gap-2">
@@ -161,7 +161,7 @@ export function ReportsTab() {
       {activeSection === "costs" && (
         <div>
           <h3 className="font-[var(--font-bebas)] text-lg tracking-wider mb-3">Monthly Maintenance Costs</h3>
-          <SectionCard>
+          <SectionCard title="Maintenance Costs">
             <SimpleBarChart data={MONTHLY_COSTS} maxValue={Math.max(...MONTHLY_COSTS.map((d) => d.value))} formatValue={(v) => `$${(v / 1000).toFixed(1)}k`} />
           </SectionCard>
           <div className="grid grid-cols-3 gap-3 mt-3">

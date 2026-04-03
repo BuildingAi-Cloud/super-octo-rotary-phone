@@ -19,8 +19,6 @@ export async function startCheckoutSession(productId: string, interval: BillingI
 
   // Create Checkout Sessions for subscription
   const session = await stripe.checkout.sessions.create({
-    ui_mode: 'embedded',
-    redirect_on_completion: 'never',
     line_items: [
       {
         price_data: {
