@@ -3,6 +3,13 @@ import React, { useEffect, useState } from "react";
 import Link from "next/link";
 
 // Dummy API fetch simulation
+type Equipment = {
+  id: number;
+  name: string;
+  health: number;
+  status: string;
+};
+
 async function fetchEquipment() {
   // Replace with real API call
   return [
@@ -13,7 +20,7 @@ async function fetchEquipment() {
 }
 
 export default function EquipmentHealthPage() {
-  const [equipment, setEquipment] = useState([]);
+  const [equipment, setEquipment] = useState<Equipment[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -44,7 +51,7 @@ export default function EquipmentHealthPage() {
               </tr>
             </thead>
             <tbody>
-              {equipment.map((eq: any) => (
+              {equipment.map((eq) => (
                 <tr key={eq.id} className="border-t">
                   <td className="p-2">{eq.name}</td>
                   <td className="p-2">{eq.health}%</td>
