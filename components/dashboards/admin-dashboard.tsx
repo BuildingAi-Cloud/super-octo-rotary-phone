@@ -22,6 +22,7 @@ const roleLabels: Record<UserRole, string> = {
   vendor: "Vendor",
   admin: "Admin",
   guest: "Guest",
+  building_manager: "Building Manager",
 };
 
 export default function AdminDashboard({ user }: { user: User }) {

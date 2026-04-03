@@ -8,9 +8,8 @@ import {
 import { loadStripe } from '@stripe/stripe-js'
 import { useRouter } from 'next/navigation'
 
-
-
-const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY)
+const stripeKey = process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY
+const stripePromise = stripeKey ? loadStripe(stripeKey) : null
 
 export function Checkout({
   productId,
@@ -71,7 +70,7 @@ export function Checkout({
     <div id="checkout">
       <EmbeddedCheckoutProvider
         stripe={stripePromise}
-        options={{ clientSecret: startCheckoutSessionForProduct }}
+        options={{ fetchClientSecret: startCheckoutSessionForProduct }}
       >
         <EmbeddedCheckout />
       </EmbeddedCheckoutProvider>
