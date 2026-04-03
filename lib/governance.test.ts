@@ -61,7 +61,7 @@ function makeVote(overrides: Partial<Vote> = {}): Vote {
 describe('canCreateVote', () => {
   it.each([
     ['building_owner', true],
-    ['property_manager', true],
+    ['building_manager', true],
     ['admin', true],
     ['resident', false],
     ['tenant', false],
@@ -79,7 +79,7 @@ describe('canManageVote', () => {
   it.each([
     ['building_owner', true],
     ['admin', true],
-    ['property_manager', false],
+    ['building_manager', false],
     ['resident', false],
     [null, false],
     [undefined, false],
@@ -107,7 +107,7 @@ describe('canCastVote', () => {
 describe('canViewMeetings', () => {
   it('allows all standard roles', () => {
     const allowed = [
-      'facility_manager', 'building_owner', 'property_manager',
+      'facility_manager', 'building_owner', 'building_manager',
       'resident', 'tenant', 'concierge', 'staff', 'security',
       'vendor', 'admin', 'guest',
     ]

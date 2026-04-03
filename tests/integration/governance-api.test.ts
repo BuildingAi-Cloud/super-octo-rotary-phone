@@ -11,6 +11,15 @@
 import { describe, expect, it, jest, beforeEach, afterEach, beforeAll, afterAll } from '@jest/globals'
 import { resetGovernanceStore } from '@/lib/governance-store'
 
+jest.mock('next/server', () => ({
+  NextResponse: {
+    json: (body: unknown, init?: { status?: number }) => ({
+      status: init?.status ?? 200,
+      json: async () => body,
+    }),
+  },
+}))
+
 // ---------------------------------------------------------------------------
 // Environment — disable Supabase so _storage falls through to in-memory
 // ---------------------------------------------------------------------------
@@ -87,11 +96,11 @@ import { GET as getResults } from '@/app/api/governance/[id]/results/route'
 // Helpers
 // ---------------------------------------------------------------------------
 function jsonRequest(body: Record<string, unknown>, method = 'POST'): Request {
-  return new Request('http://localhost/api/governance', {
+  return {
     method,
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(body),
-  })
+    json: async () => body,
+  } as unknown as Request
 }
 
 function routeContext(id: string) {
@@ -228,7 +237,7 @@ describe('GET /api/governance/[id]', () => {
     const created = await createRes.json()
 
     const res = await getVote(
-      new Request('http://localhost'),
+      {} as Request,
       routeContext(created.id),
     )
     expect(res.status).toBe(200)
@@ -238,7 +247,7 @@ describe('GET /api/governance/[id]', () => {
 
   it('returns 404 for unknown id', async () => {
     const res = await getVote(
-      new Request('http://localhost'),
+      {} as Request,
       routeContext('nonexistent'),
     )
     expect(res.status).toBe(404)
@@ -470,7 +479,7 @@ describe('GET /api/governance/[id]/results', () => {
     const vote = await createCompletedVoteWithCasts()
 
     const res = await getResults(
-      new Request('http://localhost'),
+      {} as Request,
       routeContext(vote.id),
     )
     expect(res.status).toBe(200)
@@ -488,7 +497,7 @@ describe('GET /api/governance/[id]/results', () => {
     const vote = await createCompletedVoteWithCasts()
 
     const res = await getResults(
-      new Request('http://localhost'),
+      {} as Request,
       routeContext(vote.id),
     )
     const data = await res.json()
@@ -501,7 +510,7 @@ describe('GET /api/governance/[id]/results', () => {
     const vote = await createRes.json()
 
     const res = await getResults(
-      new Request('http://localhost'),
+      {} as Request,
       routeContext(vote.id),
     )
     expect(res.status).toBe(404)
@@ -509,7 +518,7 @@ describe('GET /api/governance/[id]/results', () => {
 
   it('returns 404 for unknown vote', async () => {
     const res = await getResults(
-      new Request('http://localhost'),
+      {} as Request,
       routeContext('nonexistent'),
     )
     expect(res.status).toBe(404)
