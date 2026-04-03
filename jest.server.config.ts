@@ -2,7 +2,7 @@ import type { Config } from 'jest'
 
 const config: Config = {
   testEnvironment: 'node',
-  setupFilesAfterEnv: ['<rootDir>/tests/setup/jest.server.setup.ts'],
+  setupFiles: ['<rootDir>/tests/setup/jest.server.setup.ts'],
   moduleNameMapper: {
     '^server-only$': '<rootDir>/tests/mocks/server-only.ts',
     '^@/(.*)$': '<rootDir>/$1',
