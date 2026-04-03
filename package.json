@@ -1,6 +1,6 @@
 {
   "name": "my-v0-project",
-  "version": "0.21.0",
+  "version": "0.22.0",
   "private": true,
   "packageManager": "pnpm@9.15.0",
   "workspaces": [
@@ -13,6 +13,14 @@
     "lint": "eslint .",
     "start": "next start",
     "test": "jest --passWithNoTests",
+    "test:unit:client": "jest --config jest.client.config.ts --passWithNoTests",
+    "test:unit:server": "jest --config jest.server.config.ts --passWithNoTests",
+    "test:integration": "jest --config jest.server.config.ts --testPathPatterns=tests/integration --passWithNoTests",
+    "test:e2e": "npx playwright test",
+    "test:e2e:ui": "npx playwright test --ui",
+    "test:ci": "npm run test:unit:client && npm run test:unit:server && npm run test:integration",
+    "typecheck": "tsc --noEmit",
+    "coverage": "jest --coverage --passWithNoTests",
     "update-api-reference": "node update-api-reference.js",
     "clean:next-lock": "rm -f .next/dev/lock .next/lock || true",
     "onprem:up": "docker compose -f apps/on-prem-app/docker-compose.yml --env-file apps/on-prem-app/.env.example up -d",
@@ -118,6 +126,7 @@
     "jest-environment-jsdom": "^30.3.0",
     "postcss": "^8.5",
     "tailwindcss": "^4.1.9",
+    "@playwright/test": "^1.50.0",
     "ts-jest": "^29.4.6",
     "tw-animate-css": "1.3.3",
     "typescript": "^5"
