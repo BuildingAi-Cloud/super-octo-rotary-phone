@@ -18,6 +18,7 @@ import { DocumentsTab } from "./fm-tabs/documents-tab";
 import { WorkflowsTab } from "./fm-tabs/workflows-tab";
 import { VendorDatabaseTab } from "./fm-tabs/vendor-database-tab";
 import IntegrationsHub from "./integrations-hub";
+import { CommandCenterChrome } from "./command-center-chrome";
 
 // ─── SVG Icons (inline, no dependency) ─────────────────────────────────────────
 const Icons = {
@@ -1088,6 +1089,10 @@ export function FacilityManagerDashboard({ user }: { user: User }) {
       <div className="grid-bg fixed inset-0 opacity-20 pointer-events-none" aria-hidden="true" />
 
       <div className="relative z-10">
+        <div className="max-w-screen-2xl mx-auto p-4 md:p-6 lg:p-8 pb-0">
+          <CommandCenterChrome title="Facility Command Center" />
+        </div>
+
         {/* Sticky Tab Bar */}
         <div className="sticky top-14 md:top-16 z-40 border-b border-border/30 bg-background/95 backdrop-blur-md">
           <div className="max-w-screen-2xl mx-auto overflow-x-auto scrollbar-hide">

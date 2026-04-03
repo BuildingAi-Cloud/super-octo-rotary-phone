@@ -21,6 +21,7 @@ import AccessControlTab from "./bm-tabs/access-control-tab";
 import UserDirectoryTab from "./bm-tabs/user-directory-tab";
 import GovernancePanel from "@/components/governance/GovernancePanel";
 import IntegrationsHub from "./integrations-hub";
+import { CommandCenterChrome } from "./command-center-chrome";
 
 /* ─── Tab definitions grouped by section ─────────────────────────────────────── */
 // This metadata drives both the section switcher and the inner tab rail, so
@@ -145,6 +146,10 @@ export function BuildingManagerDashboard({ user: __user }: { user: User }) {
 
   return (
     <div className="min-h-screen bg-background text-foreground">
+      <div className="px-4 md:px-6 pt-4 md:pt-6 max-w-[1440px] mx-auto">
+        <CommandCenterChrome title="Buildsync Command Center" />
+      </div>
+
       {/* ─── Sticky Tab Bar ─────────────────────────────────── */}
       <div className="sticky top-14 md:top-16 z-40 bg-background/80 backdrop-blur-md border-b border-border/30">
         <div className="flex overflow-x-auto scrollbar-hide gap-2 px-4 md:px-6 py-2 border-b border-border/20">

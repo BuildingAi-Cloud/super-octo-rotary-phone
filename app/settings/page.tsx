@@ -403,6 +403,13 @@ export default function SettingsPage() {
         </button>
         <h1 className="text-2xl md:text-3xl font-bold">Settings</h1>
         <p className="font-mono text-xs text-muted-foreground mt-1">{ROLE_TEMPLATES[user.role]?.label || user.role}</p>
+        <button
+          type="button"
+          onClick={() => router.push("/settings/license")}
+          className="mt-3 px-3 py-1.5 text-[10px] font-mono uppercase tracking-widest border border-border/40 text-muted-foreground rounded-md hover:text-accent hover:border-accent/40 transition-colors"
+        >
+          License
+        </button>
       </div>
 
       <div className="flex gap-2 mb-6 border-b border-border/30 pb-3">

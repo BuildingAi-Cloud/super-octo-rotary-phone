@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
+import { getAiMode, getDefaultLlmEndpoint, isOnPremRuntime } from "@/lib/runtime-public"
 
 const LLM_OPTIONS = [
   { label: "Ollama (localhost:11434)", value: "http://localhost:11434" },
@@ -11,11 +12,20 @@ const LLM_OPTIONS = [
 export function LlmSelector() {
   const [llmUrl, setLlmUrl] = useState("")
   const [customUrl, setCustomUrl] = useState("")
+  const aiMode = getAiMode()
+  const onPremRuntime = isOnPremRuntime()
+  const defaultEndpoint = getDefaultLlmEndpoint()
 
   useEffect(() => {
     const stored = localStorage.getItem("llm_endpoint")
-    if (stored) requestAnimationFrame(() => setLlmUrl(stored))
-  }, [])
+    requestAnimationFrame(() => {
+      const next = stored || defaultEndpoint
+      setLlmUrl(next)
+      if (!stored) {
+        localStorage.setItem("llm_endpoint", next)
+      }
+    })
+  }, [defaultEndpoint])
 
   const handleChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const val = e.target.value
@@ -33,6 +43,9 @@ export function LlmSelector() {
   return (
     <div className="flex flex-col gap-2">
       <label className="font-mono text-xs">Select Local LLM Endpoint</label>
+      <p className="font-mono text-[10px] text-muted-foreground uppercase tracking-wider">
+        Mode: {aiMode === "local" ? "Local AI" : "Cloud AI"} {onPremRuntime ? "(On-Prem Runtime)" : "(SaaS Runtime)"}
+      </p>
       <select value={llmUrl.startsWith("http") ? llmUrl : ""} onChange={handleChange} className="border rounded px-2 py-1 text-xs">
         {LLM_OPTIONS.map(opt => (
           <option key={opt.value} value={opt.value}>{opt.label}</option>
