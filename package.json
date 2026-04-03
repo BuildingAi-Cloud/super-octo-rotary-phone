@@ -12,7 +12,7 @@
     "test:unit:client": "jest --config jest.client.config.ts --passWithNoTests",
     "test:unit:server": "jest --config jest.server.config.ts --passWithNoTests",
     "test:integration": "jest --config jest.server.config.ts --testPathPatterns=tests/integration --passWithNoTests",
-    "test:e2e": "npx playwright test",
+    "test:e2e": "npx playwright test --pass-with-no-tests",
     "test:e2e:ui": "npx playwright test --ui",
     "test:ci": "npm run test:unit:client && npm run test:unit:server && npm run test:integration",
     "typecheck": "tsc --noEmit",
