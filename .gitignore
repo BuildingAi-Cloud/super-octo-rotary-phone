@@ -31,6 +31,7 @@ next-env.d.ts
 # prevent accidental publish of internal agent files
 .claude/agents/Fullstack Architect.agent.md
 .github/agents/architect.agent.md.md
+.github/agents/Testing & CI.agent.md
 .claude/agents/*.agent.md
 .github/agents/*.agent.md
 .github/agents/*.agent.md.md
@@ -41,3 +42,8 @@ next-env.d.ts
 # build artifacts
 build-out.txt
 build-stderr.txt
+
+# test output
+/coverage
+/playwright-report
+/test-results
