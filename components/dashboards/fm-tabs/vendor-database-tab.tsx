@@ -58,6 +58,7 @@ export function VendorDatabaseTab() {
   useEffect(() => { refresh(); }, []);
 
   if (!user) return null;
+  const currentUser = user;
 
   const filtered = users.filter((u) => {
     const ms = u.name.toLowerCase().includes(search.toLowerCase()) || u.email.toLowerCase().includes(search.toLowerCase()) || (u.company || "").toLowerCase().includes(search.toLowerCase());
@@ -69,7 +70,7 @@ export function VendorDatabaseTab() {
 
   function handleAdd(e: React.FormEvent) {
     e.preventDefault();
-    const res = addUser({ email: addEmail, name: addName, role: addRole, company: addCompany || undefined }, user);
+    const res = addUser({ email: addEmail, name: addName, role: addRole, company: addCompany || undefined }, currentUser);
     if (!res.success) { setAddMsg({ type: "err", text: res.error || "Failed" }); return; }
     setAddMsg({ type: "ok", text: `Added ${addName} as ${ROLE_TEMPLATES[addRole].label}` });
     setAddName(""); setAddEmail(""); setAddCompany("");
@@ -78,7 +79,7 @@ export function VendorDatabaseTab() {
 
   function handleInvite(e: React.FormEvent) {
     e.preventDefault();
-    const res = createInvite({ email: invEmail, role: invRole }, user);
+    const res = createInvite({ email: invEmail, role: invRole }, currentUser);
     if (!res.success) { setInvMsg({ type: "err", text: res.error || "Failed" }); return; }
     setInvMsg({ type: "ok", text: `Invite sent! Code: ${res.invite?.code}` });
     setInvEmail("");
@@ -87,7 +88,7 @@ export function VendorDatabaseTab() {
 
   function handleRemove(id: string) {
     if (!window.confirm("Remove this service provider?")) return;
-    removeUser(id, user);
+    removeUser(id, currentUser);
     refresh();
   }
 
@@ -98,7 +99,7 @@ export function VendorDatabaseTab() {
   }
 
   function handleRevoke(id: string) {
-    revokeInvite(id, user);
+    revokeInvite(id, currentUser);
     refresh();
   }
 

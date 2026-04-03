@@ -150,13 +150,23 @@ export function StarRating({ rating, onChange }: { rating: number; onChange?: (r
   );
 }
 
-export function SimpleBarChart({ data, maxHeight = 80 }: { data: { label: string; value: number; color?: string }[]; maxHeight?: number }) {
-  const max = Math.max(...data.map((d) => d.value), 1);
+export function SimpleBarChart({
+  data,
+  maxHeight = 80,
+  maxValue,
+  formatValue,
+}: {
+  data: { label: string; value: number; color?: string }[];
+  maxHeight?: number;
+  maxValue?: number;
+  formatValue?: (value: number) => string;
+}) {
+  const max = Math.max(maxValue ?? 0, ...data.map((d) => d.value), 1);
   return (
     <div className="flex items-end gap-2 h-full">
       {data.map((d, i) => (
         <div key={i} className="flex flex-col items-center gap-1 flex-1 min-w-0">
-          <span className="font-mono text-[10px] text-muted-foreground">{d.value}</span>
+          <span className="font-mono text-[10px] text-muted-foreground">{formatValue ? formatValue(d.value) : d.value}</span>
           <div
             className={`w-full rounded-t-sm ${d.color || "bg-accent/60"}`}
             style={{ height: `${(d.value / max) * maxHeight}px`, minHeight: 4 }}
