@@ -21,6 +21,7 @@ export function SplitFlapAudioProvider({ children }: { children: React.ReactNode
   const [isMuted, setIsMuted] = useState(true)
   const audioContextRef = useRef<AudioContext | null>(null)
   type WindowWithWebkitAudio = Window & {
+    AudioContext?: typeof AudioContext
     webkitAudioContext?: typeof AudioContext
   }
 

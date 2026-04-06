@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { User } from "@/lib/auth-context";
 import { Card, CardHeader, CardTitle, CardContent, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -53,7 +53,7 @@ export default function StaffDashboard({ user }: { user: User }) {
     }
     return demoTasks;
   });
-  const [announcements, setAnnouncements] = useState<Announcement[]>(() => demoAnnouncements);
+  const [announcements] = useState<Announcement[]>(() => demoAnnouncements);
   const [incidents, setIncidents] = useState<Incident[]>(() => {
     if (typeof window !== "undefined") {
       const storedIncidents = JSON.parse(localStorage.getItem("buildsync_staff_incidents") || "null");
@@ -67,7 +67,7 @@ export default function StaffDashboard({ user }: { user: User }) {
   // Removed useEffect for tasks/announcements/incidents initialization
 
   const handleComplete = (id: string) => {
-    const updated = tasks.map(t => t.id === id ? { ...t, status: "completed" } : t);
+    const updated = tasks.map<Task>((t) => (t.id === id ? { ...t, status: "completed" as const } : t));
     setTasks(updated);
     localStorage.setItem("buildsync_staff_tasks", JSON.stringify(updated));
   };

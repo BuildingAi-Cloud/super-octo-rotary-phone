@@ -1030,7 +1030,7 @@ function AuditLogTab({ entries: initialEntries }: { entries: AuditEntry[] }) {
 export function FacilityManagerDashboard({ user }: { user: User }) {
   const plan = useStarterPlan();
   const isProfessional = plan === "professional";
-  const iotEnabled = user && (user as Record<string, unknown>).iotEnabled !== false;
+  const iotEnabled = (user as User & { iotEnabled?: boolean }).iotEnabled !== false;
   const [activeTab, setActiveTab] = useState<TabKey>("dashboard");
   const tabRefs = useRef<Array<HTMLButtonElement | null>>([]);
 
