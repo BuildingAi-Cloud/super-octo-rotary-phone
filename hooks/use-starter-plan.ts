@@ -1,10 +1,9 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { DEFAULT_STARTER_PLAN, resolveStarterPlan, type StarterPlan } from "@/lib/rollout";
 
-export type StarterPlan = "essential" | "professional";
-
-export function useStarterPlan(defaultPlan: StarterPlan = "professional"): StarterPlan {
+export function useStarterPlan(defaultPlan: StarterPlan = DEFAULT_STARTER_PLAN): StarterPlan {
   const [plan, setPlan] = useState<StarterPlan>(defaultPlan);
 
   useEffect(() => {
@@ -13,9 +12,7 @@ export function useStarterPlan(defaultPlan: StarterPlan = "professional"): Start
       if (!raw) return;
 
       const parsed = JSON.parse(raw) as { plan?: string };
-      if (parsed.plan === "essential" || parsed.plan === "professional") {
-        setPlan(parsed.plan);
-      }
+      setPlan(resolveStarterPlan(parsed.plan));
     } catch {
       // Keep default when stored value is unavailable or malformed.
     }

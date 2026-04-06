@@ -6,11 +6,12 @@ import Link from "next/link"
 import { AnimatedNoise } from "@/components/animated-noise"
 import { BitmapChevron } from "@/components/bitmap-chevron"
 import { ScrambleText } from "@/components/scramble-text"
+import { resolveStarterPlan } from "@/lib/rollout"
 
 function ReturnContent() {
   const searchParams = useSearchParams()
   const sessionId = searchParams.get("session_id")
-  const plan = searchParams.get("plan") || "professional"
+  const plan = resolveStarterPlan(searchParams.get("plan"))
   const interval = (searchParams.get("interval") || "monthly") as "monthly" | "yearly"
   const units = Number.parseInt(searchParams.get("units") || "50", 10)
   const [status, setStatus] = useState<"loading" | "success" | "error">("loading")

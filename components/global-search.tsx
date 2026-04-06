@@ -21,7 +21,7 @@ const NAV_ITEMS = [
   { label: "Audit Log", href: "/audit-log", description: "Security and governance logs", category: "App", keywords: ["audit", "log", "security"] },
 ]
 
-export function GlobalSearch() {
+export function GlobalSearch({ iconOnly = false }: { iconOnly?: boolean }) {
   const [open, setOpen] = useState(false)
   const [query, setQuery] = useState("")
   const inputRef = useRef<HTMLInputElement>(null)
@@ -122,12 +122,12 @@ export function GlobalSearch() {
         <button
           aria-label={`Open search (${shortcutHint})`}
           aria-expanded={open}
-          className="ml-2 inline-flex items-center gap-2 rounded-md border border-border/40 px-2.5 py-1.5 hover:border-accent/40 hover:bg-accent/10 transition-colors"
+          className={`${iconOnly ? "h-9 w-9 justify-center rounded-full text-muted-foreground hover:text-foreground hover:bg-accent/10 focus-visible:ring-2 focus-visible:ring-accent" : "ml-2 rounded-md border border-border/40 px-2.5 py-1.5 hover:border-accent/40 hover:bg-accent/10"} inline-flex items-center gap-2 transition-colors`}
           onClick={() => setOpen(true)}
         >
           <SearchIcon className="w-4 h-4" />
-          <span className="hidden md:inline text-xs text-muted-foreground">Search</span>
-          <kbd className="hidden md:inline rounded border border-border/40 px-1.5 py-0.5 text-[10px] font-mono text-muted-foreground">{shortcutHint}</kbd>
+          {!iconOnly && <span className="hidden md:inline text-xs text-muted-foreground">Search</span>}
+          {!iconOnly && <kbd className="hidden md:inline rounded border border-border/40 px-1.5 py-0.5 text-[10px] font-mono text-muted-foreground">{shortcutHint}</kbd>}
           <span className="sr-only">{`Open search (${shortcutHint})`}</span>
         </button>
       </ScaleIn>

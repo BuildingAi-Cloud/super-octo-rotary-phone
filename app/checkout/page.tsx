@@ -7,10 +7,11 @@ import { Checkout } from "@/components/checkout"
 import { getProductById, formatBillingSuffix, getUnitPriceInCents, type BillingInterval } from "@/lib/products"
 import { AnimatedNoise } from "@/components/animated-noise"
 import { BitmapChevron } from "@/components/bitmap-chevron"
+import { resolveStarterPlan } from "@/lib/rollout"
 
 function CheckoutContent() {
   const searchParams = useSearchParams()
-  const productId = searchParams.get("plan") || "professional"
+  const productId = resolveStarterPlan(searchParams.get("plan"))
   const [billingInterval, setBillingInterval] = useState<BillingInterval>((searchParams.get("interval") as BillingInterval) || "monthly")
   const [units, setUnits] = useState<number>(parseInt(searchParams.get("units") || "50", 10))
   

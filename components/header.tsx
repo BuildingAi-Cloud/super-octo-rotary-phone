@@ -16,6 +16,7 @@ import { BackButton } from "@/components/back-button"
 
 export function Header() {
   const { user, availableRoles, signOut, switchRole } = useAuth();
+  const isAuthenticated = Boolean(user)
   const router = useRouter();
   const { t } = useTranslation();
   const [notifCount, setNotifCount] = useState(0);
@@ -130,7 +131,7 @@ export function Header() {
           </div>
 
           {/* Right: all actions */}
-          <nav className="flex items-center gap-2 md:gap-4 min-w-0 overflow-x-auto md:overflow-visible scrollbar-hide">
+          <nav className={isAuthenticated ? "flex items-center gap-2 md:gap-4 min-w-0 overflow-x-auto md:overflow-visible scrollbar-hide" : "flex items-center gap-2 md:gap-3 shrink-0"}>
             {/* Notification Bell */}
             {user && (
               <button
@@ -150,7 +151,7 @@ export function Header() {
             )}
             {/* Global Search */}
             <div className="hidden md:block">
-              <GlobalSearch />
+              <GlobalSearch iconOnly />
             </div>
             {/* Accessibility controls should be available for all users, including pre-login pages. */}
             <AccessibilityToggle />
@@ -220,16 +221,16 @@ export function Header() {
               <>
                 <Link
                   href="/signin"
-                  className="font-mono text-xs uppercase tracking-widest text-muted-foreground hover:text-foreground transition-colors duration-200"
+                  className="font-mono text-[11px] uppercase tracking-[0.16em] text-muted-foreground hover:text-foreground transition-colors duration-200 px-1"
                 >
                   <ScrambleTextOnHover text={t("signIn", "Sign In") as string} as="span" duration={0.4} />
                 </Link>
                 <div className="md:hidden">
-                  <GlobalSearch />
+                  <GlobalSearch iconOnly />
                 </div>
                 <Link
                   href="/signup"
-                  className="group inline-flex items-center gap-2 border border-foreground/20 px-4 py-2 font-mono text-xs uppercase tracking-widest text-foreground hover:border-accent hover:text-accent transition-all duration-200"
+                  className="group inline-flex items-center gap-2 border border-foreground/20 px-4 md:px-5 py-2 font-mono text-[11px] uppercase tracking-[0.16em] text-foreground hover:border-accent hover:text-accent hover:bg-accent/5 transition-all duration-200"
                 >
                   <ScrambleTextOnHover text={t("getStarted", "Get Started") as string} as="span" duration={0.4} />
                 </Link>
