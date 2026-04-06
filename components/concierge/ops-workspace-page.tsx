@@ -97,7 +97,7 @@ export function OpsWorkspacePage({ title, subtitle, storageKey, fields, initialR
     <main className="min-h-screen py-24 px-6 md:px-20 bg-background">
       <div className="max-w-6xl mx-auto">
         <div className="mb-6">
-          <BackButton fallbackHref="/concierge" />
+          <BackButton fallbackHref="/concierge/dashboard" />
         </div>
 
         <div className="mb-8">

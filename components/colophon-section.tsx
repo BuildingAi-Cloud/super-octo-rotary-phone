@@ -100,8 +100,8 @@ export function ColophonSection() {
         <div className="col-span-1">
           <h4 className="font-mono text-[9px] uppercase tracking-[0.3em] text-muted-foreground mb-4">{t("compliance", "Compliance")}</h4>
           <ul className="space-y-2">
-            <li className="font-mono text-xs text-foreground/80">ISO 27001</li>
-            <li className="font-mono text-xs text-foreground/80">SOC 2 Type II</li>
+            <li className="font-mono text-xs text-foreground/80">ISO 27001 Program</li>
+            <li className="font-mono text-xs text-foreground/80">SOC 2 Type II Program</li>
             <li className="font-mono text-xs text-foreground/80">GDPR {t("ready", "Ready")}</li>
           </ul>
         </div>

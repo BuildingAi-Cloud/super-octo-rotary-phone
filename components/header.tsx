@@ -130,7 +130,7 @@ export function Header() {
           </div>
 
           {/* Right: all actions */}
-          <nav className="flex items-center gap-2 md:gap-4 min-w-0 overflow-x-auto scrollbar-hide">
+          <nav className="flex items-center gap-2 md:gap-4 min-w-0 overflow-x-auto md:overflow-visible scrollbar-hide">
             {/* Notification Bell */}
             {user && (
               <button

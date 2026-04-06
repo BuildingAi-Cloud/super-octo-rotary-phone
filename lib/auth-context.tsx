@@ -33,6 +33,17 @@ interface AuthContextType {
   availableRoles: UserRole[]
   isLoading: boolean
   signIn: (email: string, password: string) => Promise<{ success: boolean; error?: string }>
+  requestPasswordResetChallenge: (
+    email: string,
+    method: "mfa_code" | "rsa_token",
+  ) => Promise<{ success: boolean; error?: string; devCode?: string; devRsaToken?: string }>
+  resetPasswordWithSecondFactor: (
+    email: string,
+    newPassword: string,
+    factor: { method: "mfa_code" | "rsa_token"; mfaCode?: string; rsaToken?: string },
+  ) => Promise<{ success: boolean; error?: string }>
+  requestPasswordResetMfa: (email: string) => Promise<{ success: boolean; error?: string; devCode?: string }>
+  resetPasswordWithMfa: (email: string, code: string, newPassword: string) => Promise<{ success: boolean; error?: string }>
   signUp: (data: SignUpData) => Promise<{ success: boolean; error?: string }>
   signOut: () => void
   switchRole: (nextRole: UserRole) => void
@@ -47,6 +58,8 @@ interface SignUpData {
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
+
+const MFA_RESET_STORE_KEY = "buildsync_mfa_password_reset"
 
 const VALID_ROLES: UserRole[] = [
   "facility_manager",
@@ -108,6 +121,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           id: crypto.randomUUID(),
           email,
           password: "12345678",
+          rsaResetToken: `RSA-${role.toUpperCase()}-2026`,
           name: `${role.charAt(0).toUpperCase() + role.slice(1)}`,
           role,
           accessRoles: defaultAccessRoles,
@@ -121,6 +135,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           storedUsers[existingIndex] = {
             ...existingUser,
             accessRoles: normalizedRoles,
+          }
+          changed = true
+        }
+        if (!existingUser.rsaResetToken) {
+          storedUsers[existingIndex] = {
+            ...storedUsers[existingIndex],
+            rsaResetToken: `RSA-${role.toUpperCase()}-2026`,
           }
           changed = true
         }
@@ -168,6 +189,135 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
     logAudit("signInFailed", { email }, email)
     return { success: false, error: "Invalid email or password" }
+  }
+
+  const requestPasswordResetChallenge = async (
+    email: string,
+    method: "mfa_code" | "rsa_token",
+  ): Promise<{ success: boolean; error?: string; devCode?: string; devRsaToken?: string }> => {
+    const normalizedEmail = email.trim().toLowerCase()
+    if (!normalizedEmail) {
+      return { success: false, error: "Email is required" }
+    }
+
+    const storedUsers = JSON.parse(localStorage.getItem("buildsync_users") || "[]") as Array<User & { password: string; rsaResetToken?: string }>
+    const foundUser = storedUsers.find((entry) => entry.email.toLowerCase() === normalizedEmail)
+
+    if (!foundUser) {
+      logAudit("passwordResetRequestFailed", { email: normalizedEmail, reason: "user_not_found", method }, normalizedEmail)
+      return { success: false, error: "No account found for this email" }
+    }
+
+    if (method === "rsa_token") {
+      logAudit("passwordResetRsaRequested", { email: normalizedEmail }, normalizedEmail)
+      return { success: true, devRsaToken: foundUser.rsaResetToken }
+    }
+
+    const code = String(Math.floor(100000 + Math.random() * 900000))
+    const payload = {
+      email: normalizedEmail,
+      code,
+      expiresAt: Date.now() + 5 * 60 * 1000,
+    }
+
+    localStorage.setItem(MFA_RESET_STORE_KEY, JSON.stringify(payload))
+    logAudit("passwordResetMfaRequested", { email: normalizedEmail }, normalizedEmail)
+    return { success: true, devCode: code }
+  }
+
+  const requestPasswordResetMfa = async (email: string): Promise<{ success: boolean; error?: string; devCode?: string }> => {
+    const result = await requestPasswordResetChallenge(email, "mfa_code")
+    return { success: result.success, error: result.error, devCode: result.devCode }
+  }
+
+  const resetPasswordWithSecondFactor = async (
+    email: string,
+    newPassword: string,
+    factor: { method: "mfa_code" | "rsa_token"; mfaCode?: string; rsaToken?: string },
+  ): Promise<{ success: boolean; error?: string }> => {
+    const normalizedEmail = email.trim().toLowerCase()
+    const nextPassword = newPassword.trim()
+
+    if (!normalizedEmail || !nextPassword) {
+      return { success: false, error: "Email and new password are required" }
+    }
+
+    if (nextPassword.length < 8) {
+      return { success: false, error: "Password must be at least 8 characters" }
+    }
+
+    if (factor.method === "mfa_code") {
+      const normalizedCode = (factor.mfaCode || "").trim()
+      if (!normalizedCode) {
+        return { success: false, error: "MFA verification code is required" }
+      }
+
+      const rawChallenge = localStorage.getItem(MFA_RESET_STORE_KEY)
+      if (!rawChallenge) {
+        return { success: false, error: "No active verification challenge. Request a new code." }
+      }
+
+      let challenge: { email: string; code: string; expiresAt: number } | null = null
+      try {
+        challenge = JSON.parse(rawChallenge) as { email: string; code: string; expiresAt: number }
+      } catch {
+        localStorage.removeItem(MFA_RESET_STORE_KEY)
+        return { success: false, error: "Invalid verification state. Request a new code." }
+      }
+
+      if (!challenge || challenge.email !== normalizedEmail) {
+        return { success: false, error: "Verification challenge does not match this email." }
+      }
+
+      if (challenge.expiresAt < Date.now()) {
+        localStorage.removeItem(MFA_RESET_STORE_KEY)
+        return { success: false, error: "Verification code expired. Request a new code." }
+      }
+
+      if (challenge.code !== normalizedCode) {
+        return { success: false, error: "Invalid verification code" }
+      }
+
+      localStorage.removeItem(MFA_RESET_STORE_KEY)
+    }
+
+    if (factor.method === "rsa_token") {
+      const normalizedRsaToken = (factor.rsaToken || "").trim()
+      if (!normalizedRsaToken) {
+        return { success: false, error: "RSA token is required" }
+      }
+
+      const storedUsersForRsa = JSON.parse(localStorage.getItem("buildsync_users") || "[]") as Array<User & { password: string; rsaResetToken?: string }>
+      const foundUser = storedUsersForRsa.find((entry) => entry.email.toLowerCase() === normalizedEmail)
+      if (!foundUser || !foundUser.rsaResetToken) {
+        return { success: false, error: "RSA token is not configured for this account" }
+      }
+
+      if (foundUser.rsaResetToken !== normalizedRsaToken) {
+        return { success: false, error: "Invalid RSA token" }
+      }
+    }
+
+    const storedUsers = JSON.parse(localStorage.getItem("buildsync_users") || "[]") as Array<User & { password: string; rsaResetToken?: string }>
+    const updatedUsers = storedUsers.map((entry) =>
+      entry.email.toLowerCase() === normalizedEmail ? { ...entry, password: nextPassword } : entry,
+    )
+
+    localStorage.setItem("buildsync_users", JSON.stringify(updatedUsers))
+    logAudit(
+      factor.method === "mfa_code" ? "passwordResetMfaCompleted" : "passwordResetRsaCompleted",
+      { email: normalizedEmail },
+      normalizedEmail,
+    )
+    return { success: true }
+  }
+
+  const resetPasswordWithMfa = async (
+    email: string,
+    code: string,
+    newPassword: string,
+  ): Promise<{ success: boolean; error?: string }> => {
+    return resetPasswordWithSecondFactor(email, newPassword, { method: "mfa_code", mfaCode: code })
   }
 
   const signUp = async (data: SignUpData): Promise<{ success: boolean; error?: string }> => {
@@ -224,7 +374,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   return (
-    <AuthContext.Provider value={{ user, availableRoles, isLoading, signIn, signUp, signOut, switchRole }}>
+    <AuthContext.Provider
+      value={{
+        user,
+        availableRoles,
+        isLoading,
+        signIn,
+        requestPasswordResetChallenge,
+        resetPasswordWithSecondFactor,
+        requestPasswordResetMfa,
+        resetPasswordWithMfa,
+        signUp,
+        signOut,
+        switchRole,
+      }}
+    >
       {children}
     </AuthContext.Provider>
   )

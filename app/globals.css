@@ -235,14 +235,14 @@ summary {
 
 /* Grid background pattern */
 .grid-bg {
-  background-image: linear-gradient(to right, oklch(0.88 0 0) 1px, transparent 1px),
-    linear-gradient(to bottom, oklch(0.88 0 0) 1px, transparent 1px);
+  background-image: linear-gradient(to right, oklch(0.84 0 0 / 0.75) 1px, transparent 1px),
+    linear-gradient(to bottom, oklch(0.84 0 0 / 0.75) 1px, transparent 1px);
   background-size: 60px 60px;
 }
 
 .dark .grid-bg {
-  background-image: linear-gradient(to right, oklch(0.2 0 0) 1px, transparent 1px),
-    linear-gradient(to bottom, oklch(0.2 0 0) 1px, transparent 1px);
+  background-image: linear-gradient(to right, oklch(0.28 0 0 / 0.62) 1px, transparent 1px),
+    linear-gradient(to bottom, oklch(0.28 0 0 / 0.62) 1px, transparent 1px);
 }
 
 /* Custom selection color */
@@ -311,6 +311,19 @@ body.accessibility-dyslexia-font,
 body.accessibility-dyslexia-font * {
   font-family: "OpenDyslexic", "Comic Sans MS", Arial, sans-serif !important;
   letter-spacing: 0.04em !important;
+}
+
+html.accessibility-reduced-motion,
+body.accessibility-reduced-motion {
+  scroll-behavior: auto !important;
+}
+
+body.accessibility-reduced-motion *,
+body.accessibility-reduced-motion *::before,
+body.accessibility-reduced-motion *::after {
+  animation-duration: 0.01ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.01ms !important;
 }
 
 @media (min-width: 768px) {
