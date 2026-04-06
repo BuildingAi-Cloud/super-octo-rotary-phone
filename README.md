@@ -25,6 +25,37 @@ Buildings.com is built with privacy and security as core principles:
 - See `docs/api-reference.md` for API Reference (auto-updated)
 - See `docs/security.md` for security details
 
+## Mobile Apps (Android and iOS)
+
+This repository supports user-facing Android and iOS apps through Capacitor.
+
+### 1) Configure mobile web endpoint
+
+Set `CAP_SERVER_URL` to the web endpoint the app should load:
+
+- Development example: `http://10.0.2.2:3000` (Android emulator)
+- Production example: `https://your-domain.example.com`
+
+Capacitor reads this value from `capacitor.config.ts`.
+
+### 2) Create native projects
+
+- `npm run mobile:add:android`
+- `npm run mobile:add:ios`
+
+### 3) Sync web and native config
+
+- `npm run mobile:sync`
+
+### 4) Open and build apps
+
+- Android: `npm run mobile:open:android`
+- iOS: `npm run mobile:open:ios`
+
+Notes:
+- iOS build and signing require macOS with Xcode.
+- Android build requires Android Studio and SDK/NDK tooling.
+
 ## Monorepo Hybrid Blueprint
 
 The repository now supports an npm-workspaces monorepo layout for a SaaS and On-Prem hybrid model:
