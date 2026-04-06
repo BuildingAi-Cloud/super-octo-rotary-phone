@@ -7,6 +7,7 @@ import { useAuth, type UserRole } from "@/lib/auth-context";
 import { AnimatedNoise } from "@/components/animated-noise";
 import { ScrambleText, ScrambleTextOnHover } from "@/components/scramble-text";
 import { BitmapChevron } from "@/components/bitmap-chevron";
+import { PHASE_ONE_ESSENTIAL_ONLY, resolveStarterPlan, type StarterPlan } from "@/lib/rollout";
 
 const roleOptions: { value: UserRole; label: string; description: string; pricing: string }[] = [
   {
@@ -29,8 +30,6 @@ const roleOptions: { value: UserRole; label: string; description: string; pricin
   },
 ];
 
-type StarterPlan = "essential" | "professional"
-
 const PLAN_COPY: Record<StarterPlan, { label: string; price: string; tagline: string }> = {
   essential: {
     label: "Essential",
@@ -45,14 +44,14 @@ const PLAN_COPY: Record<StarterPlan, { label: string; price: string; tagline: st
 }
 
 function parseStarterPlan(value: string | null): StarterPlan {
-  return value === "essential" ? "essential" : "professional"
+  return resolveStarterPlan(value)
 }
 
 function SignUpPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { signUp, user, isLoading: authLoading } = useAuth();
-  const [selectedPlan, setSelectedPlan] = useState<StarterPlan>("professional")
+  const [selectedPlan, setSelectedPlan] = useState<StarterPlan>("essential")
   const [step, setStep] = useState<1 | 2 | 3>(1);
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -194,26 +193,32 @@ function SignUpPageContent() {
                       {PLAN_COPY[selectedPlan].price} • {PLAN_COPY[selectedPlan].tagline}
                     </p>
                   </div>
-                  <div className="inline-flex items-center border border-border/50">
-                    <button
-                      type="button"
-                      onClick={() => setSelectedPlan("essential")}
-                      className={`px-3 py-2 font-mono text-[10px] uppercase tracking-widest transition-colors ${
-                        selectedPlan === "essential" ? "bg-accent text-accent-foreground" : "text-muted-foreground hover:text-foreground"
-                      }`}
-                    >
-                      Essential
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setSelectedPlan("professional")}
-                      className={`px-3 py-2 font-mono text-[10px] uppercase tracking-widest transition-colors ${
-                        selectedPlan === "professional" ? "bg-accent text-accent-foreground" : "text-muted-foreground hover:text-foreground"
-                      }`}
-                    >
-                      Professional
-                    </button>
-                  </div>
+                  {PHASE_ONE_ESSENTIAL_ONLY ? (
+                    <div className="px-3 py-2 border border-border/50 font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+                      Phase 1 rollout: Essential only
+                    </div>
+                  ) : (
+                    <div className="inline-flex items-center border border-border/50">
+                      <button
+                        type="button"
+                        onClick={() => setSelectedPlan("essential")}
+                        className={`px-3 py-2 font-mono text-[10px] uppercase tracking-widest transition-colors ${
+                          selectedPlan === "essential" ? "bg-accent text-accent-foreground" : "text-muted-foreground hover:text-foreground"
+                        }`}
+                      >
+                        Essential
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setSelectedPlan("professional")}
+                        className={`px-3 py-2 font-mono text-[10px] uppercase tracking-widest transition-colors ${
+                          selectedPlan === "professional" ? "bg-accent text-accent-foreground" : "text-muted-foreground hover:text-foreground"
+                        }`}
+                      >
+                        Professional
+                      </button>
+                    </div>
+                  )}
                 </div>
               </div>
 

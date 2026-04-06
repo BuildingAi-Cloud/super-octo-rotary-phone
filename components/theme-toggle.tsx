@@ -15,7 +15,7 @@ export function ThemeToggle() {
   if (!mounted) {
     return (
       <button
-        className="group relative flex items-center justify-center w-9 h-9 border border-border transition-colors duration-200"
+        className="group relative flex items-center justify-center w-9 h-9 rounded-full text-muted-foreground transition-colors duration-200"
         aria-label="Toggle theme"
       >
         <span className="w-4 h-4" />
@@ -26,7 +26,7 @@ export function ThemeToggle() {
   return (
     <button
       onClick={toggleTheme}
-      className="group relative flex items-center justify-center w-9 h-9 border border-border hover:border-accent transition-colors duration-200"
+      className="group relative flex items-center justify-center w-9 h-9 rounded-full text-muted-foreground hover:text-foreground hover:bg-accent/10 focus-visible:ring-2 focus-visible:ring-accent transition-colors duration-200"
       aria-label={`Switch to ${theme === "dark" ? "light" : "dark"} mode`}
     >
       {/* Sun icon */}

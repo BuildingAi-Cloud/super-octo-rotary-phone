@@ -3,6 +3,7 @@
 import Link from "next/link"
 import { motion } from "framer-motion"
 import type { Variants } from "framer-motion"
+import { PHASE_ONE_ESSENTIAL_ONLY } from "@/lib/rollout"
 
 const plans = [
   {
@@ -80,6 +81,10 @@ export function PricingSection() {
     },
   }
 
+  const visiblePlans = PHASE_ONE_ESSENTIAL_ONLY
+    ? plans.filter((plan) => plan.id === "essential")
+    : plans
+
   return (
     <section id="pricing" className="relative py-16 md:py-28 max-w-screen-xl mx-auto px-3 md:px-6">
       {/* Section header with animation */}
@@ -105,7 +110,7 @@ export function PricingSection() {
         whileInView="visible"
         viewport={{ once: true, amount: 0.2 }}
       >
-        {plans.map((plan, idx) => (
+        {visiblePlans.map((plan, idx) => (
           <motion.article
             key={plan.name}
             variants={itemVariants}
@@ -167,7 +172,12 @@ export function PricingSection() {
             
             {/* CTA Button with inverse hover - text becomes background, background becomes text */}
             <Link
-              href={plan.cta === "Contact Sales" ? "/contact" : `/signup?plan=${plan.id}`}
+              href={plan.cta === "Contact Sales" ? "/contact" : plan.cta === "Phase 2" ? "#" : `/signup?plan=${plan.id}`}
+              onClick={(event) => {
+                if (plan.cta === "Phase 2") {
+                  event.preventDefault()
+                }
+              }}
               className={`w-full text-center rounded-lg px-4 py-2.5 md:py-3 font-semibold text-xs md:text-sm uppercase tracking-wide transition-all duration-300 shadow-sm overflow-hidden relative group ${
                 plan.highlight
                   ? "bg-accent text-accent-foreground hover:bg-accent-foreground hover:text-accent"

@@ -7,6 +7,7 @@ import { Checkbox } from "@/components/ui/checkbox"
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { AnimatePresence, motion } from "framer-motion"
+import { resolveStarterPlan } from "@/lib/rollout"
 
 export default function SettingsPage() {
   const { user, isLoading } = useAuth()
@@ -29,7 +30,7 @@ export default function SettingsPage() {
   const [sendgridApiKey, setSendgridApiKey] = useState("")
 
   // Subscription/Billing state
-  const [subscriptionPlan, setSubscriptionPlan] = useState("professional")
+  const [subscriptionPlan, setSubscriptionPlan] = useState("essential")
   const [subscriptionUnits, setSubscriptionUnits] = useState(50)
   const [subscriptionInterval, setSubscriptionInterval] = useState<"monthly" | "yearly">("monthly")
   const [subscriptionStatus, setSubscriptionStatus] = useState<"active" | "paused" | "canceled">("active")
@@ -66,7 +67,7 @@ export default function SettingsPage() {
 
     const subSaved = JSON.parse(localStorage.getItem(`buildsync_subscription_${user.id}`) || "{}")
     if (subSaved.plan) {
-      setSubscriptionPlan(subSaved.plan)
+      setSubscriptionPlan(resolveStarterPlan(subSaved.plan))
       setSubscriptionUnits(subSaved.units || 50)
       setSubscriptionInterval(subSaved.interval || "monthly")
       setSubscriptionStatus(subSaved.status || "active")

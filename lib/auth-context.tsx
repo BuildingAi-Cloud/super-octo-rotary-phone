@@ -2,6 +2,7 @@
 
 import { createContext, useContext, useState, useEffect, type ReactNode } from "react"
 import { logAudit } from "@/lib/audit"
+import { getTenantAssignmentByEmail } from "@/lib/tenant-assignments"
 
 export type UserRole =
   | "facility_manager"
@@ -92,6 +93,23 @@ function sanitizeUser(userLike: User): User {
   }
 }
 
+function applyTenantAssignment(userLike: User): User {
+  if (userLike.role !== "tenant") {
+    return userLike
+  }
+
+  const assignment = getTenantAssignmentByEmail(userLike.email)
+  if (!assignment) {
+    return userLike
+  }
+
+  return {
+    ...userLike,
+    unit: assignment.unit,
+    buildingId: assignment.buildingId || userLike.buildingId,
+  }
+}
+
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
   const [isLoading, setIsLoading] = useState(true)
@@ -159,7 +177,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (storedUser) {
         // Rehydrate the active session and rebuild the list of switchable roles
         // from the same stored user object.
-        const parsedUser = sanitizeUser(JSON.parse(storedUser))
+        const parsedUser = applyTenantAssignment(sanitizeUser(JSON.parse(storedUser)))
         setUser(parsedUser)
         setAvailableRoles(parsedUser.accessRoles || [parsedUser.role])
         localStorage.setItem("buildsync_user", JSON.stringify(parsedUser))
@@ -179,7 +197,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (foundUser) {
       // Sign-in writes the active role and the full access set so downstream UI
       // can decide whether to render a role switcher.
-      const userWithoutPassword = sanitizeUser({ ...foundUser })
+      const userWithoutPassword = applyTenantAssignment(sanitizeUser({ ...foundUser }))
       delete (userWithoutPassword as { password?: string }).password
       setUser(userWithoutPassword)
       setAvailableRoles(userWithoutPassword.accessRoles || [userWithoutPassword.role])
@@ -366,7 +384,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const allowedRoles = normalizeAccessRoles(user)
     if (!allowedRoles.includes(nextRole) || user.role === nextRole) return
 
-    const nextUser = sanitizeUser({ ...user, role: nextRole })
+    const nextUser = applyTenantAssignment(sanitizeUser({ ...user, role: nextRole }))
     setUser(nextUser)
     setAvailableRoles(nextUser.accessRoles || [nextUser.role])
     localStorage.setItem("buildsync_user", JSON.stringify(nextUser))
