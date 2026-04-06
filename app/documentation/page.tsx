@@ -2,6 +2,7 @@
 
 import Link from "next/link"
 import React from "react"
+import { useEffect, useMemo, useState } from "react"
 import { GlobalSearch } from "@/components/global-search"
 import { ThemeToggle } from "@/components/theme-toggle"
 
@@ -293,11 +294,50 @@ function RoleFlowsSection() {
 }
 
 export default function DocumentationPage() {
+  const [activeSection, setActiveSection] = useState("welcome")
+
+  const sectionIds = useMemo(() => {
+    const ids = [
+      ...leftNav.flatMap((group) => group.items.map((item) => item.href.replace("#", ""))),
+      ...toc.map((item) => item.href.replace("#", "")),
+    ]
+    return Array.from(new Set(ids))
+  }, [])
+
+  useEffect(() => {
+    const sections = sectionIds
+      .map((id) => document.getElementById(id))
+      .filter((section): section is HTMLElement => Boolean(section))
+
+    if (sections.length === 0) return
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const visible = entries
+          .filter((entry) => entry.isIntersecting)
+          .sort((a, b) => b.intersectionRatio - a.intersectionRatio)
+
+        if (visible.length > 0) {
+          setActiveSection(visible[0].target.id)
+        }
+      },
+      {
+        rootMargin: "-20% 0px -65% 0px",
+        threshold: [0.1, 0.25, 0.5, 0.75],
+      },
+    )
+
+    sections.forEach((section) => observer.observe(section))
+
+    return () => observer.disconnect()
+  }, [sectionIds])
+
   return (
-    <main className="min-h-screen max-w-screen-2xl mx-auto px-3 md:px-6 pt-20 pb-10 grid-bg">
-      <div className="grid grid-cols-1 xl:grid-cols-[260px_minmax(0,1fr)_220px] gap-8">
+    <main className="min-h-screen bg-background">
+      <div className="max-w-screen-xl mx-auto px-4 md:px-8 pt-24 pb-12">
+      <div className="grid grid-cols-1 xl:grid-cols-[240px_minmax(0,1fr)_200px] gap-8">
         <aside className="hidden xl:block">
-          <div className="sticky top-24 rounded-xl border border-border/40 bg-card/20 p-4 space-y-5">
+          <div className="sticky top-24 rounded-lg border border-border bg-card p-4 space-y-5">
             <GlobalSearch />
             {leftNav.map((group) => (
               <div key={group.heading}>
@@ -305,7 +345,15 @@ export default function DocumentationPage() {
                 <ul className="space-y-1.5">
                   {group.items.map((item) => (
                     <li key={item.href}>
-                      <a href={item.href} className="text-sm text-muted-foreground hover:text-foreground transition-colors">
+                      <a
+                        href={item.href}
+                        aria-current={item.href === `#${activeSection}` ? "location" : undefined}
+                        className={`block rounded px-2 py-1 text-sm transition-colors ${
+                          item.href === `#${activeSection}`
+                            ? "bg-accent/10 text-accent"
+                            : "text-muted-foreground hover:text-foreground"
+                        }`}
+                      >
                         {item.label}
                       </a>
                     </li>
@@ -316,7 +364,7 @@ export default function DocumentationPage() {
           </div>
         </aside>
 
-        <section className="min-w-0">
+        <section className="min-w-0 space-y-8">
           <div id="welcome" className="mb-8">
             <div className="flex items-center justify-between gap-4 flex-wrap mb-3">
               <span className="font-mono text-[10px] uppercase tracking-[0.22em] text-muted-foreground">Get Started</span>
@@ -327,17 +375,17 @@ export default function DocumentationPage() {
                 </button>
               </div>
             </div>
-            <h1 className="font-[var(--font-bebas)] text-5xl md:text-7xl tracking-tight leading-none">BuildSync Documentation</h1>
-            <p className="mt-4 text-muted-foreground max-w-3xl leading-relaxed">
+            <h1 className="text-4xl md:text-5xl font-semibold tracking-tight leading-tight">BuildSync Documentation</h1>
+            <p className="mt-3 text-muted-foreground max-w-3xl leading-relaxed text-base">
               Documentation for operators, managers, and residents. Learn role workflows, platform modules, and implementation patterns quickly.
             </p>
           </div>
 
           <section id="product-map" className="mb-8">
-            <h2 className="font-[var(--font-bebas)] text-4xl tracking-wide mb-4">Product Map</h2>
+            <h2 className="text-2xl md:text-3xl font-semibold tracking-tight mb-4">Product Map</h2>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               {productMap.map((area) => (
-                <article key={area.title} className="rounded-xl border border-border/40 bg-card/20 p-5">
+                <article key={area.title} className="rounded-lg border border-border bg-card p-5">
                   <h3 className="text-lg font-semibold">{area.title}</h3>
                   <p className="text-sm text-muted-foreground mt-2">{area.summary}</p>
                   <div className="mt-3 flex flex-wrap gap-2">
@@ -361,12 +409,12 @@ export default function DocumentationPage() {
             </div>
           </section>
 
-          <section id="platform-modules" className="rounded-xl border border-border/40 bg-card/20 p-5 md:p-6 mb-8">
-            <h2 className="font-[var(--font-bebas)] text-3xl tracking-wide">Platform Modules</h2>
+          <section id="platform-modules" className="rounded-lg border border-border bg-card p-5 md:p-6 mb-8">
+            <h2 className="text-2xl md:text-3xl font-semibold tracking-tight">Platform Modules</h2>
             <p className="mt-2 text-sm text-muted-foreground">Modules are grouped by operational responsibility so onboarding, ownership, and reporting stay clear.</p>
             <div className="mt-5 grid grid-cols-1 md:grid-cols-2 gap-4">
               {moduleGroups.map((group) => (
-                <article key={group.name} className="rounded-lg border border-border/40 bg-background/40 p-4">
+                <article key={group.name} className="rounded-lg border border-border bg-background p-4">
                   <h3 className="font-medium">{group.name}</h3>
                   <ul className="mt-2 space-y-1.5 text-sm text-muted-foreground">
                     {group.modules.map((module) => (
@@ -388,16 +436,16 @@ export default function DocumentationPage() {
           </section>
 
           <section id="role-flows" className="mb-8">
-            <h2 className="font-[var(--font-bebas)] text-4xl tracking-wide mb-4">Role Flows</h2>
+            <h2 className="text-2xl md:text-3xl font-semibold tracking-tight mb-4">Role Flows</h2>
             <RoleFlowsSection />
           </section>
 
-          <section id="implementation-path" className="rounded-xl border border-border/40 bg-card/20 p-5 md:p-6 mb-8">
-            <h2 className="font-[var(--font-bebas)] text-3xl tracking-wide">Implementation Path</h2>
+          <section id="implementation-path" className="rounded-lg border border-border bg-card p-5 md:p-6 mb-8">
+            <h2 className="text-2xl md:text-3xl font-semibold tracking-tight">Implementation Path</h2>
             <p className="mt-2 text-sm text-muted-foreground">Recommended rollout path to move from setup to operational maturity.</p>
             <div className="mt-5 space-y-4">
               {implementationPath.map((stage) => (
-                <article key={stage.phase} className="rounded-lg border border-border/40 bg-background/40 p-4">
+                <article key={stage.phase} className="rounded-lg border border-border bg-background p-4">
                   <h3 className="font-medium">{stage.phase}</h3>
                   <ul className="mt-2 space-y-1.5 text-sm text-muted-foreground">
                     {stage.tasks.map((task) => (
@@ -409,41 +457,41 @@ export default function DocumentationPage() {
             </div>
           </section>
 
-          <section id="security-compliance" className="rounded-xl border border-border/40 bg-card/20 p-5 md:p-6 mb-8">
-            <h2 className="font-[var(--font-bebas)] text-3xl tracking-wide">Security and Compliance</h2>
+          <section id="security-compliance" className="rounded-lg border border-border bg-card p-5 md:p-6 mb-8">
+            <h2 className="text-2xl md:text-3xl font-semibold tracking-tight">Security and Compliance</h2>
             <div className="mt-3 grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-muted-foreground">
-              <div className="rounded-lg border border-border/40 bg-background/40 p-4">
+              <div className="rounded-lg border border-border bg-background p-4">
                 <h3 className="text-foreground font-medium mb-2">Access and Identity</h3>
                 <p>Role-based permissions, scoped dashboard access, and controlled module visibility by responsibility.</p>
               </div>
-              <div className="rounded-lg border border-border/40 bg-background/40 p-4">
+              <div className="rounded-lg border border-border bg-background p-4">
                 <h3 className="text-foreground font-medium mb-2">Auditability</h3>
                 <p>Action trails for governance, settings, and operational records to support internal and regulatory audits.</p>
               </div>
-              <div className="rounded-lg border border-border/40 bg-background/40 p-4">
+              <div className="rounded-lg border border-border bg-background p-4">
                 <h3 className="text-foreground font-medium mb-2">Operational Controls</h3>
                 <p>Escalation workflows, notification channels, and task accountability across staff and management roles.</p>
               </div>
-              <div className="rounded-lg border border-border/40 bg-background/40 p-4">
+              <div className="rounded-lg border border-border bg-background p-4">
                 <h3 className="text-foreground font-medium mb-2">Documentation Governance</h3>
                 <p>Structured storage for compliance documents, renewal records, and approval history.</p>
               </div>
             </div>
           </section>
 
-          <section id="api-access" className="rounded-xl border border-border/40 bg-card/20 p-5 md:p-6">
-            <h2 className="font-[var(--font-bebas)] text-3xl tracking-wide">API Access</h2>
+          <section id="api-access" className="rounded-lg border border-border bg-card p-5 md:p-6">
+            <h2 className="text-2xl md:text-3xl font-semibold tracking-tight">API Access</h2>
             <p className="mt-2 text-sm text-muted-foreground leading-relaxed">
               API documentation and key management are available through the API Access area for enabled products.
             </p>
             <Link href="/api-access" className="inline-block mt-4 text-sm text-accent hover:underline">Open API Access →</Link>
           </section>
 
-          <section id="faq" className="rounded-xl border border-border/40 bg-card/20 p-5 md:p-6 mt-8">
-            <h2 className="font-[var(--font-bebas)] text-3xl tracking-wide">FAQ</h2>
+          <section id="faq" className="rounded-lg border border-border bg-card p-5 md:p-6 mt-8">
+            <h2 className="text-2xl md:text-3xl font-semibold tracking-tight">FAQ</h2>
             <div className="mt-4 space-y-3">
               {faqItems.map((item) => (
-                <article key={item.q} className="rounded-lg border border-border/40 bg-background/40 p-4">
+                <article key={item.q} className="rounded-lg border border-border bg-background p-4">
                   <h3 className="font-medium">{item.q}</h3>
                   <p className="mt-2 text-sm text-muted-foreground">{item.a}</p>
                 </article>
@@ -457,15 +505,28 @@ export default function DocumentationPage() {
         </section>
 
         <aside className="hidden xl:block">
-          <h2 className="sticky top-24 font-mono text-[10px] uppercase tracking-[0.22em] text-muted-foreground mb-3 bg-background/80 backdrop-blur-sm py-2 -mx-4 px-4">On this page</h2>
-          <ul className="space-y-2 text-sm">
-            {toc.map((item) => (
-              <li key={item.href}>
-                <a href={item.href} className="text-muted-foreground hover:text-foreground transition-colors">{item.label}</a>
-              </li>
-            ))}
-          </ul>
+          <div className="sticky top-24 rounded-lg border border-border bg-card p-4">
+            <h2 className="font-mono text-[10px] uppercase tracking-[0.22em] text-muted-foreground mb-3">On this page</h2>
+            <ul className="space-y-2 text-sm">
+              {toc.map((item) => (
+                <li key={item.href}>
+                  <a
+                    href={item.href}
+                    aria-current={item.href === `#${activeSection}` ? "location" : undefined}
+                    className={`block rounded px-2 py-1 transition-colors ${
+                      item.href === `#${activeSection}`
+                        ? "bg-accent/10 text-accent"
+                        : "text-muted-foreground hover:text-foreground"
+                    }`}
+                  >
+                    {item.label}
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </div>
         </aside>
+      </div>
       </div>
     </main>
   )

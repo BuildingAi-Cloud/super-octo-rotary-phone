@@ -1,7 +1,8 @@
 "use client";
 
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef, useEffect, useMemo } from "react";
 import type { User } from "@/lib/auth-context";
+import { useStarterPlan } from "@/hooks/use-starter-plan";
 
 import OverviewTab from "./bm-tabs/overview-tab";
 import CommunicationsTab from "./bm-tabs/communications-tab";
@@ -93,10 +94,29 @@ function renderTab(tab: TabId) {
 }
 
 export function BuildingManagerDashboard({ user: __user }: { user: User }) {
+  const plan = useStarterPlan();
+  const isProfessional = plan === "professional";
   const [activeTab, setActiveTab] = useState<TabId>("overview");
   const tabBarRef = useRef<HTMLDivElement>(null);
   const tabRefs = useRef<Array<HTMLButtonElement | null>>([]);
-  const sections = [...new Set(TABS.map((tab) => tab.section))];
+  const enabledTabs = useMemo(
+    () =>
+      TABS.filter((tab) => {
+        if (["keys", "access-control", "analytics", "governance", "integrations"].includes(tab.id)) {
+          return isProfessional;
+        }
+        return true;
+      }),
+    [isProfessional],
+  );
+
+  useEffect(() => {
+    if (!enabledTabs.some((tab) => tab.id === activeTab)) {
+      setActiveTab(enabledTabs[0]?.id ?? "overview");
+    }
+  }, [enabledTabs, activeTab]);
+
+  const sections = useMemo(() => [...new Set(enabledTabs.map((tab) => tab.section))], [enabledTabs]);
 
   // Scroll active tab into view on mount and on change
   useEffect(() => {
@@ -132,13 +152,13 @@ export function BuildingManagerDashboard({ user: __user }: { user: User }) {
 
   // The active tab determines which section is highlighted and which subset of
   // tabs should be visible in the secondary tab rail.
-  const activeSection = TABS.find((t) => t.id === activeTab)?.section || "";
-  const visibleTabs = TABS.filter((tab) => tab.section === activeSection);
+  const activeSection = enabledTabs.find((t) => t.id === activeTab)?.section || sections[0] || "";
+  const visibleTabs = enabledTabs.filter((tab) => tab.section === activeSection);
 
   const setSection = (section: string) => {
     // Switching sections always lands on the first tab in that section so the
     // panel never points at a hidden tab.
-    const firstTab = TABS.find((tab) => tab.section === section);
+    const firstTab = enabledTabs.find((tab) => tab.section === section);
     if (firstTab) {
       setActiveTab(firstTab.id);
     }

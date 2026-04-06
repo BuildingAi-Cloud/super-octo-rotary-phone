@@ -40,14 +40,14 @@ export function HeroSection() {
       <AnimatedNoise opacity={0.03} />
 
       {/* Left vertical labels */}
-      <div className="hidden lg:block absolute left-6 top-1/2 -translate-y-1/2">
+      <div className="hidden lg:block absolute left-3 xl:left-5 top-1/2 -translate-y-1/2">
         <span className="font-mono text-[10px] uppercase tracking-[0.3em] text-muted-foreground -rotate-90 origin-left block whitespace-nowrap">
           SECURE
         </span>
       </div>
 
       {/* Main content aligned to the same horizontal gutter as header. */}
-      <div ref={contentRef} className="w-full max-w-[920px] text-left">
+      <div ref={contentRef} className="w-full max-w-[920px] text-left lg:pl-16 xl:pl-24">
         <SplitFlapAudioProvider>
           <div className="relative mb-10 md:mb-12">
             <SplitFlapText text="BUILDSYNC" speed={80} />
@@ -91,7 +91,7 @@ export function HeroSection() {
       {/* Floating info tag - repositioned */}
       <div className="hidden lg:block absolute bottom-8 right-8">
         <div className="border border-border/50 px-4 py-2 font-mono text-[10px] uppercase tracking-widest text-muted-foreground bg-background/40 backdrop-blur-sm rounded-sm">
-          ISO 27001 / SOC 2 Certified
+          ISO 27001 / SOC 2 Program
         </div>
       </div>
     </section>

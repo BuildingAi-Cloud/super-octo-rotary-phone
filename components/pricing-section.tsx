@@ -6,6 +6,7 @@ import type { Variants } from "framer-motion"
 
 const plans = [
   {
+    id: "essential",
     name: "Essential",
     price: "$2.50",
     period: "/unit/month",
@@ -22,6 +23,7 @@ const plans = [
     cta: "Subscribe Now",
   },
   {
+    id: "professional",
     name: "Professional",
     price: "$4.50",
     period: "/unit/month",
@@ -40,6 +42,7 @@ const plans = [
     cta: "Subscribe Now",
   },
   {
+    id: "enterprise",
     name: "Enterprise",
     price: "Custom",
     period: "",
@@ -78,7 +81,7 @@ export function PricingSection() {
   }
 
   return (
-    <section className="relative py-16 md:py-28 max-w-screen-xl mx-auto px-3 md:px-6">
+    <section id="pricing" className="relative py-16 md:py-28 max-w-screen-xl mx-auto px-3 md:px-6">
       {/* Section header with animation */}
       <motion.div
         className="max-w-7xl mx-auto mb-12 md:mb-20"
@@ -164,7 +167,7 @@ export function PricingSection() {
             
             {/* CTA Button with inverse hover - text becomes background, background becomes text */}
             <Link
-              href={plan.cta === "Contact Sales" ? "/contact" : "/signup"}
+              href={plan.cta === "Contact Sales" ? "/contact" : `/signup?plan=${plan.id}`}
               className={`w-full text-center rounded-lg px-4 py-2.5 md:py-3 font-semibold text-xs md:text-sm uppercase tracking-wide transition-all duration-300 shadow-sm overflow-hidden relative group ${
                 plan.highlight
                   ? "bg-accent text-accent-foreground hover:bg-accent-foreground hover:text-accent"

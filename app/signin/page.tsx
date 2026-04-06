@@ -11,11 +11,21 @@ import { BitmapChevron } from "@/components/bitmap-chevron";
 
 export default function SignInPage() {
   const router = useRouter();
-  const { signIn, user, isLoading: authLoading } = useAuth();
+  const { signIn, requestPasswordResetChallenge, resetPasswordWithSecondFactor, user, isLoading: authLoading } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [showReset, setShowReset] = useState(false);
+  const [resetMethod, setResetMethod] = useState<"mfa_code" | "rsa_token">("mfa_code");
+  const [resetEmail, setResetEmail] = useState("");
+  const [resetCode, setResetCode] = useState("");
+  const [rsaToken, setRsaToken] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [resetMessage, setResetMessage] = useState("");
+  const [resetError, setResetError] = useState("");
+  const [isRequestingCode, setIsRequestingCode] = useState(false);
+  const [isResettingPassword, setIsResettingPassword] = useState(false);
 
   // Redirect authenticated users to dashboard (pre-login page protection).
   useEffect(() => {
@@ -36,10 +46,62 @@ export default function SignInPage() {
       } else {
         setError(result.error || "Invalid email or password");
       }
-    } catch (err) {
+    } catch {
       setError("Failed to sign in");
     }
     setIsLoading(false);
+  };
+
+  const handleRequestResetCode = async () => {
+    setResetError("");
+    setResetMessage("");
+    setIsRequestingCode(true);
+
+    try {
+      const result = await requestPasswordResetChallenge(resetEmail, resetMethod);
+      if (!result.success) {
+        setResetError(result.error || "Unable to request verification code.");
+      } else {
+        if (resetMethod === "mfa_code") {
+          const devSuffix = result.devCode ? ` Demo code: ${result.devCode}` : "";
+          setResetMessage(`Verification code sent. It expires in 5 minutes.${devSuffix}`);
+        } else {
+          const devSuffix = result.devRsaToken ? ` Demo RSA token: ${result.devRsaToken}` : "";
+          setResetMessage(`Use your RSA token to complete reset.${devSuffix}`);
+        }
+      }
+    } catch {
+      setResetError("Failed to request verification code.");
+    }
+
+    setIsRequestingCode(false);
+  };
+
+  const handlePasswordReset = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setResetError("");
+    setResetMessage("");
+    setIsResettingPassword(true);
+
+    try {
+      const result = await resetPasswordWithSecondFactor(resetEmail, newPassword, {
+        method: resetMethod,
+        mfaCode: resetMethod === "mfa_code" ? resetCode : undefined,
+        rsaToken: resetMethod === "rsa_token" ? rsaToken : undefined,
+      });
+      if (!result.success) {
+        setResetError(result.error || "Unable to reset password.");
+      } else {
+        setResetMessage("Password reset successful. You can now sign in with the new password.");
+        setResetCode("");
+        setRsaToken("");
+        setNewPassword("");
+      }
+    } catch {
+      setResetError("Failed to reset password.");
+    }
+
+    setIsResettingPassword(false);
   };
 
   return (
@@ -106,16 +168,124 @@ export default function SignInPage() {
             <ScrambleTextOnHover text={isLoading ? "Signing in..." : "Sign In"} as="span" duration={0.5} />
             {!isLoading && <BitmapChevron className="transition-transform duration-[400ms] ease-in-out group-hover:translate-x-1" />}
           </button>
+
+          <button
+            type="button"
+            onClick={() => {
+              setShowReset((prev) => !prev);
+              setResetError("");
+              setResetMessage("");
+              if (!showReset) {
+                setResetEmail(email);
+              }
+            }}
+            className="self-start font-mono text-[10px] uppercase tracking-[0.24em] text-accent hover:underline"
+          >
+            {showReset ? "Hide Forgot Password" : "Forgot Password"}
+          </button>
         </form>
-        {/* Footer */}
-        <div className="mt-8 text-center">
-          <p className="font-mono text-xs text-muted-foreground">
-            Don&apos;t have an account?{' '}
-            <Link href="/signup" className="text-accent hover:underline">
-              Sign up
-            </Link>
-          </p>
-        </div>
+
+        {showReset && (
+          <form
+            onSubmit={handlePasswordReset}
+            className="mt-6 space-y-4 bg-card/30 border border-border/40 p-6 rounded-lg w-full max-w-md shadow-md mx-auto"
+          >
+            <p className="font-mono text-[10px] uppercase tracking-[0.3em] text-muted-foreground">Forgot Password</p>
+
+            <div className="space-y-2">
+              <label htmlFor="reset-method" className="font-mono text-[10px] uppercase tracking-[0.3em] text-muted-foreground">Reset Method</label>
+              <select
+                id="reset-method"
+                value={resetMethod}
+                onChange={e => {
+                  const next = e.target.value as "mfa_code" | "rsa_token";
+                  setResetMethod(next);
+                  setResetError("");
+                  setResetMessage("");
+                }}
+                className="w-full rounded-md border border-border/35 bg-background px-3 py-2 text-sm"
+              >
+                <option value="mfa_code">Multi-Factor Verification Code</option>
+                <option value="rsa_token">RSA Token</option>
+              </select>
+            </div>
+
+            <div className="space-y-2">
+              <label htmlFor="reset-email" className="font-mono text-[10px] uppercase tracking-[0.3em] text-muted-foreground">Email</label>
+              <Input
+                id="reset-email"
+                type="email"
+                placeholder="you@email.com"
+                value={resetEmail}
+                onChange={e => setResetEmail(e.target.value)}
+                required
+              />
+            </div>
+
+            <button
+              type="button"
+              onClick={() => {
+                void handleRequestResetCode();
+              }}
+              disabled={isRequestingCode}
+              className="group inline-flex items-center justify-center gap-2 border border-accent/40 bg-accent/10 px-4 py-2 font-mono text-[10px] uppercase tracking-widest text-accent disabled:opacity-50"
+            >
+              <ScrambleTextOnHover text={isRequestingCode ? "Sending..." : resetMethod === "mfa_code" ? "Send Verification Code" : "Initialize RSA Reset"} as="span" duration={0.4} />
+            </button>
+
+            {resetMethod === "mfa_code" ? (
+              <div className="space-y-2">
+                <label htmlFor="reset-code" className="font-mono text-[10px] uppercase tracking-[0.3em] text-muted-foreground">MFA Code</label>
+                <Input
+                  id="reset-code"
+                  type="text"
+                  placeholder="6-digit code"
+                  value={resetCode}
+                  onChange={e => setResetCode(e.target.value)}
+                  required
+                />
+              </div>
+            ) : (
+              <div className="space-y-2">
+                <label htmlFor="rsa-token" className="font-mono text-[10px] uppercase tracking-[0.3em] text-muted-foreground">RSA Token</label>
+                <Input
+                  id="rsa-token"
+                  type="password"
+                  placeholder="Enter RSA token"
+                  value={rsaToken}
+                  onChange={e => setRsaToken(e.target.value)}
+                  required
+                />
+              </div>
+            )}
+
+            <div className="space-y-2">
+              <label htmlFor="new-password" className="font-mono text-[10px] uppercase tracking-[0.3em] text-muted-foreground">New Password</label>
+              <Input
+                id="new-password"
+                type="password"
+                placeholder="Min 8 characters"
+                value={newPassword}
+                onChange={e => setNewPassword(e.target.value)}
+                required
+                minLength={8}
+              />
+            </div>
+
+            {resetError && <div className="text-red-600 font-mono text-xs">{resetError}</div>}
+            {resetMessage && <div className="text-emerald-500 font-mono text-xs">{resetMessage}</div>}
+
+            <button
+              type="submit"
+              disabled={isResettingPassword}
+              className="group w-full inline-flex items-center justify-center gap-3 bg-accent px-6 py-3 font-mono text-xs uppercase tracking-widest text-accent-foreground hover:bg-accent/90 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <ScrambleTextOnHover text={isResettingPassword ? "Resetting..." : "Reset Password"} as="span" duration={0.5} />
+              {!isResettingPassword && <BitmapChevron className="transition-transform duration-[400ms] ease-in-out group-hover:translate-x-1" />}
+            </button>
+          </form>
+        )}
+
         {/* Back link */}
         <div className="mt-12 text-center">
           <Link

@@ -3,6 +3,7 @@ import type { Metadata, Viewport } from "next"
 import { IBM_Plex_Sans, IBM_Plex_Mono, Bebas_Neue } from "next/font/google"
 import { Analytics } from "@vercel/analytics/next"
 import { SmoothScroll } from "@/components/smooth-scroll"
+import { DynamicGridBg } from "@/components/dynamic-grid-bg"
 import { AuthProvider } from "@/lib/auth-context"
 import { ThemeProvider } from "@/lib/theme-context"
 import "./globals.css"
@@ -75,6 +76,7 @@ export default function RootLayout({
       <body
         className={`${ibmPlexSans.variable} ${bebasNeue.variable} ${ibmPlexMono.variable} mobile-web-root font-sans antialiased overflow-x-hidden`}
       >
+        <DynamicGridBg opacity={0.22} speed={0.28} />
         <div className="noise-overlay" aria-hidden="true" />
         <ThemeProvider>
           <AuthProvider>

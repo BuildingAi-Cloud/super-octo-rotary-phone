@@ -34,15 +34,15 @@ export function DynamicGridBg({ opacity = 0.2, speed = 0.5, className }: Dynamic
     <div
       className={`fixed inset-0 pointer-events-none z-0 ${className || ""}`}
       style={{
-        // Transform shifts the grid position as user scrolls, creating a parallax animation.
-        transform: `translateY(${offset}px)`,
+        // Keep full-page coverage and move the pattern itself for a continuous parallax effect.
+        backgroundPosition: `0 ${-(offset % 80)}px`,
         opacity,
-        transition: "transform 0.1s ease-out",
+        transition: "background-position 0.08s linear",
+        willChange: "background-position",
       }}
       aria-hidden="true"
     >
-      {/* Container with the grid pattern that will translate on scroll. */}
-      <div className="grid-bg absolute inset-0 w-full h-[200%]" />
+      <div className="grid-bg absolute inset-0 w-full h-full" />
     </div>
   )
 }

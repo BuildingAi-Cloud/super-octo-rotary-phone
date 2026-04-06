@@ -1,8 +1,8 @@
 "use client"
 
-import { useMemo, useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 import { type User } from "@/lib/auth-context"
-import { amenityStore, addBooking, getBookingsForUser } from "@/lib/amenity-store"
+import { amenityStore, type Booking } from "@/lib/amenity-store"
 import { getLeaseProfileForUser } from "@/lib/lease-management-store"
 import { resolveTenantPaymentVisibility, type PaymentMethod, type PaymentSchedule, type TenantLeaseProfile } from "@/lib/tenant-portal-config"
 import { AnimatedNoise } from "@/components/animated-noise"
@@ -76,15 +76,106 @@ export function TenantDashboard({ user }: TenantDashboardProps) {
   const [bookingAmenity, setBookingAmenity] = useState("")
   const [bookingDate, setBookingDate] = useState("")
   const [bookingTime, setBookingTime] = useState("")
+  const [bookingNonce, setBookingNonce] = useState("")
+  const [bookingStartedAt, setBookingStartedAt] = useState(0)
+  const [bookingTrap, setBookingTrap] = useState("")
+  const [isBookingSubmitting, setIsBookingSubmitting] = useState(false)
   const [bookingStatus, setBookingStatus] = useState("")
   const amenities = amenityStore
-  const myBookings = getBookingsForUser(user.id)
+  const [myBookings, setMyBookings] = useState<Booking[]>([])
   const paymentHistory = leaseInfo.paymentHistory || []
   const commercialBilling = leaseInfo.commercialBilling
   const showCommercialBilling = leaseInfo.buildingType === "commercial" || Boolean(commercialBilling)
   const paymentStatusLabel = paymentVisibility.canMakePortalPayment ? `${paymentMethodLabel[paymentVisibility.primaryPaymentMethod]} available` : "Paid directly to owner"
   const paymentActionLabel = paymentVisibility.canMakePortalPayment ? "Pay Rent" : paymentVisibility.canManagePaymentSetup ? "Payment Setup" : "Payment Instructions"
   const hasMappedLease = leaseInfo.unit !== fallbackLeaseInfo.unit
+
+  useEffect(() => {
+    let active = true
+
+    async function loadBookings() {
+      try {
+        const response = await fetch(`/api/amenities/bookings?userId=${encodeURIComponent(user.id)}`, { cache: "no-store" })
+        if (!response.ok) return
+        const payload = (await response.json()) as { bookings?: Booking[] }
+        if (!active || !Array.isArray(payload.bookings)) return
+        setMyBookings(payload.bookings)
+      } catch {
+        // Keep current values when API is unavailable.
+      }
+    }
+
+    void loadBookings()
+    return () => {
+      active = false
+    }
+  }, [user.id])
+
+  async function startBooking(amenityId: string) {
+    setBookingStatus("")
+    setBookingAmenity(amenityId)
+    setBookingStartedAt(Date.now())
+    setBookingTrap("")
+
+    try {
+      const response = await fetch(`/api/amenities/bookings?mode=challenge&amenityId=${encodeURIComponent(amenityId)}`, { cache: "no-store" })
+      if (!response.ok) {
+        setBookingNonce("")
+        setBookingStatus("Unable to initialize secure booking. Please retry.")
+        return
+      }
+      const payload = (await response.json()) as { nonce?: string }
+      setBookingNonce(payload.nonce || "")
+    } catch {
+      setBookingNonce("")
+      setBookingStatus("Unable to initialize secure booking. Please retry.")
+    }
+  }
+
+  async function submitBooking(event: React.FormEvent) {
+    event.preventDefault()
+    if (!bookingAmenity || !bookingNonce) {
+      setBookingStatus("Secure booking challenge missing. Please reopen booking form.")
+      return
+    }
+
+    setIsBookingSubmitting(true)
+    try {
+      const response = await fetch("/api/amenities/bookings", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          amenityId: bookingAmenity,
+          userId: user.id,
+          date: bookingDate,
+          time: bookingTime,
+          nonce: bookingNonce,
+          submittedAt: bookingStartedAt,
+          website: bookingTrap,
+        }),
+      })
+
+      const payload = (await response.json()) as { error?: string; booking?: Booking }
+
+      if (!response.ok || !payload.booking) {
+        setBookingStatus(payload.error || "Booking was rejected. Please retry.")
+        return
+      }
+
+      setMyBookings((prev) => [payload.booking as Booking, ...prev])
+      setBookingStatus("Booking submitted successfully.")
+      setBookingAmenity("")
+      setBookingDate("")
+      setBookingTime("")
+      setBookingNonce("")
+      setBookingStartedAt(0)
+      setBookingTrap("")
+    } catch {
+      setBookingStatus("Booking submission failed. Please retry.")
+    } finally {
+      setIsBookingSubmitting(false)
+    }
+  }
 
   return (
     <main className="relative min-h-screen bg-background">
@@ -348,8 +439,7 @@ export function TenantDashboard({ user }: TenantDashboardProps) {
                       type="button"
                       disabled={amenity.status !== "available"}
                       onClick={() => {
-                        setBookingAmenity(amenity.id)
-                        setBookingStatus("")
+                        void startBooking(amenity.id)
                       }}
                       className="w-full py-2 border border-accent bg-accent/10 font-mono text-[10px] uppercase tracking-widest text-accent hover:bg-accent/20 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                     >
@@ -361,24 +451,19 @@ export function TenantDashboard({ user }: TenantDashboardProps) {
 
               {bookingAmenity && (
                 <form
-                  onSubmit={(event) => {
-                    event.preventDefault()
-                    addBooking({
-                      id: crypto.randomUUID(),
-                      amenityId: bookingAmenity,
-                      userId: user.id,
-                      date: bookingDate,
-                      time: bookingTime,
-                      status: "pending",
-                    })
-                    setBookingStatus("Booking submitted and pending approval.")
-                    setBookingAmenity("")
-                    setBookingDate("")
-                    setBookingTime("")
-                  }}
+                  onSubmit={submitBooking}
                   className="border border-accent/30 bg-accent/5 p-4"
                 >
                   <h4 className="font-mono text-xs mb-2">Book Amenity</h4>
+                  <input
+                    type="text"
+                    value={bookingTrap}
+                    onChange={(event) => setBookingTrap(event.target.value)}
+                    tabIndex={-1}
+                    autoComplete="off"
+                    aria-hidden="true"
+                    className="absolute left-[-9999px] opacity-0 pointer-events-none"
+                  />
                   <div className="grid grid-cols-1 md:grid-cols-[1fr_1.6fr_auto] gap-2 items-start">
                     <input
                       type="date"
@@ -396,7 +481,7 @@ export function TenantDashboard({ user }: TenantDashboardProps) {
                       className="border border-border px-2 py-2 font-mono text-xs bg-background"
                     />
                     <button type="submit" className="bg-accent px-4 py-2 text-accent-foreground font-mono text-xs uppercase tracking-widest">
-                      Submit
+                      {isBookingSubmitting ? "Submitting..." : "Submit"}
                     </button>
                   </div>
                   {bookingStatus && <p className="mt-2 font-mono text-xs text-accent">{bookingStatus}</p>}

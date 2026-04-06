@@ -8,6 +8,7 @@ const navItems = [
   { id: "insights", label: "Insights" },
   { id: "solutions", label: "Solutions" },
   { id: "principles", label: "Pillars" },
+  { id: "compliance-by-country", label: "Compliance" },
   { id: "pricing", label: "Pricing" },
   { id: "colophon", label: "Connect" },
 ]

@@ -19,6 +19,7 @@ import { WorkflowsTab } from "./fm-tabs/workflows-tab";
 import { VendorDatabaseTab } from "./fm-tabs/vendor-database-tab";
 import IntegrationsHub from "./integrations-hub";
 import { CommandCenterChrome } from "./command-center-chrome";
+import { useStarterPlan } from "@/hooks/use-starter-plan";
 
 // ─── SVG Icons (inline, no dependency) ─────────────────────────────────────────
 const Icons = {
@@ -1027,6 +1028,8 @@ function AuditLogTab({ entries: initialEntries }: { entries: AuditEntry[] }) {
 // ─── MAIN DASHBOARD ─────────────────────────────────────────────────────────────
 
 export function FacilityManagerDashboard({ user }: { user: User }) {
+  const plan = useStarterPlan();
+  const isProfessional = plan === "professional";
   const iotEnabled = (user as User & { iotEnabled?: boolean }).iotEnabled !== false;
   const [activeTab, setActiveTab] = useState<TabKey>("dashboard");
   const tabRefs = useRef<Array<HTMLButtonElement | null>>([]);
@@ -1034,9 +1037,12 @@ export function FacilityManagerDashboard({ user }: { user: User }) {
   const enabledTabs = useMemo(() => {
     return TABS.filter((tab) => {
       if (tab.key === "alerts" && !iotEnabled) return false;
+      if (["vendor_database", "integrations", "audit_log", "reports"].includes(tab.key)) {
+        return isProfessional;
+      }
       return true;
     });
-  }, [iotEnabled]);
+  }, [iotEnabled, isProfessional]);
 
   useEffect(() => {
     if (!enabledTabs.some((tab) => tab.key === activeTab)) {
@@ -1079,9 +1085,12 @@ export function FacilityManagerDashboard({ user }: { user: User }) {
   };
 
   const handleNavigateTab = useCallback((tab: TabKey) => {
+    if (!enabledTabs.some((entry) => entry.key === tab)) {
+      return;
+    }
     setActiveTab(tab);
     window.scrollTo({ top: 0, behavior: "smooth" });
-  }, []);
+  }, [enabledTabs]);
 
   return (
     <main className="relative min-h-screen bg-background">
