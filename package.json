@@ -6,7 +6,7 @@
   "scripts": {
     "build": "next build",
     "dev": "next dev",
-    "lint": "ESLINT_USE_FLAT_CONFIG=false eslint .",
+    "lint": "eslint .",
     "start": "next start",
     "test": "jest --passWithNoTests",
     "update-api-reference": "node update-api-reference.js",

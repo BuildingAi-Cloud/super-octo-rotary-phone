@@ -40,13 +40,11 @@ export default function SignUpPage() {
       if (!role) return;
       setError("");
       setIsLoading(true);
-      let timeoutId: NodeJS.Timeout | null = null;
+      const timeoutId = setTimeout(() => {
+        setIsLoading(false);
+        setError("Request timed out. Please try again.");
+      }, 10000);
       try {
-        // Timeout fallback: reset loading after 10 seconds
-        timeoutId = setTimeout(() => {
-          setIsLoading(false);
-          setError("Request timed out. Please try again.");
-        }, 10000);
         const result = await signUp({
           email,
           password,
@@ -64,6 +62,7 @@ export default function SignUpPage() {
         const message = error instanceof Error ? error.message : "An unexpected error occurred"
         setError(message);
       } finally {
+        clearTimeout(timeoutId);
         setIsLoading(false);
       }
     };

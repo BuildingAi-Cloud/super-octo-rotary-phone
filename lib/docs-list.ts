@@ -3,14 +3,13 @@ import path from 'path';
 
 export async function getDocsList() {
   const docsDir = path.join(process.cwd(), 'docs');
-  let files: string[] = [];
   try {
-    files = await fs.readdir(docsDir);
+    const files = await fs.readdir(docsDir);
+    return files.filter((f) => f.endsWith('.md')).map((f) => ({
+      slug: f.replace(/\.md$/, ''),
+      title: f.replace(/-/g, ' ').replace(/\.md$/, '').replace(/\b\w/g, (c) => c.toUpperCase()),
+    }));
   } catch {
     return [];
   }
-  return files.filter((f) => f.endsWith('.md')).map((f) => ({
-    slug: f.replace(/\.md$/, ''),
-    title: f.replace(/-/g, ' ').replace(/\.md$/, '').replace(/\b\w/g, (c) => c.toUpperCase()),
-  }));
 }
