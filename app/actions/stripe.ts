@@ -41,7 +41,7 @@ export async function startCheckoutSession(productId: string, interval: BillingI
       },
     ],
     mode: 'subscription',
-  })
+  } as any)
 
   return session.client_secret
 }
