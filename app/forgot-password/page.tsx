@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useAuth } from "@/lib/auth-context";
@@ -11,7 +11,7 @@ import { BitmapChevron } from "@/components/bitmap-chevron";
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-export default function ForgotPasswordPage() {
+function ForgotPasswordPageInner() {
   const searchParams = useSearchParams();
   const { requestPasswordResetChallenge, resetPasswordWithSecondFactor } = useAuth();
 
@@ -300,5 +300,19 @@ export default function ForgotPasswordPage() {
         </div>
       </div>
     </main>
+  );
+}
+
+export default function ForgotPasswordPage() {
+  return (
+    <Suspense
+      fallback={
+        <main className="min-h-screen flex items-center justify-center">
+          <p className="font-mono text-xs text-muted-foreground animate-pulse">Loading...</p>
+        </main>
+      }
+    >
+      <ForgotPasswordPageInner />
+    </Suspense>
   );
 }
