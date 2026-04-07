@@ -59,34 +59,27 @@ jobs:
                 ciStatus = "⚠️ unavailable";
               }
 
-              // Open issues (excludes pull requests)
-              let openIssues = "—";
-              try {
-                const { data: issues } = await github.rest.issues.listForRepo({
-                  owner: org,
-                  repo: repoName,
-                  state: "open",
-                  per_page: 1,
-                });
-                // The list endpoint mixes issues + PRs; use the repo-level counter for pure issues
-                openIssues = String(repo.open_issues_count);
-              } catch {
-                openIssues = "—";
-              }
-
-              // Open pull requests
+              // Open pull requests (paginate to handle repos with > 100 open PRs)
               let openPRs = "—";
+              let prCount = 0;
               try {
-                const { data: prs } = await github.rest.pulls.list({
+                const prs = await github.paginate(github.rest.pulls.list, {
                   owner: org,
                   repo: repoName,
                   state: "open",
                   per_page: 100,
                 });
-                openPRs = String(prs.length);
+                prCount = prs.length;
+                openPRs = String(prCount);
               } catch {
                 openPRs = "—";
               }
+
+              // Open issues — repo.open_issues_count includes PRs, so subtract PR count
+              const openIssues =
+                openPRs === "—"
+                  ? String(repo.open_issues_count)
+                  : String(Math.max(0, repo.open_issues_count - prCount));
 
               const repoLink = `[${repoName}](${repo.html_url})`;
               const defaultBranch = repo.default_branch;
