@@ -6,16 +6,42 @@ import Link from "next/link"
 import { AnimatedNoise } from "@/components/animated-noise"
 import { BitmapChevron } from "@/components/bitmap-chevron"
 import { ScrambleText } from "@/components/scramble-text"
+import { resolveStarterPlan } from "@/lib/rollout"
 
 function ReturnContent() {
   const searchParams = useSearchParams()
   const sessionId = searchParams.get("session_id")
+  const plan = resolveStarterPlan(searchParams.get("plan"))
+  const interval = (searchParams.get("interval") || "monthly") as "monthly" | "yearly"
+  const units = Number.parseInt(searchParams.get("units") || "50", 10)
   const [status, setStatus] = useState<"loading" | "success" | "error">("loading")
 
   useEffect(() => {
     if (sessionId) {
       // Payment confirmation is simulated; no real payment processing
       setTimeout(() => {
+        try {
+          const rawUser = localStorage.getItem("buildsync_user")
+          const user = rawUser ? JSON.parse(rawUser) as { id?: string } : null
+          const ownerKey = user?.id || "guest"
+          const storeKey = `buildsync_subscription_${ownerKey}`
+          const now = new Date()
+          const next = new Date(now)
+          if (interval === "monthly") next.setMonth(next.getMonth() + 1)
+          else next.setFullYear(next.getFullYear() + 1)
+
+          localStorage.setItem(storeKey, JSON.stringify({
+            plan,
+            interval,
+            units: Number.isFinite(units) ? Math.max(10, Math.min(1000, units)) : 50,
+            status: "active",
+            startedAt: now.toISOString(),
+            nextBillingAt: next.toISOString(),
+            source: "checkout",
+          }))
+        } catch {
+          // Non-blocking in demo flow
+        }
         setStatus("success")
       }, 1500)
     } else {
@@ -74,6 +100,12 @@ function ReturnContent() {
         >
           Go to Dashboard
           <BitmapChevron />
+        </Link>
+        <Link
+          href="/settings"
+          className="inline-flex items-center gap-2 border border-accent px-6 py-3 font-mono text-xs uppercase tracking-widest text-accent hover:bg-accent/10 transition-all"
+        >
+          Manage Subscription
         </Link>
         <Link
           href="/"

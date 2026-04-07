@@ -58,7 +58,7 @@ export function VasPaymentSection({ enabled = true }: { enabled?: boolean }) {
       </div>
       <button
         type="submit"
-        className="group w-full inline-flex items-center justify-center gap-3 bg-accent px-6 py-4 font-mono text-xs uppercase tracking-widest text-accent-foreground hover:bg-accent/90 transition-all duration-200"
+        className="group w-full inline-flex items-center justify-center gap-3 bg-accent px-6 py-4 font-mono text-xs uppercase tracking-widest text-background hover:bg-background hover:text-accent border border-accent transition-all duration-300"
       >
         Pay Now
       </button>

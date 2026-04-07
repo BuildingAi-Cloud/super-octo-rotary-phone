@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import type { User, UserRole } from "@/lib/auth-context";
-import { addableRoles, ROLE_TEMPLATES } from "@/lib/rbac";
+import { addableRoles, ROLE_TEMPLATES, ORG_ADMIN_ROLES } from "@/lib/rbac";
 import {
   listUsers,
   addUser,
@@ -14,6 +14,7 @@ import {
   type StoredUser,
   type Invite,
 } from "@/lib/user-management-store";
+import { logAudit } from "@/lib/audit";
 
 // ── Inline Icons ─────────────────────────────────────────────────────────────
 

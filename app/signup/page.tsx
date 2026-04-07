@@ -1,12 +1,13 @@
 
 "use client";
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { Suspense, useState, useEffect } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { useAuth, type UserRole } from "@/lib/auth-context";
 import { AnimatedNoise } from "@/components/animated-noise";
 import { ScrambleText, ScrambleTextOnHover } from "@/components/scramble-text";
 import { BitmapChevron } from "@/components/bitmap-chevron";
+import { PHASE_ONE_ESSENTIAL_ONLY, resolveStarterPlan, type StarterPlan } from "@/lib/rollout";
 
 const roleOptions: { value: UserRole; label: string; description: string; pricing: string }[] = [
   {
@@ -22,60 +23,123 @@ const roleOptions: { value: UserRole; label: string; description: string; pricin
     pricing: "Portfolio pricing available. Contact sales for details.",
   },
   {
-    value: "property_manager",
-    label: "Property Manager",
-    description: "Tenant relations, leasing, and property administration",
+    value: "building_manager",
+    label: "Building Manager",
+    description: "Daily operations, tenant relations, and full property management",
     pricing: "Flexible pricing per managed unit or property",
   },
 ];
 
-export default function SignUpPage() {
-    const handleRoleSelect = (selectedRole: UserRole) => {
-      setRole(selectedRole);
-      setStep(2);
-    };
+const PLAN_COPY: Record<StarterPlan, { label: string; price: string; tagline: string }> = {
+  essential: {
+    label: "Essential",
+    price: "$2.50 /unit/month",
+    tagline: "Best for smaller buildings and HOA operations.",
+  },
+  professional: {
+    label: "Professional",
+    price: "$4.50 /unit/month",
+    tagline: "Best for property managers and larger portfolios.",
+  },
+}
 
-    const handleSubmit = async (e: React.FormEvent) => {
-      e.preventDefault();
-      if (!role) return;
-      setError("");
-      setIsLoading(true);
-      const timeoutId = setTimeout(() => {
-        setIsLoading(false);
-        setError("Request timed out. Please try again.");
-      }, 10000);
-      try {
-        const result = await signUp({
-          email,
-          password,
-          name,
-          role,
-          company: company || undefined,
-        });
-        if (timeoutId) clearTimeout(timeoutId);
-        if (result.success) {
-          setStep(3);
-        } else {
-          setError(result.error || "An error occurred");
-        }
-      } catch (error: unknown) {
-        const message = error instanceof Error ? error.message : "An unexpected error occurred"
-        setError(message);
-      } finally {
-        clearTimeout(timeoutId);
-        setIsLoading(false);
-      }
-    };
+function parseStarterPlan(value: string | null): StarterPlan {
+  return resolveStarterPlan(value)
+}
+
+function SignUpPageContent() {
   const router = useRouter();
-  const { signUp } = useAuth();
+  const searchParams = useSearchParams();
+  const { signUp, user, isLoading: authLoading } = useAuth();
+  const [selectedPlan, setSelectedPlan] = useState<StarterPlan>("essential")
   const [step, setStep] = useState<1 | 2 | 3>(1);
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [company, setCompany] = useState("");
-  const [role, setRole] = useState<UserRole | "">("");
+  const [role, setRole] = useState<UserRole | "">();
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [humanA, setHumanA] = useState(0)
+  const [humanB, setHumanB] = useState(0)
+  const [humanAnswer, setHumanAnswer] = useState("")
+
+  function generateHumanChallenge() {
+    const a = Math.floor(Math.random() * 8) + 2
+    const b = Math.floor(Math.random() * 8) + 2
+    setHumanA(a)
+    setHumanB(b)
+    setHumanAnswer("")
+  }
+
+  // Redirect authenticated users to dashboard (pre-login page protection).
+  useEffect(() => {
+    if (!authLoading && user) {
+      router.push("/dashboard")
+    }
+  }, [user, authLoading, router])
+
+  useEffect(() => {
+    const planFromQuery = parseStarterPlan(searchParams.get("plan"))
+    setSelectedPlan(planFromQuery)
+  }, [searchParams])
+
+  useEffect(() => {
+    localStorage.setItem(
+      "buildsync_signup_plan",
+      JSON.stringify({ plan: selectedPlan, capturedAt: new Date().toISOString() })
+    )
+  }, [selectedPlan])
+
+  useEffect(() => {
+    generateHumanChallenge()
+  }, [])
+
+  const handleRoleSelect = (selectedRole: UserRole) => {
+    setRole(selectedRole);
+    setStep(2);
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!role) return;
+    setError("");
+
+    const parsed = Number.parseInt(humanAnswer, 10)
+    if (!Number.isFinite(parsed) || parsed !== humanA + humanB) {
+      setError("Human verification failed. Please solve the check and try again.")
+      generateHumanChallenge()
+      return
+    }
+
+    setIsLoading(true);
+    let timeoutId: NodeJS.Timeout | null = null;
+    try {
+      // Timeout fallback: reset loading after 10 seconds
+      timeoutId = setTimeout(() => {
+        setIsLoading(false);
+        setError("Request timed out. Please try again.");
+      }, 10000);
+      const result = await signUp({
+        email,
+        password,
+        name,
+        role,
+        company: company || undefined,
+      });
+      if (timeoutId) clearTimeout(timeoutId);
+      if (result.success) {
+        setStep(3);
+      } else {
+        setError(result.error || "An error occurred");
+      }
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : "An unexpected error occurred"
+      setError(message);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
     return (
           <main className="relative min-h-screen flex items-center justify-center p-6">
@@ -117,6 +181,47 @@ export default function SignUpPage() {
                   <span className="font-mono text-[10px] uppercase tracking-widest">Payment</span>
                 </div>
               </div>
+
+              <div className="mb-8 border border-accent/30 bg-accent/5 p-4 md:p-5">
+                <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+                  <div>
+                    <p className="font-mono text-[10px] uppercase tracking-[0.3em] text-accent">Selected Plan</p>
+                    <h2 className="mt-1 font-[var(--font-bebas)] text-2xl tracking-wide">
+                      {PLAN_COPY[selectedPlan].label}
+                    </h2>
+                    <p className="font-mono text-xs text-muted-foreground mt-1">
+                      {PLAN_COPY[selectedPlan].price} • {PLAN_COPY[selectedPlan].tagline}
+                    </p>
+                  </div>
+                  {PHASE_ONE_ESSENTIAL_ONLY ? (
+                    <div className="px-3 py-2 border border-border/50 font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+                      Phase 1 rollout: Essential only
+                    </div>
+                  ) : (
+                    <div className="inline-flex items-center border border-border/50">
+                      <button
+                        type="button"
+                        onClick={() => setSelectedPlan("essential")}
+                        className={`px-3 py-2 font-mono text-[10px] uppercase tracking-widest transition-colors ${
+                          selectedPlan === "essential" ? "bg-accent text-accent-foreground" : "text-muted-foreground hover:text-foreground"
+                        }`}
+                      >
+                        Essential
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setSelectedPlan("professional")}
+                        className={`px-3 py-2 font-mono text-[10px] uppercase tracking-widest transition-colors ${
+                          selectedPlan === "professional" ? "bg-accent text-accent-foreground" : "text-muted-foreground hover:text-foreground"
+                        }`}
+                      >
+                        Professional
+                      </button>
+                    </div>
+                  )}
+                </div>
+              </div>
+
               {step === 1 && (
                 <div className="space-y-4">
                   {roleOptions.map((option) => (
@@ -195,6 +300,33 @@ export default function SignUpPage() {
                       placeholder="Min 8 characters"
                     />
                   </div>
+
+                  <div className="space-y-3 border border-border/50 bg-card/30 p-4">
+                    <p className="font-mono text-[10px] uppercase tracking-[0.3em] text-muted-foreground">Human Check</p>
+                    <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+                      <label htmlFor="human-check" className="font-mono text-xs text-foreground/90">
+                        What is {humanA} + {humanB}?
+                      </label>
+                      <input
+                        id="human-check"
+                        type="number"
+                        value={humanAnswer}
+                        onChange={(e) => setHumanAnswer(e.target.value)}
+                        required
+                        className="w-full sm:w-28 border border-border bg-background px-3 py-2 font-mono text-sm text-foreground focus:border-accent focus:outline-none transition-colors"
+                        placeholder="Answer"
+                        inputMode="numeric"
+                      />
+                      <button
+                        type="button"
+                        onClick={generateHumanChallenge}
+                        className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground hover:text-accent transition-colors"
+                      >
+                        Refresh
+                      </button>
+                    </div>
+                  </div>
+
                   <button
                     type="submit"
                     disabled={isLoading}
@@ -246,4 +378,12 @@ export default function SignUpPage() {
           </main>
         )
       }
+
+export default function SignUpPage() {
+  return (
+    <Suspense fallback={<main className="relative min-h-screen flex items-center justify-center p-6" />}>
+      <SignUpPageContent />
+    </Suspense>
+  )
+}
   

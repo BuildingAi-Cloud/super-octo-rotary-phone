@@ -1,0 +1,11 @@
+Buildsync Enterprise On-Prem Distribution Notice
+
+This container image is licensed for use under the applicable Master Software Agreement and Service Schedule.
+
+Key operational terms for on-prem deployments:
+1. Customer data remains within customer-controlled infrastructure unless explicitly shared for support.
+2. Buildsync does not use customer data to train foundational models without written consent.
+3. Reverse engineering, unauthorized redistribution, and removal of proprietary notices are prohibited.
+4. License validation and heartbeat checks may be used for seat-count and entitlement compliance.
+
+For full legal terms, refer to your signed Buildsync agreement.

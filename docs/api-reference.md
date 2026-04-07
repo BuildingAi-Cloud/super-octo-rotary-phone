@@ -2,13 +2,18 @@
 
 This page is automatically generated.
 
-<<<<<<< HEAD
 - /api/amenities/[id]
 - /api/amenities/_storage
 - /api/amenities
-=======
->>>>>>> feature/ui-updates
 - /api/auth
 - /api/checkout-session
 - /api/dashboard
+- /api/governance/[id]/cast
+- /api/governance/[id]/results
+- /api/governance/[id]
+- /api/governance/_storage
+- /api/governance
 - /api/otp
+- /api/owner-banks/[id]
+- /api/owner-banks/_storage
+- /api/owner-banks

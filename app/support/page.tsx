@@ -2,7 +2,7 @@
 import { useAuth } from "@/lib/auth-context";
 import { useState } from "react";
 
-const PAID_ROLES = ["admin", "property_manager", "building_owner"];
+const PAID_ROLES = ["admin", "building_manager", "building_owner"];
 
 export default function SupportPage() {
   const { user } = useAuth();

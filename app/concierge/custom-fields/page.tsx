@@ -1,10 +1,16 @@
+import { OpsWorkspacePage } from "@/components/concierge/ops-workspace-page";
+
 export default function ConciergeCustomFieldsPage() {
   return (
-    <main className="min-h-screen py-24 px-6 md:px-28 bg-background">
-      <h1 className="font-[var(--font-bebas)] text-4xl md:text-6xl tracking-tight mb-8">Custom Fields</h1>
-      <div className="bg-card/80 p-8 rounded-lg shadow-lg max-w-2xl mx-auto">
-        <p className="font-mono text-sm text-muted-foreground">Custom field management coming soon.</p>
-      </div>
-    </main>
+    <OpsWorkspacePage
+      title="Custom Fields"
+      subtitle="Define custom concierge data points used in front-desk and resident workflows."
+      storageKey="buildsync_concierge_custom_fields"
+      fields={[
+        { key: "field", label: "Field Name", placeholder: "Preferred contact window", required: true },
+        { key: "type", label: "Type", placeholder: "text / number / select", required: true },
+        { key: "scope", label: "Scope", placeholder: "resident / visitor / package", required: true },
+      ]}
+    />
   );
 }

@@ -24,7 +24,6 @@ yarn-error.log*
 
 # typescript
 *.tsbuildinfo
-<<<<<<< HEAD
 next-env.d.ts
 .next-dev.err.log
 .next-dev.out.log
@@ -32,9 +31,19 @@ next-env.d.ts
 # prevent accidental publish of internal agent files
 .claude/agents/Fullstack Architect.agent.md
 .github/agents/architect.agent.md.md
+.github/agents/Testing & CI.agent.md
 .claude/agents/*.agent.md
 .github/agents/*.agent.md
 .github/agents/*.agent.md.md
-=======
-next-env.d.ts
->>>>>>> feature/ui-updates
+
+# prompt assets
+.github/prompts/
+
+# build artifacts
+build-out.txt
+build-stderr.txt
+
+# test output
+/coverage
+/playwright-report
+/test-results

@@ -4,6 +4,7 @@ import { useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { useAuth } from "@/lib/auth-context"
 import { FacilityManagerDashboard } from "@/components/dashboards/facility-manager-dashboard"
+import { BuildingManagerDashboard } from "@/components/dashboards/building-manager-dashboard"
 import { BuildingOwnerDashboard } from "@/components/dashboards/building-owner-dashboard"
 import { PropertyManagerDashboard } from "@/components/dashboards/property-manager-dashboard"
 import ResidentDashboard from "@/components/dashboards/resident-dashboard"
@@ -21,6 +22,8 @@ export default function DashboardPage() {
   const { user, isLoading } = useAuth()
 
   useEffect(() => {
+    // Dashboard is the post-login entry point, so unauthenticated visitors are
+    // redirected back to sign-in once auth hydration finishes.
     if (!isLoading && !user) {
       router.push("/signin")
     }
@@ -42,10 +45,14 @@ export default function DashboardPage() {
     return null
   }
 
-  // Render dashboard based on user role
+  // The active role from auth-context is the single source of truth here.
+  // When the header switcher changes roles, this switch automatically re-routes
+  // the same user into the matching dashboard implementation.
   switch (user.role) {
     case "facility_manager":
       return <FacilityManagerDashboard user={user} />
+    case "building_manager":
+      return <BuildingManagerDashboard user={user} />
     case "building_owner":
       return <BuildingOwnerDashboard user={user} />
     case "property_manager":

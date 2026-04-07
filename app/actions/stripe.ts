@@ -1,9 +1,9 @@
 'use server'
 
 import { stripe } from '../../lib/stripe'
-import { PRODUCTS } from '../../lib/products'
+import { PRODUCTS, type BillingInterval, getUnitPriceInCents } from '../../lib/products'
 
-export async function startCheckoutSession(productId: string) {
+export async function startCheckoutSession(productId: string, interval: BillingInterval = 'monthly', units = 50) {
   const product = PRODUCTS.find((p) => p.id === productId)
   if (!product) {
     throw new Error(`Product with id "${productId}" not found`)
@@ -13,24 +13,26 @@ export async function startCheckoutSession(productId: string) {
     throw new Error('Enterprise plans require custom pricing. Please contact sales.')
   }
 
+  const safeUnits = Number.isFinite(units) ? Math.max(10, Math.min(1000, Math.floor(units))) : 50
+  const recurringInterval = interval === 'yearly' ? 'year' : 'month'
+  const unitAmount = getUnitPriceInCents(product, interval)
+
   // Create Checkout Sessions for subscription
   const session = await stripe.checkout.sessions.create({
-    ui_mode: 'embedded',
-    redirect_on_completion: 'never',
     line_items: [
       {
         price_data: {
           currency: 'usd',
           product_data: {
             name: `BuildSync ${product.name} Plan`,
-            description: product.description,
+            description: `${product.description} (${interval})`,
           },
-          unit_amount: product.priceInCents,
+          unit_amount: unitAmount,
           recurring: {
-            interval: 'month',
+            interval: recurringInterval,
           },
         },
-        quantity: 50, // Default to 50 units
+        quantity: safeUnits,
         adjustable_quantity: {
           enabled: true,
           minimum: 10,

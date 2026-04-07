@@ -196,14 +196,14 @@ export function WorkSection() {
   }, [])
 
   return (
-    <section ref={sectionRef} id="solutions" className="relative py-32 pl-6 md:pl-28 pr-6 md:pr-12">
+    <section ref={sectionRef} id="solutions" className="relative py-16 md:py-28 max-w-screen-xl mx-auto px-3 md:px-6">
       {/* Section header */}
-      <div ref={headerRef} className="mb-16 flex items-end justify-between">
+      <div ref={headerRef} className="max-w-7xl mx-auto mb-12 md:mb-20 flex flex-col md:flex-row md:items-end md:justify-between gap-8">
         <div>
           <span className="font-mono text-[10px] uppercase tracking-[0.3em] text-accent">02 / Solutions</span>
-          <h2 className="mt-4 font-[var(--font-bebas)] text-5xl md:text-7xl tracking-tight">CORE PLATFORMS</h2>
+          <h2 className="mt-4 font-[var(--font-bebas)] text-4xl md:text-6xl lg:text-7xl tracking-tight">CORE PLATFORMS</h2>
         </div>
-        <p className="hidden md:block max-w-xs font-mono text-xs text-muted-foreground text-right leading-relaxed">
+        <p className="max-w-xs font-mono text-xs md:text-sm text-muted-foreground leading-relaxed">
           Click any platform to explore features and capabilities.
         </p>
       </div>
@@ -211,7 +211,7 @@ export function WorkSection() {
       {/* Asymmetric grid */}
       <div
         ref={gridRef}
-        className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6 auto-rows-[180px] md:auto-rows-[200px]"
+        className="max-w-7xl mx-auto grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 md:gap-5 auto-rows-[160px] md:auto-rows-[180px]"
       >
         {solutions.map((solution, index) => (
           <WorkCard 
@@ -435,7 +435,7 @@ function SolutionDetailPanel({
           </p>
           <a
             href="/signup"
-            className="inline-flex items-center gap-2 border border-accent bg-accent/10 px-6 py-3 font-mono text-xs uppercase tracking-widest text-accent hover:bg-accent hover:text-accent-foreground transition-all duration-200"
+            className="inline-flex items-center gap-2 border border-accent bg-accent/10 px-6 py-3 font-mono text-xs uppercase tracking-widest text-accent hover:bg-accent hover:text-background transition-all duration-300"
           >
             Get Started
             <svg width="12" height="12" viewBox="0 0 12 12" fill="none">

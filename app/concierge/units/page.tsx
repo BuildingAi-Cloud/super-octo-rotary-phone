@@ -1,10 +1,16 @@
+import { OpsWorkspacePage } from "@/components/concierge/ops-workspace-page";
+
 export default function ConciergeUnitsPage() {
   return (
-    <main className="min-h-screen py-24 px-6 md:px-28 bg-background">
-      <h1 className="font-[var(--font-bebas)] text-4xl md:text-6xl tracking-tight mb-8">Units & Occupants</h1>
-      <div className="bg-card/80 p-8 rounded-lg shadow-lg max-w-2xl mx-auto">
-        <p className="font-mono text-sm text-muted-foreground">Unit and occupant management coming soon.</p>
-      </div>
-    </main>
+    <OpsWorkspacePage
+      title="Units & Occupants"
+      subtitle="Track occupancy updates, access notes, and concierge-visible unit context."
+      storageKey="buildsync_concierge_units"
+      fields={[
+        { key: "unit", label: "Unit", placeholder: "14B", required: true },
+        { key: "occupant", label: "Occupant", placeholder: "Resident name", required: true },
+        { key: "note", label: "Concierge Note", placeholder: "Temporary access or handoff info", required: true },
+      ]}
+    />
   );
 }

@@ -599,27 +599,17 @@ function SidebarMenuBadge({
   )
 }
 
-function getStableSkeletonWidth(id: string) {
-  // Simple hash for id-based stable pseudo-random width
-  let hash = 0
-  for (let i = 0; i < id.length; i++) {
-    hash = ((hash << 5) - hash) + id.charCodeAt(i)
-    hash |= 0
-  }
-  return `${50 + (Math.abs(hash) % 41)}%`
-}
-
 function SidebarMenuSkeleton({
   className,
   showIcon = false,
-  id = '',
   ...props
 }: React.ComponentProps<'div'> & {
   showIcon?: boolean
-  id?: string
 }) {
-  // Use id prop for stable width, fallback to 50%
-  const width = id ? getStableSkeletonWidth(id) : '50%'
+  // Random width between 50 to 90%.
+  const width = React.useMemo(() => {
+    return `${Math.floor(Math.random() * 40) + 50}%`
+  }, [])
 
   return (
     <div

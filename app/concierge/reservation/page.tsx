@@ -1,11 +1,19 @@
+import { OpsWorkspacePage } from "@/components/concierge/ops-workspace-page";
+
 export default function ConciergeReservationPage() {
   return (
-    <main className="min-h-screen py-24 px-6 md:px-28 bg-background">
-      <h1 className="font-[var(--font-bebas)] text-4xl md:text-6xl tracking-tight mb-8">Reservation</h1>
-      <div className="bg-card/80 p-8 rounded-lg shadow-lg max-w-2xl mx-auto">
-        <p className="font-mono text-sm text-muted-foreground">Amenity and space reservation coming soon.</p>
-      </div>
-    </main>
+    <OpsWorkspacePage
+      title="Reservation"
+      subtitle="Manage amenity reservations and space booking requests from residents and staff."
+      storageKey="buildsync_concierge_reservation"
+      fields={[
+        { key: "requestor", label: "Requestor", placeholder: "Resident or staff", required: true },
+        { key: "space", label: "Space", placeholder: "Party room / Guest suite", required: true },
+        { key: "timeslot", label: "Timeslot", placeholder: "2026-04-04 18:00-21:00", required: true },
+      ]}
+      initialRecords={[
+        { requestor: "Unit 14B", space: "Party Room", timeslot: "2026-04-05 19:00-22:00" },
+      ]}
+    />
   );
 }
-// Removed duplicate ConciergeReservationPage function and export

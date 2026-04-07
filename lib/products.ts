@@ -8,6 +8,10 @@ export interface Product {
   highlight: boolean
 }
 
+export type BillingInterval = "monthly" | "yearly"
+
+const YEARLY_DISCOUNT_FACTOR = 0.85
+
 // This is the source of truth for all products.
 // All UI to display products should pull from this array.
 // IDs passed to the checkout session should be the same as IDs from this array.
@@ -73,4 +77,16 @@ export function getProductById(id: string): Product | undefined {
 export function formatPrice(priceInCents: number): string {
   if (priceInCents === 0) return "Custom"
   return `$${(priceInCents / 100).toFixed(2)}`
+}
+
+export function getUnitPriceInCents(product: Product, interval: BillingInterval): number {
+  if (product.priceInCents === 0) return 0
+  if (interval === "monthly") return product.priceInCents
+
+  // Yearly is billed once per year with a built-in discount.
+  return Math.round(product.priceInCents * 12 * YEARLY_DISCOUNT_FACTOR)
+}
+
+export function formatBillingSuffix(interval: BillingInterval): string {
+  return interval === "monthly" ? "/unit/month" : "/unit/year"
 }

@@ -4,33 +4,55 @@
 import { useEffect, useMemo, useRef, useState } from "react"
 import { SearchIcon, XIcon, ArrowRight } from "lucide-react"
 import { ScaleIn } from "@/components/animations/ScaleIn"
+import docsIndex from "@/docs/docs-index"
 
-export function GlobalSearch() {
+const NAV_ITEMS = [
+  { label: "Home", href: "/", description: "Landing page", category: "Navigation", keywords: ["home", "hero", "landing"] },
+  { label: "Features", href: "/features", description: "Product capabilities", category: "Navigation", keywords: ["features", "modules"] },
+  { label: "Documentation", href: "/documentation", description: "Guides and product docs", category: "Docs", keywords: ["docs", "help", "guides"] },
+  { label: "Docs Hub", href: "/docs", description: "Central hub for guides, articles, and quick references", category: "Docs", keywords: ["docs", "guides", "articles", "hub"] },
+  { label: "API Reference", href: "/api-reference", description: "API endpoints and specs", category: "Docs", keywords: ["api", "reference", "endpoints"] },
+  { label: "API Access", href: "/api-access", description: "Manage API products and keys", category: "Developer", keywords: ["api", "keys", "integration"] },
+  { label: "Privacy Policy", href: "/privacy-policy", description: "Privacy and policy details", category: "Legal", keywords: ["privacy", "policy", "compliance"] },
+  { label: "Support", href: "/support", description: "Get support", category: "Help", keywords: ["support", "help", "contact"] },
+  { label: "About", href: "/about", description: "About BuildSync", category: "Company", keywords: ["about", "company"] },
+  { label: "Dashboard", href: "/dashboard", description: "Main operations dashboard", category: "App", keywords: ["dashboard", "kpi", "overview"] },
+  { label: "Settings", href: "/settings", description: "Personal and system settings", category: "App", keywords: ["settings", "preferences"] },
+  { label: "Audit Log", href: "/audit-log", description: "Security and governance logs", category: "App", keywords: ["audit", "log", "security"] },
+]
+
+export function GlobalSearch({ iconOnly = false }: { iconOnly?: boolean }) {
   const [open, setOpen] = useState(false)
   const [query, setQuery] = useState("")
   const inputRef = useRef<HTMLInputElement>(null)
   const isMac = typeof navigator !== "undefined" && /Mac|iPhone|iPad|iPod/.test(navigator.platform)
   const shortcutHint = isMac ? "⌘K" : "Ctrl+K"
 
-  const navItems = [
-    { label: "Home", href: "/", description: "Landing page", category: "Navigation", keywords: ["home", "hero", "landing"] },
-    { label: "Features", href: "/features", description: "Product capabilities", category: "Navigation", keywords: ["features", "modules"] },
-    { label: "Documentation", href: "/documentation", description: "Guides and product docs", category: "Docs", keywords: ["docs", "help", "guides"] },
-    { label: "API Reference", href: "/api-reference", description: "API endpoints and specs", category: "Docs", keywords: ["api", "reference", "endpoints"] },
-    { label: "API Access", href: "/api-access", description: "Manage API products and keys", category: "Developer", keywords: ["api", "keys", "integration"] },
-    { label: "Privacy Policy", href: "/privacy-policy", description: "Privacy and policy details", category: "Legal", keywords: ["privacy", "policy", "compliance"] },
-    { label: "Support", href: "/support", description: "Get support", category: "Help", keywords: ["support", "help", "contact"] },
-    { label: "About", href: "/about", description: "About BuildSync", category: "Company", keywords: ["about", "company"] },
-    { label: "Dashboard", href: "/dashboard", description: "Main operations dashboard", category: "App", keywords: ["dashboard", "kpi", "overview"] },
-    { label: "Settings", href: "/settings", description: "Personal and system settings", category: "App", keywords: ["settings", "preferences"] },
-    { label: "Audit Log", href: "/audit-log", description: "Security and governance logs", category: "App", keywords: ["audit", "log", "security"] },
-  ]
+  const docItems = useMemo(() => {
+    return docsIndex.map((doc) => ({
+      label: doc.title,
+      href: doc.kind === "page" ? `/docs/${doc.slug}` : `/docs#article-${doc.slug}`,
+      description: doc.summary,
+      category: doc.kind === "page" ? "Documentation Articles" : "Documentation Guides",
+      keywords: doc.keywords,
+    }))
+  }, [])
+
+  const searchItems = useMemo(() => {
+    const seen = new Set<string>()
+    return [...NAV_ITEMS, ...docItems].filter((item) => {
+      const key = `${item.label}:${item.href}`
+      if (seen.has(key)) return false
+      seen.add(key)
+      return true
+    })
+  }, [docItems])
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase()
     if (!q) return []
 
-    const scored = navItems
+    const scored = searchItems
       .map((item) => {
         const label = item.label.toLowerCase()
         const desc = item.description.toLowerCase()
@@ -50,11 +72,11 @@ export function GlobalSearch() {
       .slice(0, 12)
 
     return scored.map((entry) => entry.item)
-  }, [query])
+  }, [query, searchItems])
 
   // Group filtered results by category
   const groupedResults = useMemo(() => {
-    const groups: Record<string, typeof navItems> = {}
+    const groups: Record<string, typeof searchItems> = {}
     filtered.forEach(item => {
       if (!groups[item.category]) {
         groups[item.category] = []
@@ -100,12 +122,12 @@ export function GlobalSearch() {
         <button
           aria-label={`Open search (${shortcutHint})`}
           aria-expanded={open}
-          className="ml-2 inline-flex items-center gap-2 rounded-md border border-border/40 px-2.5 py-1.5 hover:border-accent/40 hover:bg-accent/10 transition-colors"
+          className={`${iconOnly ? "h-9 w-9 justify-center rounded-full text-muted-foreground hover:text-foreground hover:bg-accent/10 focus-visible:ring-2 focus-visible:ring-accent" : "ml-2 rounded-md border border-border/40 px-2.5 py-1.5 hover:border-accent/40 hover:bg-accent/10"} inline-flex items-center gap-2 transition-colors`}
           onClick={() => setOpen(true)}
         >
           <SearchIcon className="w-4 h-4" />
-          <span className="hidden md:inline text-xs text-muted-foreground">Search</span>
-          <kbd className="hidden md:inline rounded border border-border/40 px-1.5 py-0.5 text-[10px] font-mono text-muted-foreground">{shortcutHint}</kbd>
+          {!iconOnly && <span className="hidden md:inline text-xs text-muted-foreground">Search</span>}
+          {!iconOnly && <kbd className="hidden md:inline rounded border border-border/40 px-1.5 py-0.5 text-[10px] font-mono text-muted-foreground">{shortcutHint}</kbd>}
           <span className="sr-only">{`Open search (${shortcutHint})`}</span>
         </button>
       </ScaleIn>
@@ -153,7 +175,7 @@ export function GlobalSearch() {
                   <div className="p-5 space-y-4">
                     <p className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground">Popular pages</p>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                      {navItems.slice(0, 8).map((item) => (
+                      {searchItems.slice(0, 8).map((item) => (
                         <button
                           key={item.href}
                           type="button"

@@ -2,12 +2,12 @@
 "use client";
 import { useTranslation } from "react-i18next"
 
-import { useState } from "react"
-import { amenityStore, addBooking, getBookingsForUser } from "@/lib/amenity-store"
+import { useEffect, useState } from "react"
+import { amenityStore, type Booking } from "@/lib/amenity-store"
 import { type User } from "@/lib/auth-context"
-import { DashboardHeader } from "./dashboard-header"
 import { AnimatedNoise } from "@/components/animated-noise"
 import { ScrambleText } from "@/components/scramble-text"
+import GovernancePanel from "@/components/governance/GovernancePanel"
 
 
 interface ResidentDashboardProps {
@@ -41,9 +41,100 @@ export default function ResidentDashboard({ user }: ResidentDashboardProps) {
   const [bookingDate, setBookingDate] = useState("")
   const [bookingTime, setBookingTime] = useState("")
   const [bookingAmenity, setBookingAmenity] = useState("")
+  const [bookingNonce, setBookingNonce] = useState("")
+  const [bookingStartedAt, setBookingStartedAt] = useState(0)
+  const [bookingTrap, setBookingTrap] = useState("")
+  const [isBookingSubmitting, setIsBookingSubmitting] = useState(false)
   const [bookingStatus, setBookingStatus] = useState("")
+  const [myBookings, setMyBookings] = useState<Booking[]>([])
   const amenities = amenityStore
-  const myBookings = getBookingsForUser(user.id)
+
+  useEffect(() => {
+    let active = true
+
+    async function loadBookings() {
+      try {
+        const response = await fetch(`/api/amenities/bookings?userId=${encodeURIComponent(user.id)}`, { cache: "no-store" })
+        if (!response.ok) return
+        const payload = (await response.json()) as { bookings?: Booking[] }
+        if (!active || !Array.isArray(payload.bookings)) return
+        setMyBookings(payload.bookings)
+      } catch {
+        // Keep current values when API is unavailable.
+      }
+    }
+
+    void loadBookings()
+    return () => {
+      active = false
+    }
+  }, [user.id])
+
+  async function startBooking(amenityId: string) {
+    setBookingStatus("")
+    setBookingAmenity(amenityId)
+    setBookingStartedAt(Date.now())
+    setBookingTrap("")
+
+    try {
+      const response = await fetch(`/api/amenities/bookings?mode=challenge&amenityId=${encodeURIComponent(amenityId)}`, { cache: "no-store" })
+      if (!response.ok) {
+        setBookingNonce("")
+        setBookingStatus("Unable to initialize secure booking. Please retry.")
+        return
+      }
+      const payload = (await response.json()) as { nonce?: string }
+      setBookingNonce(payload.nonce || "")
+    } catch {
+      setBookingNonce("")
+      setBookingStatus("Unable to initialize secure booking. Please retry.")
+    }
+  }
+
+  async function submitBooking(event: React.FormEvent) {
+    event.preventDefault()
+    if (!bookingAmenity || !bookingNonce) {
+      setBookingStatus("Secure booking challenge missing. Please reopen booking form.")
+      return
+    }
+
+    setIsBookingSubmitting(true)
+    try {
+      const response = await fetch("/api/amenities/bookings", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          amenityId: bookingAmenity,
+          userId: user.id,
+          date: bookingDate,
+          time: bookingTime,
+          nonce: bookingNonce,
+          submittedAt: bookingStartedAt,
+          website: bookingTrap,
+        }),
+      })
+
+      const payload = (await response.json()) as { error?: string; booking?: Booking }
+
+      if (!response.ok || !payload.booking) {
+        setBookingStatus(payload.error || "Booking was rejected. Please retry.")
+        return
+      }
+
+      setMyBookings((prev) => [payload.booking as Booking, ...prev])
+      setBookingStatus("Booking submitted successfully.")
+      setBookingAmenity("")
+      setBookingDate("")
+      setBookingTime("")
+      setBookingNonce("")
+      setBookingStartedAt(0)
+      setBookingTrap("")
+    } catch {
+      setBookingStatus("Booking submission failed. Please retry.")
+    } finally {
+      setIsBookingSubmitting(false)
+    }
+  }
 
   return (
     <main className="relative min-h-screen bg-background">
@@ -51,8 +142,6 @@ export default function ResidentDashboard({ user }: ResidentDashboardProps) {
       <div className="grid-bg fixed inset-0 opacity-20" aria-hidden="true" />
 
       <div className="relative z-10">
-        <DashboardHeader user={user} />
-
         <div className="p-6 md:p-8">
           {/* Welcome section */}
           <div className="mb-6">
@@ -175,6 +264,11 @@ export default function ResidentDashboard({ user }: ResidentDashboardProps) {
                   ))}
                 </div>
               </div>
+
+              {/* Governance & E-Voting */}
+              <div className="mt-6">
+                <GovernancePanel />
+              </div>
             </>
           )}
 
@@ -193,7 +287,9 @@ export default function ResidentDashboard({ user }: ResidentDashboardProps) {
                     <button
                       disabled={amenity.status !== "available"}
                       className="w-full py-2 border border-accent bg-accent/10 font-mono text-[10px] uppercase tracking-widest text-accent hover:bg-accent/20 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                      onClick={() => setBookingAmenity(amenity.id)}
+                      onClick={() => {
+                        void startBooking(amenity.id)
+                      }}
                     >
                       {amenity.status === "maintenance" ? "Unavailable" : "Book Now"}
                     </button>
@@ -202,24 +298,19 @@ export default function ResidentDashboard({ user }: ResidentDashboardProps) {
               </div>
               {bookingAmenity && (
                 <form
-                  onSubmit={e => {
-                    e.preventDefault()
-                    addBooking({
-                      id: crypto.randomUUID(),
-                      amenityId: bookingAmenity,
-                      userId: user.id,
-                      date: bookingDate,
-                      time: bookingTime,
-                      status: "pending"
-                    })
-                    setBookingStatus("Booking submitted and pending approval.")
-                    setBookingAmenity("")
-                    setBookingDate("")
-                    setBookingTime("")
-                  }}
+                  onSubmit={submitBooking}
                   className="border border-accent/30 bg-accent/5 p-4 mb-4"
                 >
                   <h4 className="font-mono text-xs mb-2">{t("bookAmenity", "Book Amenity")}</h4>
+                  <input
+                    type="text"
+                    value={bookingTrap}
+                    onChange={e => setBookingTrap(e.target.value)}
+                    tabIndex={-1}
+                    autoComplete="off"
+                    aria-hidden="true"
+                    className="absolute left-[-9999px] opacity-0 pointer-events-none"
+                  />
                   <input
                     type="date"
                     value={bookingDate}
@@ -235,7 +326,13 @@ export default function ResidentDashboard({ user }: ResidentDashboardProps) {
                     required
                     className="border border-border px-2 py-1 mb-2 font-mono text-xs"
                   />
-                  <button type="submit" className="bg-accent px-4 py-2 text-accent-foreground font-mono text-xs uppercase tracking-widest">{t("submit", "Submit")}</button>
+                  <button
+                    type="submit"
+                    disabled={isBookingSubmitting || !bookingNonce}
+                    className="bg-accent px-4 py-2 text-accent-foreground font-mono text-xs uppercase tracking-widest disabled:opacity-50"
+                  >
+                    {isBookingSubmitting ? "Submitting..." : t("submit", "Submit")}
+                  </button>
                   {bookingStatus && <p className="mt-2 font-mono text-xs text-accent">{bookingStatus}</p>}
                 </form>
               )}

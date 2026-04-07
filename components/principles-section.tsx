@@ -1,55 +1,41 @@
 "use client"
 
 import { useRef, useEffect } from "react"
-import { HighlightText } from "@/components/highlight-text"
 import gsap from "gsap"
 import { ScrollTrigger } from "gsap/ScrollTrigger"
 
 gsap.registerPlugin(ScrollTrigger)
 
+const principles = [
+  {
+    number: "01",
+    title: "Operational Excellence",
+    summary: "Reduce reactive work with clear maintenance and automation workflows.",
+    points: ["Preventive maintenance programs", "Energy and automation optimization"],
+  },
+  {
+    number: "02",
+    title: "Security and Privacy",
+    summary: "Protect people, assets, and data with layered controls.",
+    points: ["Access control and auditability", "Encryption and incident response"],
+  },
+  {
+    number: "03",
+    title: "Sustainable Buildings",
+    summary: "Track efficiency and support sustainability targets across facilities.",
+    points: ["Carbon and utility visibility", "LEED and green standards support"],
+  },
+  {
+    number: "04",
+    title: "Smart Modernization",
+    summary: "Modernize legacy buildings with connected systems and phased rollout.",
+    points: ["IoT and PropTech integration", "Portfolio-wide modernization playbooks"],
+  },
+]
 export function PrinciplesSection() {
   const sectionRef = useRef<HTMLElement>(null)
   const headerRef = useRef<HTMLDivElement>(null)
   const principlesRef = useRef<HTMLDivElement>(null)
-
-  const principles = [
-    {
-      number: "01",
-      titleParts: [
-        { text: "OPERATIONAL", highlight: true },
-        { text: " EXCELLENCE", highlight: false },
-      ],
-      description: "Streamlined HVAC maintenance, energy management, and building automation that reduces costs and maximizes efficiency.",
-      align: "left",
-    },
-    {
-      number: "02",
-      titleParts: [
-        { text: "SECURITY", highlight: true },
-        { text: " & PRIVACY", highlight: false },
-      ],
-      description: "End-to-end encryption, access control, and compliance with building safety regulations to protect residents and assets.",
-      align: "right",
-    },
-    {
-      number: "03",
-      titleParts: [
-        { text: "SUSTAINABLE ", highlight: false },
-        { text: "BUILDINGS", highlight: true },
-      ],
-      description: "LEED certification support, carbon footprint tracking, and green building standards for environmentally responsible operations.",
-      align: "left",
-    },
-    {
-      number: "04",
-      titleParts: [
-        { text: "SMART ", highlight: false },
-        { text: "MODERNIZATION", highlight: true },
-      ],
-      description: "PropTech integration and IoT retrofitting to transform legacy buildings into intelligent, connected environments.",
-      align: "right",
-    },
-  ]
 
   useEffect(() => {
     if (!sectionRef.current || !headerRef.current || !principlesRef.current) return
@@ -68,14 +54,14 @@ export function PrinciplesSection() {
         },
       })
 
-      // Each principle slides in from its aligned side
+      // Cards slide in with stagger for quick-scan reveal.
       const articles = principlesRef.current?.querySelectorAll("article")
       articles?.forEach((article, index) => {
-        const isRight = principles[index].align === "right"
         gsap.from(article, {
-          x: isRight ? 80 : -80,
+          y: 24,
           opacity: 0,
-          duration: 1,
+          duration: 0.6,
+          delay: index * 0.08,
           ease: "power3.out",
           scrollTrigger: {
             trigger: article,
@@ -90,46 +76,37 @@ export function PrinciplesSection() {
   }, [])
 
   return (
-    <section ref={sectionRef} id="principles" className="relative py-32 pl-6 md:pl-28 pr-6 md:pr-12">
+    <section ref={sectionRef} id="principles" className="relative py-14 md:py-20 max-w-screen-xl mx-auto px-3 md:px-6">
       {/* Section header */}
-      <div ref={headerRef} className="mb-24">
+      <div ref={headerRef} className="max-w-7xl mx-auto mb-8 md:mb-10">
         <span className="font-mono text-[10px] uppercase tracking-[0.3em] text-accent">03 / Pillars</span>
-        <h2 className="mt-4 font-[var(--font-bebas)] text-5xl md:text-7xl tracking-tight">CORE PILLARS</h2>
+        <h2 className="mt-4 font-[var(--font-bebas)] text-4xl md:text-6xl lg:text-7xl tracking-tight">CORE PILLARS</h2>
+        <p className="mt-3 max-w-2xl font-mono text-xs md:text-sm text-muted-foreground leading-relaxed">
+          Quick-scan foundations that guide operations, security, sustainability, and modernization.
+        </p>
       </div>
 
-      {/* Staggered principles */}
-      <div ref={principlesRef} className="space-y-24 md:space-y-32">
+      {/* Compact principle cards to reduce scroll depth. */}
+      <div ref={principlesRef} className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-5">
         {principles.map((principle, index) => (
           <article
             key={index}
-            className={`flex flex-col ${
-              principle.align === "right" ? "items-end text-right" : "items-start text-left"
-            }`}
+            className="border border-border/50 bg-background/40 backdrop-blur-sm p-5 md:p-6"
           >
-            {/* Annotation label */}
-            <span className="font-mono text-[10px] uppercase tracking-[0.3em] text-muted-foreground mb-4">
-              {principle.number} / {principle.titleParts[0].text.split(" ")[0]}
-            </span>
+            <div className="flex items-start justify-between gap-4">
+              <h3 className="font-[var(--font-bebas)] text-2xl md:text-4xl tracking-tight leading-none">{principle.title}</h3>
+              <span className="font-mono text-[10px] uppercase tracking-[0.25em] text-accent">{principle.number}</span>
+            </div>
 
-            <h3 className="font-[var(--font-bebas)] text-4xl md:text-6xl lg:text-8xl tracking-tight leading-none">
-              {principle.titleParts.map((part, i) =>
-                part.highlight ? (
-                  <HighlightText key={i} parallaxSpeed={0.6}>
-                    {part.text}
-                  </HighlightText>
-                ) : (
-                  <span key={i}>{part.text}</span>
-                ),
-              )}
-            </h3>
+            <p className="mt-3 font-mono text-xs md:text-sm text-muted-foreground leading-relaxed">{principle.summary}</p>
 
-            {/* Description */}
-            <p className="mt-6 max-w-md font-mono text-sm text-muted-foreground leading-relaxed">
-              {principle.description}
-            </p>
-
-            {/* Decorative line */}
-            <div className={`mt-8 h-[1px] bg-border w-24 md:w-48 ${principle.align === "right" ? "mr-0" : "ml-0"}`} />
+            <ul className="mt-4 space-y-2">
+              {principle.points.map((point) => (
+                <li key={point} className="font-mono text-xs text-foreground/85">
+                  • {point}
+                </li>
+              ))}
+            </ul>
           </article>
         ))}
       </div>

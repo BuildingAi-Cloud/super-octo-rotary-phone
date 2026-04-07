@@ -34,6 +34,12 @@ const MOCK_VENDORS: Vendor[] = [
 
 const TRADE_TYPES = ["All", "Plumbing", "HVAC", "Electrical", "Painting", "General", "Security Systems"];
 
+const STATUS_COLORS: Record<string, string> = {
+  active: "bg-green-500/10 text-green-500 border-green-500/30",
+  suspended: "bg-red-500/10 text-red-500 border-red-500/30",
+  pending_review: "bg-yellow-500/10 text-yellow-600 border-yellow-500/30",
+};
+
 // ─── Component ──────────────────────────────────────────────────────────────────
 export function VendorsTab() {
   const [vendors, setVendors] = useState(MOCK_VENDORS);

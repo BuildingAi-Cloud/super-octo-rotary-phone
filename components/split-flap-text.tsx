@@ -20,11 +20,16 @@ function useSplitFlapAudio() {
 export function SplitFlapAudioProvider({ children }: { children: React.ReactNode }) {
   const [isMuted, setIsMuted] = useState(true)
   const audioContextRef = useRef<AudioContext | null>(null)
+  type WindowWithWebkitAudio = Window & {
+    AudioContext?: typeof AudioContext
+    webkitAudioContext?: typeof AudioContext
+  }
 
   const getAudioContext = useCallback(() => {
     if (typeof window === "undefined") return null
     if (!audioContextRef.current) {
-      const AudioContextClass = window.AudioContext || (window as unknown as { webkitAudioContext?: typeof window.AudioContext }).webkitAudioContext
+      const windowWithWebkitAudio = window as WindowWithWebkitAudio
+      const AudioContextClass = windowWithWebkitAudio.AudioContext || windowWithWebkitAudio.webkitAudioContext
       if (AudioContextClass) {
         audioContextRef.current = new AudioContextClass()
       }
@@ -238,7 +243,7 @@ function SplitFlapChar({ char, index, animationKey, skipEntrance, speed, playCli
       <div
         style={{
           width: "0.3em",
-          fontSize: "clamp(4rem, 15vw, 14rem)",
+          fontSize: "clamp(2.6rem, 10vw, 8.5rem)",
         }}
       />
     )
@@ -251,7 +256,7 @@ function SplitFlapChar({ char, index, animationKey, skipEntrance, speed, playCli
       transition={{ delay: tileDelay, duration: 0.3, ease: "easeOut" }}
       className="relative overflow-hidden flex items-center justify-center font-[family-name:var(--font-bebas)]"
       style={{
-        fontSize: "clamp(4rem, 15vw, 14rem)",
+        fontSize: "clamp(2.6rem, 10vw, 8.5rem)",
         width: "0.65em",
         height: "1.05em",
         backgroundColor: bgColor,

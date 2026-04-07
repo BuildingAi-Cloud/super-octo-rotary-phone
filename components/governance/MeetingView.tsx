@@ -8,7 +8,7 @@ interface MeetingViewProps {
   title: string
 }
 
-export default function MeetingView({ agenda, deadline, title: _title }: MeetingViewProps) {
+export default function MeetingView({ agenda, deadline, title }: MeetingViewProps) {
   const meetingDate = new Date(deadline).toLocaleDateString(undefined, {
     weekday: "long",
     year: "numeric",
