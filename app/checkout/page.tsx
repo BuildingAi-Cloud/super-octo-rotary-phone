@@ -1,21 +1,57 @@
 "use client"
 
 import { useSearchParams } from "next/navigation"
-import { Suspense, useState } from "react"
+import { Suspense, useEffect, useMemo, useState } from "react"
 import Link from "next/link"
 import { Checkout } from "@/components/checkout"
 import { getProductById, formatBillingSuffix, getUnitPriceInCents, type BillingInterval } from "@/lib/products"
 import { AnimatedNoise } from "@/components/animated-noise"
 import { BitmapChevron } from "@/components/bitmap-chevron"
 import { resolveStarterPlan } from "@/lib/rollout"
+import {
+  DEFAULT_ESSENTIAL_COST_ASSUMPTIONS,
+  ESSENTIAL_COST_ASSUMPTIONS_STORAGE_KEY,
+  formatCurrency,
+  getEssentialQuote,
+  parseEssentialCustomerType,
+  sanitizeEssentialCostAssumptions,
+  type EssentialCostAssumptions,
+  type EssentialCustomerType,
+} from "@/lib/essential-pricing"
 
 function CheckoutContent() {
   const searchParams = useSearchParams()
   const productId = resolveStarterPlan(searchParams.get("plan"))
   const [billingInterval, setBillingInterval] = useState<BillingInterval>((searchParams.get("interval") as BillingInterval) || "monthly")
   const [units, setUnits] = useState<number>(parseInt(searchParams.get("units") || "50", 10))
+  const [customerType] = useState<EssentialCustomerType>(parseEssentialCustomerType(searchParams.get("customerType")))
+  const [tenancyName] = useState(searchParams.get("tenancyName") || "")
+  const [buildingCount, setBuildingCount] = useState<number>(parseInt(searchParams.get("buildingCount") || "1", 10))
+  const [featureCount, setFeatureCount] = useState<number>(parseInt(searchParams.get("featureCount") || "2", 10))
+  const [siteCount, setSiteCount] = useState<number>(parseInt(searchParams.get("siteCount") || "1", 10))
+  const [costAssumptions, setCostAssumptions] = useState<EssentialCostAssumptions>(DEFAULT_ESSENTIAL_COST_ASSUMPTIONS)
+
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem(ESSENTIAL_COST_ASSUMPTIONS_STORAGE_KEY)
+      if (!raw) return
+      const parsed = JSON.parse(raw) as Partial<EssentialCostAssumptions>
+      setCostAssumptions(sanitizeEssentialCostAssumptions(parsed))
+    } catch {
+      setCostAssumptions(DEFAULT_ESSENTIAL_COST_ASSUMPTIONS)
+    }
+  }, [])
   
   const product = getProductById(productId)
+  const essentialQuote = useMemo(() => {
+    return getEssentialQuote({
+      customerType,
+      tenancyName,
+      buildingCount,
+      selectedFeatures: customerType === "building_manager" ? Array.from({ length: Math.max(1, featureCount) }, (_, i) => `f-${i}`) : undefined,
+      siteCount,
+    }, costAssumptions)
+  }, [customerType, tenancyName, buildingCount, featureCount, siteCount, costAssumptions])
 
   if (!product || product.priceInCents === 0) {
     return (
@@ -37,10 +73,12 @@ function CheckoutContent() {
 
   const safeUnits = Number.isFinite(units) ? Math.max(10, Math.min(1000, units)) : 50
   const unitPriceInCents = getUnitPriceInCents(product, billingInterval)
-  const totalPrice = (unitPriceInCents * safeUnits) / 100
+  const defaultTotalPrice = (unitPriceInCents * safeUnits) / 100
+  const totalPrice = productId === "essential" ? (billingInterval === "yearly" ? essentialQuote.yearly : essentialQuote.monthly) : defaultTotalPrice
   const approxMonthly = billingInterval === "yearly" ? totalPrice / 12 : totalPrice
   const billingLabel = billingInterval === "yearly" ? "Yearly Total" : "Monthly Total"
   const unitSuffix = formatBillingSuffix(billingInterval)
+  const billableUnits = productId === "essential" ? Math.max(1, essentialQuote.quantity) : safeUnits
 
   return (
     <div className="w-full max-w-4xl mx-auto">
@@ -55,9 +93,13 @@ function CheckoutContent() {
                 <p className="font-mono text-sm text-foreground">{product.name} Plan</p>
                 <p className="font-mono text-[10px] text-muted-foreground">{product.description}</p>
               </div>
-              <p className="font-mono text-sm text-foreground">
-                ${(unitPriceInCents / 100).toFixed(2)}{unitSuffix}
-              </p>
+              {productId === "essential" ? (
+                <p className="font-mono text-sm text-foreground">{essentialQuote.pricingModel}</p>
+              ) : (
+                <p className="font-mono text-sm text-foreground">
+                  ${(unitPriceInCents / 100).toFixed(2)}{unitSuffix}
+                </p>
+              )}
             </div>
 
             <div className="border-t border-border/30 pt-4">
@@ -83,21 +125,64 @@ function CheckoutContent() {
               </div>
             </div>
             
-            <div className="flex justify-between items-center border-t border-border/30 pt-4">
-              <p className="font-mono text-xs text-muted-foreground">Units</p>
-              <input
-                type="number"
-                min={10}
-                max={1000}
-                value={safeUnits}
-                onChange={(e) => setUnits(parseInt(e.target.value || "50", 10))}
-                className="w-24 border border-border/40 bg-background rounded px-2 py-1 font-mono text-sm text-right"
-              />
-            </div>
+            {productId === "essential" ? (
+              <div className="border-t border-border/30 pt-4 space-y-3">
+                <p className="font-mono text-[10px] text-muted-foreground uppercase tracking-widest">Real-time Essential Inputs</p>
+                {customerType === "building_owner" && (
+                  <div className="flex justify-between items-center gap-3">
+                    <p className="font-mono text-xs text-muted-foreground">Commercial Buildings</p>
+                    <input
+                      type="number"
+                      min={1}
+                      value={Math.max(1, buildingCount || 1)}
+                      onChange={(e) => setBuildingCount(Math.max(1, Number.parseInt(e.target.value || "1", 10)))}
+                      className="w-24 border border-border/40 bg-background rounded px-2 py-1 font-mono text-sm text-right"
+                    />
+                  </div>
+                )}
+                {customerType === "building_manager" && (
+                  <div className="flex justify-between items-center gap-3">
+                    <p className="font-mono text-xs text-muted-foreground">Feature Bundles</p>
+                    <input
+                      type="number"
+                      min={1}
+                      value={Math.max(1, featureCount || 1)}
+                      onChange={(e) => setFeatureCount(Math.max(1, Number.parseInt(e.target.value || "1", 10)))}
+                      className="w-24 border border-border/40 bg-background rounded px-2 py-1 font-mono text-sm text-right"
+                    />
+                  </div>
+                )}
+                {customerType === "facility_manager" && (
+                  <div className="flex justify-between items-center gap-3">
+                    <p className="font-mono text-xs text-muted-foreground">Managed Sites</p>
+                    <input
+                      type="number"
+                      min={1}
+                      value={Math.max(1, siteCount || 1)}
+                      onChange={(e) => setSiteCount(Math.max(1, Number.parseInt(e.target.value || "1", 10)))}
+                      className="w-24 border border-border/40 bg-background rounded px-2 py-1 font-mono text-sm text-right"
+                    />
+                  </div>
+                )}
+                <p className="font-mono text-[10px] text-foreground/80">{essentialQuote.metricLabel}: {essentialQuote.quantity} ({essentialQuote.detail})</p>
+              </div>
+            ) : (
+              <div className="flex justify-between items-center border-t border-border/30 pt-4">
+                <p className="font-mono text-xs text-muted-foreground">Units</p>
+                <input
+                  type="number"
+                  min={10}
+                  max={1000}
+                  value={safeUnits}
+                  onChange={(e) => setUnits(parseInt(e.target.value || "50", 10))}
+                  className="w-24 border border-border/40 bg-background rounded px-2 py-1 font-mono text-sm text-right"
+                />
+              </div>
+            )}
             
             <div className="flex justify-between items-center border-t border-border/30 pt-4">
               <p className="font-mono text-xs text-foreground uppercase tracking-widest">{billingLabel}</p>
-              <p className="font-[var(--font-bebas)] text-2xl text-accent">${totalPrice.toFixed(2)}</p>
+              <p className="font-[var(--font-bebas)] text-2xl text-accent">{formatCurrency(totalPrice)}</p>
             </div>
             {billingInterval === "yearly" && (
               <div className="flex justify-between items-center border-t border-border/30 pt-3">
@@ -130,7 +215,20 @@ function CheckoutContent() {
         {/* Stripe Checkout */}
         <div className="border border-border/40 bg-card/30 p-6">
           <h2 className="font-[var(--font-bebas)] text-2xl tracking-wide mb-6">PAYMENT</h2>
-          <Checkout productId={productId} interval={billingInterval} units={safeUnits} />
+          <Checkout
+            productId={productId}
+            interval={billingInterval}
+            units={billableUnits}
+            metadata={{
+              customerType,
+              tenancyName: tenancyName || undefined,
+              buildingCount: String(Math.max(1, buildingCount || 1)),
+              featureCount: String(Math.max(1, featureCount || 1)),
+              siteCount: String(Math.max(1, siteCount || 1)),
+              monthlyEstimate: String(essentialQuote.monthly),
+              yearlyEstimate: String(essentialQuote.yearly),
+            }}
+          />
         </div>
       </div>
     </div>

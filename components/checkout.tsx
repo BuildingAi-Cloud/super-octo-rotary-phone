@@ -15,10 +15,12 @@ export function Checkout({
   productId,
   interval,
   units,
+  metadata,
 }: {
   productId: string
   interval: 'monthly' | 'yearly'
   units: number
+  metadata?: Record<string, string | undefined>
 }) {
   const router = useRouter()
   const [error, setError] = useState<string | null>(null)
@@ -32,7 +34,7 @@ export function Checkout({
     const res = await fetch('/api/checkout-session', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ productId, interval, units }),
+      body: JSON.stringify({ productId, interval, units, metadata }),
     });
     const data = await res.json();
     if (!res.ok) {
@@ -40,7 +42,7 @@ export function Checkout({
       throw new Error(data.error || 'Unable to initialize checkout')
     }
     return data.clientSecret;
-  }, [productId, interval, units]);
+  }, [productId, interval, units, metadata]);
 
   if (!stripeEnabled) {
     return (
@@ -52,7 +54,20 @@ export function Checkout({
           type="button"
           onClick={() => {
             const demoSession = `demo_${Date.now()}`
-            router.push(`/checkout/return?session_id=${encodeURIComponent(demoSession)}&plan=${encodeURIComponent(productId)}&interval=${encodeURIComponent(interval)}&units=${units}`)
+            const params = new URLSearchParams({
+              session_id: demoSession,
+              plan: productId,
+              interval,
+              units: String(units),
+            })
+
+            if (metadata) {
+              Object.entries(metadata).forEach(([key, value]) => {
+                if (value) params.set(key, value)
+              })
+            }
+
+            router.push(`/checkout/return?${params.toString()}`)
           }}
           className="w-full px-4 py-3 border border-accent bg-accent/10 text-accent font-mono text-xs uppercase tracking-widest hover:bg-accent hover:text-accent-foreground transition-colors"
         >

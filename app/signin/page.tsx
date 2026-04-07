@@ -3,15 +3,29 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth-context";
+import { ROLE_TEMPLATES } from "@/lib/rbac";
+import type { UserRole } from "@/lib/auth-context";
 import Link from "next/link";
 import { AnimatedNoise } from "@/components/animated-noise";
 import { ScrambleText, ScrambleTextOnHover } from "@/components/scramble-text";
 import { Input } from "@/components/ui/input";
 import { BitmapChevron } from "@/components/bitmap-chevron";
 
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
 export default function SignInPage() {
   const router = useRouter();
-  const { signIn, requestPasswordResetChallenge, resetPasswordWithSecondFactor, user, isLoading: authLoading } = useAuth();
+  const {
+    signIn,
+    switchRole,
+    availableRoles,
+    requestPasswordResetChallenge,
+    resetPasswordWithSecondFactor,
+    user,
+    isLoading: authLoading,
+  } = useAuth();
+  const [authStep, setAuthStep] = useState<"signin" | "account">("signin");
+  const [selectedAccountRole, setSelectedAccountRole] = useState<UserRole | null>(null);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -26,23 +40,105 @@ export default function SignInPage() {
   const [resetError, setResetError] = useState("");
   const [isRequestingCode, setIsRequestingCode] = useState(false);
   const [isResettingPassword, setIsResettingPassword] = useState(false);
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
+  const [resetFieldErrors, setResetFieldErrors] = useState<Record<string, string>>({});
 
-  // Redirect authenticated users to dashboard (pre-login page protection).
+  const validateSignIn = () => {
+    const nextErrors: Record<string, string> = {};
+
+    if (!email.trim()) {
+      nextErrors.email = "Email is required.";
+    } else if (!EMAIL_REGEX.test(email.trim())) {
+      nextErrors.email = "Enter a valid email address.";
+    }
+
+    if (!password.trim()) {
+      nextErrors.password = "Password is required.";
+    }
+
+    setFieldErrors(nextErrors);
+    return Object.keys(nextErrors).length === 0;
+  };
+
+  const validateResetRequest = () => {
+    const nextErrors: Record<string, string> = {};
+
+    if (!resetEmail.trim()) {
+      nextErrors.resetEmail = "Email is required.";
+    } else if (!EMAIL_REGEX.test(resetEmail.trim())) {
+      nextErrors.resetEmail = "Enter a valid email address.";
+    }
+
+    setResetFieldErrors((prev) => ({ ...prev, ...nextErrors }));
+    return Object.keys(nextErrors).length === 0;
+  };
+
+  const validateResetSubmit = () => {
+    const nextErrors: Record<string, string> = {};
+
+    if (!resetEmail.trim()) {
+      nextErrors.resetEmail = "Email is required.";
+    } else if (!EMAIL_REGEX.test(resetEmail.trim())) {
+      nextErrors.resetEmail = "Enter a valid email address.";
+    }
+
+    if (resetMethod === "mfa_code") {
+      const code = resetCode.trim();
+      if (!code) {
+        nextErrors.resetCode = "Verification code is required.";
+      } else if (!/^\d{6}$/.test(code)) {
+        nextErrors.resetCode = "Enter the 6-digit verification code.";
+      }
+    }
+
+    if (resetMethod === "rsa_token" && !rsaToken.trim()) {
+      nextErrors.rsaToken = "RSA token is required.";
+    }
+
+    if (!newPassword.trim()) {
+      nextErrors.newPassword = "New password is required.";
+    } else if (newPassword.trim().length < 8) {
+      nextErrors.newPassword = "New password must be at least 8 characters.";
+    }
+
+    setResetFieldErrors(nextErrors);
+    return Object.keys(nextErrors).length === 0;
+  };
+
+  // Keep sign-in as a 2-step flow: credentials first, then account selection.
   useEffect(() => {
     if (!authLoading && user) {
-      router.push("/dashboard")
+      setAuthStep("account")
+      setEmail(user.email)
     }
-  }, [user, authLoading, router])
+  }, [user, authLoading])
+
+  const accountRoles: UserRole[] = user
+    ? [...new Set((availableRoles && availableRoles.length > 0 ? availableRoles : [user.role]))]
+    : []
+
+  const enterDashboardForRole = (role: UserRole) => {
+    setSelectedAccountRole(role)
+    if (user && user.role !== role) {
+      switchRole(role)
+    }
+    router.push("/dashboard")
+  }
 
   // Actually call signIn from useAuth and check credentials
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
+    if (!validateSignIn()) {
+      setError("Please fix the highlighted fields and try again.");
+      return;
+    }
     setIsLoading(true);
     try {
       const result = await signIn(email, password);
       if (result.success) {
-        router.push("/dashboard");
+        setShowReset(false)
+        setAuthStep("account")
       } else {
         setError(result.error || "Invalid email or password");
       }
@@ -55,6 +151,10 @@ export default function SignInPage() {
   const handleRequestResetCode = async () => {
     setResetError("");
     setResetMessage("");
+    if (!validateResetRequest()) {
+      setResetError("Please provide a valid email before requesting a code.");
+      return;
+    }
     setIsRequestingCode(true);
 
     try {
@@ -81,6 +181,10 @@ export default function SignInPage() {
     e.preventDefault();
     setResetError("");
     setResetMessage("");
+    if (!validateResetSubmit()) {
+      setResetError("Please fix the highlighted fields and try again.");
+      return;
+    }
     setIsResettingPassword(true);
 
     try {
@@ -117,25 +221,29 @@ export default function SignInPage() {
             </span>
           </Link>
           <h1 className="font-[var(--font-bebas)] text-4xl md:text-5xl tracking-tight">
-            <ScrambleText text="SIGN IN" duration={0.8} />
+            <ScrambleText text={authStep === "signin" ? "SIGN IN" : "SELECT ACCOUNT"} duration={0.8} />
           </h1>
           <p className="mt-4 font-mono text-sm text-muted-foreground">
-            Welcome back! Please sign in to your account.
+            {authStep === "signin"
+              ? "Welcome back! Please sign in to your account."
+              : "Choose the account access level you want to use for this session."}
           </p>
         </div>
         {/* Step indicator for visual consistency */}
         <div className="mb-8 flex items-center justify-center gap-4">
-          <div className="flex items-center gap-2 text-accent">
-            <span className="h-2 w-2 bg-accent" />
+          <div className={`flex items-center gap-2 ${authStep === "signin" ? "text-accent" : "text-muted-foreground"}`}>
+            <span className={`h-2 w-2 ${authStep === "signin" ? "bg-accent" : "bg-muted"}`} />
             <span className="font-mono text-[10px] uppercase tracking-widest">Sign In</span>
           </div>
           <div className="h-px w-8 bg-border" />
-          <div className="flex items-center gap-2 text-muted-foreground">
-            <span className="h-2 w-2 bg-muted" />
+          <div className={`flex items-center gap-2 ${authStep === "account" ? "text-accent" : "text-muted-foreground"}`}>
+            <span className={`h-2 w-2 ${authStep === "account" ? "bg-accent" : "bg-muted"}`} />
             <span className="font-mono text-[10px] uppercase tracking-widest">Account</span>
           </div>
         </div>
-        <form onSubmit={handleSignIn} className="space-y-6 bg-card/30 border border-border/40 p-8 rounded-lg w-full max-w-md flex flex-col gap-6 shadow-md mx-auto">
+        {authStep === "signin" && (
+          <form noValidate onSubmit={handleSignIn} className="space-y-6 bg-card/30 border border-border/40 p-8 rounded-lg w-full max-w-md flex flex-col gap-6 shadow-md mx-auto">
+          {error && <div role="alert" className="rounded border border-red-500/30 bg-red-500/10 px-3 py-2 text-red-600 font-mono text-xs">{error}</div>}
           <div className="space-y-2">
             <label htmlFor="email" className="font-mono text-[10px] uppercase tracking-[0.3em] text-muted-foreground">Email</label>
             <Input
@@ -143,9 +251,16 @@ export default function SignInPage() {
               type="email"
               placeholder="you@email.com"
               value={email}
-              onChange={e => setEmail(e.target.value)}
+              onChange={e => {
+                setEmail(e.target.value)
+                setFieldErrors((prev) => ({ ...prev, email: "" }))
+              }}
               required
+              aria-invalid={Boolean(fieldErrors.email)}
+              aria-describedby={fieldErrors.email ? "signin-email-error" : undefined}
+              className={fieldErrors.email ? "border-red-500 focus-visible:ring-red-500" : undefined}
             />
+            {fieldErrors.email && <p id="signin-email-error" className="font-mono text-[10px] text-red-600">{fieldErrors.email}</p>}
           </div>
           <div className="space-y-2">
             <label htmlFor="password" className="font-mono text-[10px] uppercase tracking-[0.3em] text-muted-foreground">Password</label>
@@ -154,12 +269,18 @@ export default function SignInPage() {
               type="password"
               placeholder="Min 8 characters"
               value={password}
-              onChange={e => setPassword(e.target.value)}
+              onChange={e => {
+                setPassword(e.target.value)
+                setFieldErrors((prev) => ({ ...prev, password: "" }))
+              }}
               required
               minLength={8}
+              aria-invalid={Boolean(fieldErrors.password)}
+              aria-describedby={fieldErrors.password ? "signin-password-error" : undefined}
+              className={fieldErrors.password ? "border-red-500 focus-visible:ring-red-500" : undefined}
             />
+            {fieldErrors.password && <p id="signin-password-error" className="font-mono text-[10px] text-red-600">{fieldErrors.password}</p>}
           </div>
-          {error && <div className="text-red-600 font-mono text-xs mt-2">{error}</div>}
           <button
             type="submit"
             disabled={isLoading}
@@ -183,10 +304,53 @@ export default function SignInPage() {
           >
             {showReset ? "Hide Forgot Password" : "Forgot Password"}
           </button>
-        </form>
+          </form>
+        )}
 
-        {showReset && (
+        {authStep === "account" && (
+          <section className="space-y-4 bg-card/30 border border-border/40 p-8 rounded-lg w-full max-w-md shadow-md mx-auto">
+            <p className="font-mono text-[10px] uppercase tracking-[0.3em] text-muted-foreground">Account Access</p>
+            {accountRoles.length === 0 ? (
+              <div className="rounded border border-red-500/30 bg-red-500/10 px-3 py-2 text-red-600 font-mono text-xs">
+                No account roles found for this user. Please sign out and try again.
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {accountRoles.map((role) => (
+                  <button
+                    key={role}
+                    type="button"
+                    onClick={() => enterDashboardForRole(role)}
+                    disabled={selectedAccountRole === role}
+                    className="w-full text-left rounded border border-border/40 bg-background/70 px-4 py-3 transition-colors hover:border-accent/60 hover:bg-accent/5 disabled:opacity-70"
+                  >
+                    <p className="font-mono text-xs uppercase tracking-widest text-foreground">
+                      {ROLE_TEMPLATES[role]?.label || role.replaceAll("_", " ")}
+                    </p>
+                    <p className="mt-1 text-xs text-muted-foreground">
+                      {ROLE_TEMPLATES[role]?.description || "Access this dashboard view."}
+                    </p>
+                  </button>
+                ))}
+              </div>
+            )}
+            <button
+              type="button"
+              onClick={() => {
+                setAuthStep("signin")
+                setError("")
+                setPassword("")
+              }}
+              className="self-start font-mono text-[10px] uppercase tracking-[0.24em] text-accent hover:underline"
+            >
+              Use different credentials
+            </button>
+          </section>
+        )}
+
+        {authStep === "signin" && showReset && (
           <form
+            noValidate
             onSubmit={handlePasswordReset}
             className="mt-6 space-y-4 bg-card/30 border border-border/40 p-6 rounded-lg w-full max-w-md shadow-md mx-auto"
           >
@@ -217,9 +381,16 @@ export default function SignInPage() {
                 type="email"
                 placeholder="you@email.com"
                 value={resetEmail}
-                onChange={e => setResetEmail(e.target.value)}
+                onChange={e => {
+                  setResetEmail(e.target.value)
+                  setResetFieldErrors((prev) => ({ ...prev, resetEmail: "" }))
+                }}
                 required
+                aria-invalid={Boolean(resetFieldErrors.resetEmail)}
+                aria-describedby={resetFieldErrors.resetEmail ? "reset-email-error" : undefined}
+                className={resetFieldErrors.resetEmail ? "border-red-500 focus-visible:ring-red-500" : undefined}
               />
+              {resetFieldErrors.resetEmail && <p id="reset-email-error" className="font-mono text-[10px] text-red-600">{resetFieldErrors.resetEmail}</p>}
             </div>
 
             <button
@@ -241,9 +412,16 @@ export default function SignInPage() {
                   type="text"
                   placeholder="6-digit code"
                   value={resetCode}
-                  onChange={e => setResetCode(e.target.value)}
+                  onChange={e => {
+                    setResetCode(e.target.value)
+                    setResetFieldErrors((prev) => ({ ...prev, resetCode: "" }))
+                  }}
                   required
+                  aria-invalid={Boolean(resetFieldErrors.resetCode)}
+                  aria-describedby={resetFieldErrors.resetCode ? "reset-code-error" : undefined}
+                  className={resetFieldErrors.resetCode ? "border-red-500 focus-visible:ring-red-500" : undefined}
                 />
+                {resetFieldErrors.resetCode && <p id="reset-code-error" className="font-mono text-[10px] text-red-600">{resetFieldErrors.resetCode}</p>}
               </div>
             ) : (
               <div className="space-y-2">
@@ -253,9 +431,16 @@ export default function SignInPage() {
                   type="password"
                   placeholder="Enter RSA token"
                   value={rsaToken}
-                  onChange={e => setRsaToken(e.target.value)}
+                  onChange={e => {
+                    setRsaToken(e.target.value)
+                    setResetFieldErrors((prev) => ({ ...prev, rsaToken: "" }))
+                  }}
                   required
+                  aria-invalid={Boolean(resetFieldErrors.rsaToken)}
+                  aria-describedby={resetFieldErrors.rsaToken ? "rsa-token-error" : undefined}
+                  className={resetFieldErrors.rsaToken ? "border-red-500 focus-visible:ring-red-500" : undefined}
                 />
+                {resetFieldErrors.rsaToken && <p id="rsa-token-error" className="font-mono text-[10px] text-red-600">{resetFieldErrors.rsaToken}</p>}
               </div>
             )}
 
@@ -266,10 +451,17 @@ export default function SignInPage() {
                 type="password"
                 placeholder="Min 8 characters"
                 value={newPassword}
-                onChange={e => setNewPassword(e.target.value)}
+                onChange={e => {
+                  setNewPassword(e.target.value)
+                  setResetFieldErrors((prev) => ({ ...prev, newPassword: "" }))
+                }}
                 required
                 minLength={8}
+                aria-invalid={Boolean(resetFieldErrors.newPassword)}
+                aria-describedby={resetFieldErrors.newPassword ? "new-password-error" : undefined}
+                className={resetFieldErrors.newPassword ? "border-red-500 focus-visible:ring-red-500" : undefined}
               />
+              {resetFieldErrors.newPassword && <p id="new-password-error" className="font-mono text-[10px] text-red-600">{resetFieldErrors.newPassword}</p>}
             </div>
 
             {resetError && <div className="text-red-600 font-mono text-xs">{resetError}</div>}

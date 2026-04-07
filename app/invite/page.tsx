@@ -9,6 +9,8 @@ import { ROLE_TEMPLATES } from "@/lib/rbac";
 import { AnimatedNoise } from "@/components/animated-noise";
 import { ScrambleText } from "@/components/scramble-text";
 
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
 function InvitePageInner() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -21,17 +23,42 @@ function InvitePageInner() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [resultRole, setResultRole] = useState("");
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
 
   function handleCodeSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!code.trim()) { setError("Enter your invite code"); return; }
+    if (!code.trim()) {
+      setFieldErrors({ code: "Invite code is required." });
+      setError("Please enter your invite code.");
+      return;
+    }
     setError("");
+    setFieldErrors({});
     setStep("profile");
   }
 
   async function handleProfileSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError("");
+
+    const nextErrors: Record<string, string> = {};
+    if (!name.trim()) nextErrors.name = "Full name is required.";
+    if (!email.trim()) {
+      nextErrors.email = "Email is required.";
+    } else if (!EMAIL_REGEX.test(email.trim())) {
+      nextErrors.email = "Enter a valid email address.";
+    }
+    if (!password.trim()) {
+      nextErrors.password = "Password is required.";
+    } else if (password.trim().length < 8) {
+      nextErrors.password = "Password must be at least 8 characters.";
+    }
+
+    setFieldErrors(nextErrors);
+    if (Object.keys(nextErrors).length > 0) {
+      setError("Please fix the highlighted fields and try again.");
+      return;
+    }
 
     const result = acceptInvite(code.trim().toUpperCase(), { name, email, password });
     if (!result.success) {
@@ -92,6 +119,7 @@ function InvitePageInner() {
         {/* ── Code Step ─────────────────────────────────────────── */}
         {step === "code" && (
           <form
+            noValidate
             onSubmit={handleCodeSubmit}
             className="space-y-6 bg-card/30 border border-border/40 p-8 rounded-lg max-w-md mx-auto"
           >
@@ -105,10 +133,16 @@ function InvitePageInner() {
                 maxLength={12}
                 placeholder="XXXX-XXXX"
                 value={code}
-                onChange={(e) => setCode(e.target.value)}
+                onChange={(e) => {
+                  setCode(e.target.value)
+                  setFieldErrors((prev) => ({ ...prev, code: "" }))
+                }}
                 autoFocus
+                aria-invalid={Boolean(fieldErrors.code)}
+                aria-describedby={fieldErrors.code ? "invite-code-error" : undefined}
               />
             </div>
+            {fieldErrors.code && <p id="invite-code-error" className="font-mono text-xs text-red-500 text-center">{fieldErrors.code}</p>}
             {error && <p className="font-mono text-xs text-red-500 text-center">{error}</p>}
             <button
               type="submit"
@@ -126,6 +160,7 @@ function InvitePageInner() {
         {/* ── Profile Step ──────────────────────────────────────── */}
         {step === "profile" && (
           <form
+            noValidate
             onSubmit={handleProfileSubmit}
             className="space-y-6 bg-card/30 border border-border/40 p-8 rounded-lg max-w-md mx-auto"
           >
@@ -141,8 +176,14 @@ function InvitePageInner() {
                 required
                 className="w-full bg-background border border-border/40 rounded-md px-3 py-2 font-mono text-xs focus:outline-none focus:border-accent/60"
                 value={name}
-                onChange={(e) => setName(e.target.value)}
+                onChange={(e) => {
+                  setName(e.target.value)
+                  setFieldErrors((prev) => ({ ...prev, name: "" }))
+                }}
+                aria-invalid={Boolean(fieldErrors.name)}
+                aria-describedby={fieldErrors.name ? "invite-name-error" : undefined}
               />
+              {fieldErrors.name && <p id="invite-name-error" className="font-mono text-[10px] text-red-500">{fieldErrors.name}</p>}
             </div>
             <div className="space-y-2">
               <label className="font-mono text-[10px] uppercase tracking-[0.3em] text-muted-foreground">Email</label>
@@ -151,8 +192,14 @@ function InvitePageInner() {
                 required
                 className="w-full bg-background border border-border/40 rounded-md px-3 py-2 font-mono text-xs focus:outline-none focus:border-accent/60"
                 value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                onChange={(e) => {
+                  setEmail(e.target.value)
+                  setFieldErrors((prev) => ({ ...prev, email: "" }))
+                }}
+                aria-invalid={Boolean(fieldErrors.email)}
+                aria-describedby={fieldErrors.email ? "invite-email-error" : undefined}
               />
+              {fieldErrors.email && <p id="invite-email-error" className="font-mono text-[10px] text-red-500">{fieldErrors.email}</p>}
             </div>
             <div className="space-y-2">
               <label className="font-mono text-[10px] uppercase tracking-[0.3em] text-muted-foreground">Password</label>
@@ -162,8 +209,14 @@ function InvitePageInner() {
                 minLength={8}
                 className="w-full bg-background border border-border/40 rounded-md px-3 py-2 font-mono text-xs focus:outline-none focus:border-accent/60"
                 value={password}
-                onChange={(e) => setPassword(e.target.value)}
+                onChange={(e) => {
+                  setPassword(e.target.value)
+                  setFieldErrors((prev) => ({ ...prev, password: "" }))
+                }}
+                aria-invalid={Boolean(fieldErrors.password)}
+                aria-describedby={fieldErrors.password ? "invite-password-error" : undefined}
               />
+              {fieldErrors.password && <p id="invite-password-error" className="font-mono text-[10px] text-red-500">{fieldErrors.password}</p>}
             </div>
             {error && <p className="font-mono text-xs text-red-500 text-center">{error}</p>}
             <button

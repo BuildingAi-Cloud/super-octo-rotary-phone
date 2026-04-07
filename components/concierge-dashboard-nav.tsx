@@ -1,8 +1,8 @@
 "use client"
 import { useEffect, useMemo, useState } from "react"
 import Link from "next/link"
-import { DEFAULT_STARTER_PLAN, resolveStarterPlan, type StarterPlan } from "@/lib/rollout"
 
+type StarterPlan = "essential" | "professional"
 type FeatureScope = "all" | "professional"
 
 type ConciergeFeature = {
@@ -28,7 +28,6 @@ const FEATURE_REGISTRY: Record<string, ConciergeFeature> = {
   instructions: { key: "instructions", label: "Instructions", href: "/concierge/instructions", scope: "all" },
   incidentReport: { key: "incidentReport", label: "Incident Report", href: "/concierge/incident-report", scope: "all" },
   residentDirectory: { key: "residentDirectory", label: "Resident Directory", href: "/concierge/resident-directory", scope: "all" },
-  tenantAssignments: { key: "tenantAssignments", label: "Tenant Assignments", href: "/concierge/tenant-assignments", scope: "all" },
   settings: { key: "settings", label: "General Settings", href: "/concierge/settings", scope: "all" },
 }
 
@@ -43,7 +42,7 @@ const NAV_SECTIONS = [
   },
   {
     title: "Front Desk",
-    featureKeys: ["frontdesk", "eventLogs", "instructions", "incidentReport", "residentDirectory", "tenantAssignments"],
+    featureKeys: ["frontdesk", "eventLogs", "instructions", "incidentReport", "residentDirectory"],
   },
   {
     title: "Settings",
@@ -52,14 +51,16 @@ const NAV_SECTIONS = [
 ]
 
 export function ConciergeDashboardNav() {
-  const [plan, setPlan] = useState<StarterPlan>(DEFAULT_STARTER_PLAN)
+  const [plan, setPlan] = useState<StarterPlan>("professional")
 
   useEffect(() => {
     try {
       const raw = localStorage.getItem("buildsync_signup_plan")
       if (!raw) return
       const parsed = JSON.parse(raw) as { plan?: string }
-      setPlan(resolveStarterPlan(parsed.plan))
+      if (parsed.plan === "essential" || parsed.plan === "professional") {
+        setPlan(parsed.plan)
+      }
     } catch {
       // Keep default package when stored value is invalid.
     }

@@ -1,6 +1,6 @@
 
 "use client";
-import { Suspense, useState, useEffect } from "react";
+import { Suspense, useState, useEffect, useMemo } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { useAuth, type UserRole } from "@/lib/auth-context";
@@ -8,33 +8,52 @@ import { AnimatedNoise } from "@/components/animated-noise";
 import { ScrambleText, ScrambleTextOnHover } from "@/components/scramble-text";
 import { BitmapChevron } from "@/components/bitmap-chevron";
 import { PHASE_ONE_ESSENTIAL_ONLY, resolveStarterPlan, type StarterPlan } from "@/lib/rollout";
+import {
+  DEFAULT_ESSENTIAL_COST_ASSUMPTIONS,
+  ESSENTIAL_COST_ASSUMPTIONS_STORAGE_KEY,
+  formatCurrency,
+  getEssentialQuote,
+  sanitizeEssentialCostAssumptions,
+  type EssentialCostAssumptions,
+  type EssentialCustomerType,
+  type EssentialPlanProfile,
+} from "@/lib/essential-pricing";
 
-const roleOptions: { value: UserRole; label: string; description: string; pricing: string }[] = [
-  {
-    value: "facility_manager",
-    label: "Facility Manager",
-    description: "Daily operations, maintenance, and building systems",
-    pricing: "Custom pricing based on building size and features",
-  },
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+const roleOptions: { value: EssentialCustomerType; label: string; description: string; pricing: string }[] = [
   {
     value: "building_owner",
     label: "Building Owner",
-    description: "Asset oversight, investment tracking, and portfolio management",
-    pricing: "Portfolio pricing available. Contact sales for details.",
+    description: "Commercial building operators managing tenancy and cloud workspace identity",
+    pricing: "Essential pricing is based on number of buildings",
   },
   {
     value: "building_manager",
     label: "Building Manager",
-    description: "Daily operations, tenant relations, and full property management",
-    pricing: "Flexible pricing per managed unit or property",
+    description: "Residential and commercial day-to-day operations with configurable feature bundles",
+    pricing: "Essential pricing is based on enabled features",
+  },
+  {
+    value: "facility_manager",
+    label: "Facility Manager",
+    description: "Specific use case teams handling operations subscriptions across managed sites",
+    pricing: "Essential pricing is based on active sites",
   },
 ];
+
+const managerFeatureOptions = [
+  { id: "ops", label: "Work order automation" },
+  { id: "tenant", label: "Resident and tenant communications" },
+  { id: "compliance", label: "Compliance workflows" },
+  { id: "finance", label: "Vendor and billing controls" },
+]
 
 const PLAN_COPY: Record<StarterPlan, { label: string; price: string; tagline: string }> = {
   essential: {
     label: "Essential",
     price: "$2.50 /unit/month",
-    tagline: "Best for smaller buildings and HOA operations.",
+    tagline: "Final quote is configured by your buildings, features, and operations setup.",
   },
   professional: {
     label: "Professional",
@@ -57,12 +76,19 @@ function SignUpPageContent() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [company, setCompany] = useState("");
-  const [role, setRole] = useState<UserRole | "">();
+  const [role, setRole] = useState<EssentialCustomerType | "">("");
+  const [tenancyName, setTenancyName] = useState("")
+  const [buildingCount, setBuildingCount] = useState(1)
+  const [siteCount, setSiteCount] = useState(1)
+  const [estimatedUnits, setEstimatedUnits] = useState(50)
+  const [selectedManagerFeatures, setSelectedManagerFeatures] = useState<string[]>(["ops", "tenant"])
+  const [costAssumptions, setCostAssumptions] = useState<EssentialCostAssumptions>(DEFAULT_ESSENTIAL_COST_ASSUMPTIONS)
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [humanA, setHumanA] = useState(0)
   const [humanB, setHumanB] = useState(0)
   const [humanAnswer, setHumanAnswer] = useState("")
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({})
 
   function generateHumanChallenge() {
     const a = Math.floor(Math.random() * 8) + 2
@@ -92,21 +118,114 @@ function SignUpPageContent() {
   }, [selectedPlan])
 
   useEffect(() => {
+    try {
+      const raw = localStorage.getItem(ESSENTIAL_COST_ASSUMPTIONS_STORAGE_KEY)
+      if (!raw) return
+      const parsed = JSON.parse(raw) as Partial<EssentialCostAssumptions>
+      setCostAssumptions(sanitizeEssentialCostAssumptions(parsed))
+    } catch {
+      setCostAssumptions(DEFAULT_ESSENTIAL_COST_ASSUMPTIONS)
+    }
+  }, [])
+
+  const pricingProfile = useMemo<EssentialPlanProfile | null>(() => {
+    if (!role) return null
+
+    return {
+      customerType: role,
+      tenancyName: role === "building_owner" ? tenancyName.trim() : undefined,
+      buildingCount: role === "building_owner" ? buildingCount : undefined,
+      selectedFeatures: role === "building_manager" ? selectedManagerFeatures : undefined,
+      siteCount: role === "facility_manager" ? siteCount : undefined,
+      estimatedUnits,
+    }
+  }, [role, tenancyName, buildingCount, selectedManagerFeatures, siteCount, estimatedUnits])
+
+  const liveQuote = useMemo(() => {
+    if (!pricingProfile) return null
+    return getEssentialQuote(pricingProfile, costAssumptions)
+  }, [pricingProfile, costAssumptions])
+
+  useEffect(() => {
+    if (!pricingProfile || !liveQuote) return
+
+    localStorage.setItem(
+      "buildsync_signup_profile",
+      JSON.stringify({
+        ...pricingProfile,
+        quote: liveQuote,
+        capturedAt: new Date().toISOString(),
+      })
+    )
+  }, [pricingProfile, liveQuote])
+
+  useEffect(() => {
     generateHumanChallenge()
   }, [])
 
-  const handleRoleSelect = (selectedRole: UserRole) => {
+  const handleRoleSelect = (selectedRole: EssentialCustomerType) => {
     setRole(selectedRole);
+    if (selectedRole === "building_owner") {
+      setBuildingCount(1)
+    }
+    if (selectedRole === "building_manager") {
+      setSelectedManagerFeatures(["ops", "tenant"])
+    }
+    if (selectedRole === "facility_manager") {
+      setSiteCount(1)
+    }
     setStep(2);
   };
+
+  const toggleManagerFeature = (featureId: string) => {
+    setSelectedManagerFeatures((prev) => {
+      if (prev.includes(featureId)) {
+        if (prev.length === 1) return prev
+        return prev.filter((id) => id !== featureId)
+      }
+
+      return [...prev, featureId]
+    })
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!role) return;
     setError("");
 
+    const nextErrors: Record<string, string> = {}
+    if (!name.trim()) nextErrors.name = "Name is required."
+    if (!email.trim()) {
+      nextErrors.email = "Email is required."
+    } else if (!EMAIL_REGEX.test(email.trim())) {
+      nextErrors.email = "Enter a valid email address."
+    }
+    if (!password.trim()) {
+      nextErrors.password = "Password is required."
+    } else if (password.trim().length < 8) {
+      nextErrors.password = "Password must be at least 8 characters."
+    }
+    if (role === "building_owner" && !tenancyName.trim()) {
+      nextErrors.tenancyName = "Tenancy cloud name is required for Building Owner accounts."
+    }
+    if (!humanAnswer.trim()) {
+      nextErrors.humanCheck = "Please answer the human check question."
+    }
+
+    setFieldErrors(nextErrors)
+    if (Object.keys(nextErrors).length > 0) {
+      setError("Please fix the highlighted fields and try again.")
+      return
+    }
+
+    if (!pricingProfile || !liveQuote) {
+      setError("Please complete customer setup details before continuing.")
+      return
+    }
+
     const parsed = Number.parseInt(humanAnswer, 10)
     if (!Number.isFinite(parsed) || parsed !== humanA + humanB) {
+      setFieldErrors((prev) => ({ ...prev, humanCheck: "Human check answer is incorrect." }))
       setError("Human verification failed. Please solve the check and try again.")
       generateHumanChallenge()
       return
@@ -124,8 +243,9 @@ function SignUpPageContent() {
         email,
         password,
         name,
-        role,
+        role: role as UserRole,
         company: company || undefined,
+        essentialProfile: pricingProfile,
       });
       if (timeoutId) clearTimeout(timeoutId);
       if (result.success) {
@@ -154,14 +274,14 @@ function SignUpPageContent() {
                   </span>
                 </Link>
                 <h1 className="font-[var(--font-bebas)] text-4xl md:text-5xl tracking-tight">
-                  <ScrambleText text={step === 1 ? "SELECT YOUR ROLE" : step === 2 ? "CREATE ACCOUNT" : "PAYMENT (OPTIONAL)"} duration={0.8} />
+                  <ScrambleText text={step === 1 ? "SELECT CUSTOMER TYPE" : step === 2 ? "CREATE ACCOUNT" : "COMPLETE CHECKOUT"} duration={0.8} />
                 </h1>
                 <p className="mt-4 font-mono text-sm text-muted-foreground">
                   {step === 1 
-                    ? "Choose the role that best describes your responsibilities" 
+                    ? "Choose the account type for Essential Plan 1" 
                     : step === 2
-                      ? "Complete your account setup to get started"
-                      : "You can skip payment for now. Payment will be required after launch."}
+                      ? "Complete account and pricing setup in real time"
+                      : "Review your quote and continue to checkout."}
                 </p>
               </div>
               {/* Step indicator */}
@@ -220,6 +340,21 @@ function SignUpPageContent() {
                     </div>
                   )}
                 </div>
+                {liveQuote && (
+                  <div className="mt-4 border border-border/50 bg-background/40 p-3 md:p-4">
+                    <p className="font-mono text-[10px] uppercase tracking-[0.3em] text-muted-foreground">Live Signup Quote</p>
+                    <div className="mt-2 flex flex-col gap-1 md:flex-row md:items-end md:justify-between">
+                      <div>
+                        <p className="font-mono text-xs text-muted-foreground">{liveQuote.pricingModel}</p>
+                        <p className="font-mono text-xs text-foreground/80">{liveQuote.metricLabel}: {liveQuote.quantity} ({liveQuote.detail})</p>
+                        <p className="font-mono text-xs text-foreground/80">
+                          Approx per-unit estimate: {formatCurrency(liveQuote.monthly / Math.max(1, estimatedUnits))} /unit/month
+                        </p>
+                      </div>
+                      <p className="font-[var(--font-bebas)] text-2xl tracking-wide text-accent">{formatCurrency(liveQuote.monthly)} monthly total</p>
+                    </div>
+                  </div>
+                )}
               </div>
 
               {step === 1 && (
@@ -243,7 +378,8 @@ function SignUpPageContent() {
                 </div>
               )}
               {step === 2 && (
-                <form onSubmit={handleSubmit} className="space-y-6">
+                <form noValidate onSubmit={handleSubmit} className="space-y-6">
+                  {error && <div role="alert" className="rounded border border-red-500/30 bg-red-500/10 px-3 py-2 text-red-600 font-mono text-xs">{error}</div>}
                   <div className="space-y-2">
                     <label htmlFor="name" className="font-mono text-[10px] uppercase tracking-[0.3em] text-muted-foreground">
                       Name
@@ -252,11 +388,17 @@ function SignUpPageContent() {
                       id="name"
                       type="text"
                       value={name}
-                      onChange={(e) => setName(e.target.value)}
+                      onChange={(e) => {
+                        setName(e.target.value)
+                        setFieldErrors((prev) => ({ ...prev, name: "" }))
+                      }}
                       required
-                      className="w-full border border-border bg-card/50 px-4 py-3 font-mono text-sm text-foreground placeholder:text-muted-foreground/50 focus:border-accent focus:outline-none transition-colors"
+                      aria-invalid={Boolean(fieldErrors.name)}
+                      aria-describedby={fieldErrors.name ? "signup-name-error" : undefined}
+                      className={`w-full border bg-card/50 px-4 py-3 font-mono text-sm text-foreground placeholder:text-muted-foreground/50 focus:outline-none transition-colors ${fieldErrors.name ? "border-red-500 focus:border-red-500" : "border-border focus:border-accent"}`}
                       placeholder="John Smith"
                     />
+                    {fieldErrors.name && <p id="signup-name-error" className="font-mono text-[10px] text-red-600">{fieldErrors.name}</p>}
                   </div>
                   <div className="space-y-2">
                     <label htmlFor="email" className="font-mono text-[10px] uppercase tracking-[0.3em] text-muted-foreground">
@@ -266,11 +408,17 @@ function SignUpPageContent() {
                       id="email"
                       type="email"
                       value={email}
-                      onChange={(e) => setEmail(e.target.value)}
+                      onChange={(e) => {
+                        setEmail(e.target.value)
+                        setFieldErrors((prev) => ({ ...prev, email: "" }))
+                      }}
                       required
-                      className="w-full border border-border bg-card/50 px-4 py-3 font-mono text-sm text-foreground placeholder:text-muted-foreground/50 focus:border-accent focus:outline-none transition-colors"
+                      aria-invalid={Boolean(fieldErrors.email)}
+                      aria-describedby={fieldErrors.email ? "signup-email-error" : undefined}
+                      className={`w-full border bg-card/50 px-4 py-3 font-mono text-sm text-foreground placeholder:text-muted-foreground/50 focus:outline-none transition-colors ${fieldErrors.email ? "border-red-500 focus:border-red-500" : "border-border focus:border-accent"}`}
                       placeholder="you@email.com"
                     />
+                    {fieldErrors.email && <p id="signup-email-error" className="font-mono text-[10px] text-red-600">{fieldErrors.email}</p>}
                   </div>
                   <div className="space-y-2">
                     <label htmlFor="company" className="font-mono text-[10px] uppercase tracking-[0.3em] text-muted-foreground">
@@ -285,6 +433,97 @@ function SignUpPageContent() {
                       placeholder="Acme Properties"
                     />
                   </div>
+
+                  {role === "building_owner" && (
+                    <>
+                      <div className="space-y-2">
+                        <label htmlFor="tenancy-name" className="font-mono text-[10px] uppercase tracking-[0.3em] text-muted-foreground">
+                          Tenancy Name (Cloud)
+                        </label>
+                        <input
+                          id="tenancy-name"
+                          type="text"
+                          value={tenancyName}
+                          onChange={(e) => {
+                            setTenancyName(e.target.value)
+                            setFieldErrors((prev) => ({ ...prev, tenancyName: "" }))
+                          }}
+                          required
+                          aria-invalid={Boolean(fieldErrors.tenancyName)}
+                          aria-describedby={fieldErrors.tenancyName ? "signup-tenancy-error" : undefined}
+                          className={`w-full border bg-card/50 px-4 py-3 font-mono text-sm text-foreground placeholder:text-muted-foreground/50 focus:outline-none transition-colors ${fieldErrors.tenancyName ? "border-red-500 focus:border-red-500" : "border-border focus:border-accent"}`}
+                          placeholder="e.g. skyline-towers"
+                        />
+                        {fieldErrors.tenancyName && <p id="signup-tenancy-error" className="font-mono text-[10px] text-red-600">{fieldErrors.tenancyName}</p>}
+                      </div>
+                      <div className="space-y-2">
+                        <label htmlFor="building-count" className="font-mono text-[10px] uppercase tracking-[0.3em] text-muted-foreground">
+                          Number of Commercial Buildings
+                        </label>
+                        <input
+                          id="building-count"
+                          type="number"
+                          min={1}
+                          value={buildingCount}
+                          onChange={(e) => setBuildingCount(Math.max(1, Number.parseInt(e.target.value || "1", 10)))}
+                          required
+                          className="w-full border border-border bg-card/50 px-4 py-3 font-mono text-sm text-foreground placeholder:text-muted-foreground/50 focus:border-accent focus:outline-none transition-colors"
+                        />
+                      </div>
+                    </>
+                  )}
+
+                  {role === "building_manager" && (
+                    <div className="space-y-3 border border-border/50 bg-card/30 p-4">
+                      <p className="font-mono text-[10px] uppercase tracking-[0.3em] text-muted-foreground">Feature-Based Pricing</p>
+                      <div className="space-y-2">
+                        {managerFeatureOptions.map((feature) => (
+                          <label key={feature.id} className="flex items-center gap-3 font-mono text-xs text-foreground/90">
+                            <input
+                              type="checkbox"
+                              checked={selectedManagerFeatures.includes(feature.id)}
+                              onChange={() => toggleManagerFeature(feature.id)}
+                              className="h-4 w-4 border-border bg-background"
+                            />
+                            {feature.label}
+                          </label>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {role === "facility_manager" && (
+                    <div className="space-y-2">
+                      <label htmlFor="site-count" className="font-mono text-[10px] uppercase tracking-[0.3em] text-muted-foreground">
+                        Managed Sites (Specific Use Case)
+                      </label>
+                      <input
+                        id="site-count"
+                        type="number"
+                        min={1}
+                        value={siteCount}
+                        onChange={(e) => setSiteCount(Math.max(1, Number.parseInt(e.target.value || "1", 10)))}
+                        required
+                        className="w-full border border-border bg-card/50 px-4 py-3 font-mono text-sm text-foreground placeholder:text-muted-foreground/50 focus:border-accent focus:outline-none transition-colors"
+                      />
+                    </div>
+                  )}
+
+                  <div className="space-y-2">
+                    <label htmlFor="estimated-units" className="font-mono text-[10px] uppercase tracking-[0.3em] text-muted-foreground">
+                      Estimated Units
+                    </label>
+                    <input
+                      id="estimated-units"
+                      type="number"
+                      min={1}
+                      value={estimatedUnits}
+                      onChange={(e) => setEstimatedUnits(Math.max(1, Number.parseInt(e.target.value || "1", 10)))}
+                      className="w-full border border-border bg-card/50 px-4 py-3 font-mono text-sm text-foreground placeholder:text-muted-foreground/50 focus:border-accent focus:outline-none transition-colors"
+                    />
+                    <p className="font-mono text-[10px] text-muted-foreground">Used to show your per-unit estimate during signup.</p>
+                  </div>
+
                   <div className="space-y-2">
                     <label htmlFor="password" className="font-mono text-[10px] uppercase tracking-[0.3em] text-muted-foreground">
                       Password
@@ -293,12 +532,18 @@ function SignUpPageContent() {
                       id="password"
                       type="password"
                       value={password}
-                      onChange={(e) => setPassword(e.target.value)}
+                      onChange={(e) => {
+                        setPassword(e.target.value)
+                        setFieldErrors((prev) => ({ ...prev, password: "" }))
+                      }}
                       required
                       minLength={8}
-                      className="w-full border border-border bg-card/50 px-4 py-3 font-mono text-sm text-foreground placeholder:text-muted-foreground/50 focus:border-accent focus:outline-none transition-colors"
+                      aria-invalid={Boolean(fieldErrors.password)}
+                      aria-describedby={fieldErrors.password ? "signup-password-error" : undefined}
+                      className={`w-full border bg-card/50 px-4 py-3 font-mono text-sm text-foreground placeholder:text-muted-foreground/50 focus:outline-none transition-colors ${fieldErrors.password ? "border-red-500 focus:border-red-500" : "border-border focus:border-accent"}`}
                       placeholder="Min 8 characters"
                     />
+                    {fieldErrors.password && <p id="signup-password-error" className="font-mono text-[10px] text-red-600">{fieldErrors.password}</p>}
                   </div>
 
                   <div className="space-y-3 border border-border/50 bg-card/30 p-4">
@@ -311,9 +556,14 @@ function SignUpPageContent() {
                         id="human-check"
                         type="number"
                         value={humanAnswer}
-                        onChange={(e) => setHumanAnswer(e.target.value)}
+                        onChange={(e) => {
+                          setHumanAnswer(e.target.value)
+                          setFieldErrors((prev) => ({ ...prev, humanCheck: "" }))
+                        }}
                         required
-                        className="w-full sm:w-28 border border-border bg-background px-3 py-2 font-mono text-sm text-foreground focus:border-accent focus:outline-none transition-colors"
+                        aria-invalid={Boolean(fieldErrors.humanCheck)}
+                        aria-describedby={fieldErrors.humanCheck ? "signup-human-error" : undefined}
+                        className={`w-full sm:w-28 border bg-background px-3 py-2 font-mono text-sm text-foreground focus:outline-none transition-colors ${fieldErrors.humanCheck ? "border-red-500 focus:border-red-500" : "border-border focus:border-accent"}`}
                         placeholder="Answer"
                         inputMode="numeric"
                       />
@@ -325,6 +575,7 @@ function SignUpPageContent() {
                         Refresh
                       </button>
                     </div>
+                    {fieldErrors.humanCheck && <p id="signup-human-error" className="font-mono text-[10px] text-red-600">{fieldErrors.humanCheck}</p>}
                   </div>
 
                   <button
@@ -338,19 +589,49 @@ function SignUpPageContent() {
                   <p className="font-mono text-[10px] text-muted-foreground text-center leading-relaxed">
                     By creating an account, you agree to our Terms of Service and Privacy Policy
                   </p>
-                  {error && <div className="text-red-600 font-mono text-xs mt-2">{error}</div>}
                 </form>
               )}
               {step === 3 && (
                 <div className="flex flex-col items-center gap-8 p-8 border border-accent/30 bg-accent/5 rounded-lg">
                   <div className="text-center">
-                    <h2 className="font-[var(--font-bebas)] text-2xl mb-2">Payment</h2>
-                    <p className="font-mono text-xs text-muted-foreground mb-4">Payments are currently disabled. You can skip payment and continue using the app.</p>
+                    <h2 className="font-[var(--font-bebas)] text-2xl mb-2">Essential Plan Ready</h2>
+                    <p className="font-mono text-xs text-muted-foreground mb-1">Account created and customer profile wired.</p>
+                    {liveQuote && (
+                      <p className="font-mono text-xs text-foreground/90 mb-4">
+                        {liveQuote.pricingModel}: {formatCurrency(liveQuote.monthly)}/month or {formatCurrency(liveQuote.yearly)}/year
+                      </p>
+                    )}
                     <button
                       className="mt-2 px-6 py-3 bg-accent text-accent-foreground rounded font-mono text-xs uppercase tracking-widest hover:bg-accent/90 transition-all"
+                      onClick={() => {
+                        const params = new URLSearchParams({
+                          plan: "essential",
+                          customerType: role,
+                        })
+
+                        if (role === "building_owner") {
+                          params.set("buildingCount", String(buildingCount))
+                          if (tenancyName.trim()) params.set("tenancyName", tenancyName.trim())
+                        }
+
+                        if (role === "building_manager") {
+                          params.set("featureCount", String(Math.max(1, selectedManagerFeatures.length)))
+                        }
+
+                        if (role === "facility_manager") {
+                          params.set("siteCount", String(siteCount))
+                        }
+
+                        router.push(`/checkout?${params.toString()}`)
+                      }}
+                    >
+                      Continue to Checkout
+                    </button>
+                    <button
+                      className="mt-3 px-6 py-3 border border-border/50 text-foreground rounded font-mono text-xs uppercase tracking-widest hover:border-accent hover:text-accent transition-all"
                       onClick={() => router.push("/dashboard")}
                     >
-                      Continue
+                      Skip for now
                     </button>
                   </div>
                 </div>

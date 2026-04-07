@@ -7,6 +7,8 @@ import { Checkbox } from "@/components/ui/checkbox"
 import { useRouter } from "next/navigation"
 import { motion } from "framer-motion"
 
+const PHONE_REGEX = /^\+?[0-9()\-\s]{7,20}$/
+
 const CONCIERGE_SETTINGS_ROLES = ["admin", "building_owner", "building_manager", "property_manager", "concierge"] as const
 
 export default function ConciergeSettingsPage() {
@@ -18,6 +20,7 @@ export default function ConciergeSettingsPage() {
   const [smsNotifications, setSmsNotifications] = useState(false)
   const [pushNotifications, setPushNotifications] = useState(true)
   const [status, setStatus] = useState("")
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({})
 
   useEffect(() => {
     if (!user) return
@@ -52,6 +55,20 @@ export default function ConciergeSettingsPage() {
 
   const saveProfile = (e: React.FormEvent) => {
     e.preventDefault()
+    const nextErrors: Record<string, string> = {}
+    if (!displayName.trim()) {
+      nextErrors.displayName = "Display name is required."
+    }
+    if (phone.trim() && !PHONE_REGEX.test(phone.trim())) {
+      nextErrors.phone = "Enter a valid phone number or leave it blank."
+    }
+
+    setFieldErrors(nextErrors)
+    if (Object.keys(nextErrors).length > 0) {
+      setStatus("Please fix the highlighted fields.")
+      return
+    }
+
     localStorage.setItem(
       `buildsync_profile_settings_${user.id}`,
       JSON.stringify({
@@ -96,15 +113,23 @@ export default function ConciergeSettingsPage() {
 
       <section className="mb-6 border border-border/40 rounded-lg p-4 md:p-6 bg-card/20">
         <h2 className="font-semibold mb-4">Profile Settings</h2>
-        <form onSubmit={saveProfile} className="space-y-4">
+        <form noValidate onSubmit={saveProfile} className="space-y-4">
+          {status && status.startsWith("Please fix") && <div role="alert" className="rounded border border-red-500/30 bg-red-500/10 px-3 py-2 text-xs text-red-600 font-mono">{status}</div>}
           <div>
             <label className="block text-sm mb-1">Display Name</label>
             <input
               type="text"
-              className="w-full border border-border/40 bg-background rounded-md px-3 py-2 text-sm"
+              className={`w-full border bg-background rounded-md px-3 py-2 text-sm ${fieldErrors.displayName ? "border-red-500" : "border-border/40"}`}
               value={displayName}
-              onChange={(e) => setDisplayName(e.target.value)}
+              onChange={(e) => {
+                setDisplayName(e.target.value)
+                setFieldErrors((prev) => ({ ...prev, displayName: "" }))
+                if (status.startsWith("Please fix")) setStatus("")
+              }}
+              aria-invalid={Boolean(fieldErrors.displayName)}
+              aria-describedby={fieldErrors.displayName ? "concierge-displayName-error" : undefined}
             />
+            {fieldErrors.displayName && <p id="concierge-displayName-error" className="mt-1 text-xs text-red-600">{fieldErrors.displayName}</p>}
           </div>
           <div>
             <label className="block text-sm mb-1">Email</label>
@@ -114,10 +139,17 @@ export default function ConciergeSettingsPage() {
             <label className="block text-sm mb-1">Phone (Optional)</label>
             <input
               type="text"
-              className="w-full border border-border/40 bg-background rounded-md px-3 py-2 text-sm"
+              className={`w-full border bg-background rounded-md px-3 py-2 text-sm ${fieldErrors.phone ? "border-red-500" : "border-border/40"}`}
               value={phone}
-              onChange={(e) => setPhone(e.target.value)}
+              onChange={(e) => {
+                setPhone(e.target.value)
+                setFieldErrors((prev) => ({ ...prev, phone: "" }))
+                if (status.startsWith("Please fix")) setStatus("")
+              }}
+              aria-invalid={Boolean(fieldErrors.phone)}
+              aria-describedby={fieldErrors.phone ? "concierge-phone-error" : undefined}
             />
+            {fieldErrors.phone && <p id="concierge-phone-error" className="mt-1 text-xs text-red-600">{fieldErrors.phone}</p>}
           </div>
 
           <div className="space-y-2 pt-2">
@@ -173,7 +205,7 @@ export default function ConciergeSettingsPage() {
         )}
       </section>
 
-      {status && <div className="text-green-600 font-mono text-xs mt-2">{status}</div>}
+      {status && <div className={`font-mono text-xs mt-2 ${status.startsWith("Please fix") ? "text-red-600" : "text-green-600"}`}>{status}</div>}
     </motion.main>
   )
 }
