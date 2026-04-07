@@ -1,9 +1,8 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { User } from "@/lib/auth-context";
 import { Card, CardHeader, CardTitle, CardContent, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 
 interface Task {
@@ -47,22 +46,6 @@ const demoAnnouncements: Announcement[] = [
 ];
 
 export default function StaffDashboard({ user }: { user: User }) {
-<<<<<<< HEAD
-  const [tasks, setTasks] = useState<Task[]>([]);
-  const [announcements, setAnnouncements] = useState<Announcement[]>([]);
-  const [incidents, setIncidents] = useState<Incident[]>([]);
-  const [incidentDesc, setIncidentDesc] = useState("");
-  const [incidentStatus, setIncidentStatus] = useState("");
-
-  useEffect(() => {
-    // Load tasks from localStorage or use demo
-    const stored = JSON.parse(localStorage.getItem("buildsync_staff_tasks") || "null");
-    setTasks(stored || demoTasks);
-    setAnnouncements(demoAnnouncements);
-    const storedIncidents = JSON.parse(localStorage.getItem("buildsync_staff_incidents") || "null");
-    setIncidents(storedIncidents || []);
-  }, []);
-=======
   const [tasks, setTasks] = useState<Task[]>(() => {
     if (typeof window !== "undefined") {
       const stored = JSON.parse(localStorage.getItem("buildsync_staff_tasks") || "null");
@@ -70,7 +53,7 @@ export default function StaffDashboard({ user }: { user: User }) {
     }
     return demoTasks;
   });
-  const [announcements, setAnnouncements] = useState<Announcement[]>(() => demoAnnouncements);
+  const [announcements] = useState<Announcement[]>(() => demoAnnouncements);
   const [incidents, setIncidents] = useState<Incident[]>(() => {
     if (typeof window !== "undefined") {
       const storedIncidents = JSON.parse(localStorage.getItem("buildsync_staff_incidents") || "null");
@@ -82,10 +65,9 @@ export default function StaffDashboard({ user }: { user: User }) {
   const [incidentStatus, setIncidentStatus] = useState("");
 
   // Removed useEffect for tasks/announcements/incidents initialization
->>>>>>> feature/ui-updates
 
   const handleComplete = (id: string) => {
-    const updated = tasks.map(t => t.id === id ? { ...t, status: "completed" } : t);
+    const updated = tasks.map<Task>((t) => (t.id === id ? { ...t, status: "completed" as const } : t));
     setTasks(updated);
     localStorage.setItem("buildsync_staff_tasks", JSON.stringify(updated));
   };

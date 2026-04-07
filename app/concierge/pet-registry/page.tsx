@@ -1,14 +1,16 @@
-<<<<<<< HEAD
-=======
-import React from "react";
->>>>>>> feature/ui-updates
+import { OpsWorkspacePage } from "@/components/concierge/ops-workspace-page";
+
 export default function ConciergePetRegistryPage() {
   return (
-    <main className="min-h-screen py-24 px-6 md:px-28 bg-background">
-      <h1 className="font-[var(--font-bebas)] text-4xl md:text-6xl tracking-tight mb-8">Pet Registry</h1>
-      <div className="bg-card/80 p-8 rounded-lg shadow-lg max-w-2xl mx-auto">
-        <p className="font-mono text-sm text-muted-foreground">Pet registry management coming soon.</p>
-      </div>
-    </main>
+    <OpsWorkspacePage
+      title="Pet Registry"
+      subtitle="Keep pet registration records accessible for concierge and security checks."
+      storageKey="buildsync_concierge_pet_registry"
+      fields={[
+        { key: "owner", label: "Owner", placeholder: "Resident name", required: true },
+        { key: "unit", label: "Unit", placeholder: "8A", required: true },
+        { key: "pet", label: "Pet", placeholder: "Dog - Golden Retriever", required: true },
+      ]}
+    />
   );
 }

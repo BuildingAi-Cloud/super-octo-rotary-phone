@@ -1,16 +1,12 @@
 {
   "name": "my-v0-project",
-<<<<<<< HEAD
   "version": "0.10.0",
-=======
-  "version": "0.5.0",
->>>>>>> feature/ui-updates
   "private": true,
   "packageManager": "pnpm@9.15.0",
   "scripts": {
     "build": "next build",
     "dev": "next dev",
-    "lint": "eslint .",
+    "lint": "ESLINT_USE_FLAT_CONFIG=false eslint .",
     "start": "next start",
     "test": "jest --passWithNoTests",
     "update-api-reference": "node update-api-reference.js",
@@ -101,10 +97,7 @@
     "@types/react-dom": "^19",
     "@typescript-eslint/eslint-plugin": "^8.57.1",
     "babel-jest": "^30.3.0",
-<<<<<<< HEAD
     "eslint": "8",
-=======
->>>>>>> feature/ui-updates
     "eslint-config-next": "^16.2.1",
     "eslint-plugin-react": "^7.37.5",
     "eslint-plugin-react-hooks": "^7.0.1",

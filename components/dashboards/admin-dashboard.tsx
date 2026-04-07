@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { User, UserRole } from "@/lib/auth-context";
 import { getAuditLog, AuditEntry } from "@/lib/audit";
 import { Table, TableHeader, TableBody, TableHead, TableRow, TableCell } from "@/components/ui/table";
@@ -7,6 +7,8 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Select } from "@/components/ui/select";
 import Link from "next/link";
+import GovernancePanel from "@/components/governance/GovernancePanel";
+import OrgAdminPanel from "@/components/dashboards/org-admin-panel";
 
 const roleLabels: Record<UserRole, string> = {
   facility_manager: "Facility Manager",
@@ -20,22 +22,11 @@ const roleLabels: Record<UserRole, string> = {
   vendor: "Vendor",
   admin: "Admin",
   guest: "Guest",
+  building_manager: "Building Manager",
 };
 
 export default function AdminDashboard({ user }: { user: User }) {
-  const [tab, setTab] = useState<"users" | "settings" | "audit">("users");
-<<<<<<< HEAD
-  const [users, setUsers] = useState<User[]>([]);
-  const [search, setSearch] = useState("");
-  const [audit, setAudit] = useState<AuditEntry[]>([]);
-
-  useEffect(() => {
-    // Load users from localStorage
-    const stored = JSON.parse(localStorage.getItem("buildsync_users") || "[]");
-    setUsers(stored);
-    setAudit(getAuditLog().reverse());
-  }, []);
-=======
+  const [tab, setTab] = useState<"users" | "settings" | "audit" | "governance" | "onboarding">("users");
   const [users, setUsers] = useState<User[]>(() => {
     if (typeof window !== "undefined") {
       return JSON.parse(localStorage.getItem("buildsync_users") || "[]");
@@ -49,9 +40,7 @@ export default function AdminDashboard({ user }: { user: User }) {
     }
     return [];
   });
-
-  // Removed useEffect for users/audit initialization
->>>>>>> feature/ui-updates
+  // ...existing code...
 
   const handleRoleChange = (id: string, newRole: UserRole) => {
     const updated = users.map(u => u.id === id ? { ...u, role: newRole } : u);
@@ -78,6 +67,8 @@ export default function AdminDashboard({ user }: { user: User }) {
         <Button variant={tab === "users" ? "default" : "outline"} onClick={() => setTab("users")}>Users</Button>
         <Button variant={tab === "settings" ? "default" : "outline"} onClick={() => setTab("settings")}>Settings</Button>
         <Button variant={tab === "audit" ? "default" : "outline"} onClick={() => setTab("audit")}>Audit Log</Button>
+        <Button variant={tab === "governance" ? "default" : "outline"} onClick={() => setTab("governance")}>Governance</Button>
+        <Button variant={tab === "onboarding" ? "default" : "outline"} onClick={() => setTab("onboarding")}>Onboarding</Button>
       </div>
 
       {tab === "users" && (
@@ -168,6 +159,14 @@ export default function AdminDashboard({ user }: { user: User }) {
             </TableBody>
           </Table>
         </div>
+      )}
+
+      {tab === "governance" && (
+        <GovernancePanel />
+      )}
+
+      {tab === "onboarding" && (
+        <OrgAdminPanel user={user} />
       )}
     </div>
   );
