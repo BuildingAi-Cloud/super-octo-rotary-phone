@@ -6,6 +6,7 @@ import { logAudit } from "@/lib/audit"
 export type UserRole =
   | "facility_manager"
   | "building_owner"
+  | "building_manager"
   | "property_manager"
   | "resident"
   | "tenant"
@@ -29,6 +30,15 @@ interface AuthContextType {
   isLoading: boolean
   signIn: (email: string, password: string) => Promise<{ success: boolean; error?: string }>
   signUp: (data: SignUpData) => Promise<{ success: boolean; error?: string }>
+  requestPasswordResetChallenge: (
+    email: string,
+    method: "mfa_code" | "rsa_token",
+  ) => Promise<{ success: boolean; error?: string; devCode?: string; devRsaToken?: string }>
+  resetPasswordWithSecondFactor: (
+    email: string,
+    newPassword: string,
+    payload: { method: "mfa_code" | "rsa_token"; mfaCode?: string; rsaToken?: string },
+  ) => Promise<{ success: boolean; error?: string }>
   signOut: () => void
 }
 
@@ -52,6 +62,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const roles: UserRole[] = [
       "facility_manager",
       "building_owner",
+      "building_manager",
       "property_manager",
       "resident",
       "tenant",
@@ -141,6 +152,47 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return { success: true }
   }
 
+  const requestPasswordResetChallenge = async (
+    email: string,
+    method: "mfa_code" | "rsa_token",
+  ): Promise<{ success: boolean; error?: string; devCode?: string; devRsaToken?: string }> => {
+    const storedUsers = JSON.parse(localStorage.getItem("buildsync_users") || "[]")
+    const foundUser = storedUsers.find((u: User & { password: string }) => u.email === email)
+    if (!foundUser) {
+      return { success: false, error: "Account not found" }
+    }
+
+    if (method === "mfa_code") {
+      return { success: true, devCode: "123456" }
+    }
+
+    return { success: true, devRsaToken: "654321" }
+  }
+
+  const resetPasswordWithSecondFactor = async (
+    email: string,
+    newPassword: string,
+    payload: { method: "mfa_code" | "rsa_token"; mfaCode?: string; rsaToken?: string },
+  ): Promise<{ success: boolean; error?: string }> => {
+    const storedUsers = JSON.parse(localStorage.getItem("buildsync_users") || "[]") as Array<User & { password: string }>
+    const index = storedUsers.findIndex((u) => u.email === email)
+    if (index === -1) {
+      return { success: false, error: "Account not found" }
+    }
+
+    if (payload.method === "mfa_code" && (!payload.mfaCode || payload.mfaCode.length < 6)) {
+      return { success: false, error: "Invalid verification code" }
+    }
+
+    if (payload.method === "rsa_token" && (!payload.rsaToken || payload.rsaToken.length < 6)) {
+      return { success: false, error: "Invalid RSA token" }
+    }
+
+    storedUsers[index] = { ...storedUsers[index], password: newPassword }
+    localStorage.setItem("buildsync_users", JSON.stringify(storedUsers))
+    return { success: true }
+  }
+
   const signOut = () => {
     logAudit("signOut", {}, user?.email || null)
     setUser(null)
@@ -148,7 +200,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   return (
-    <AuthContext.Provider value={{ user, isLoading, signIn, signUp, signOut }}>
+    <AuthContext.Provider
+      value={{
+        user,
+        isLoading,
+        signIn,
+        signUp,
+        requestPasswordResetChallenge,
+        resetPasswordWithSecondFactor,
+        signOut,
+      }}
+    >
       {children}
     </AuthContext.Provider>
   )
@@ -166,6 +228,7 @@ export function getRoleDisplayName(role: UserRole): string {
   const names: Record<UserRole, string> = {
     facility_manager: "Facility Manager",
     building_owner: "Building Owner",
+    building_manager: "Building Manager",
     property_manager: "Property Manager",
     resident: "Resident",
     tenant: "Tenant",

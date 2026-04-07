@@ -39,7 +39,7 @@ export async function startCheckoutSession(productId: string) {
       },
     ],
     mode: 'subscription',
-  })
+  } as any)
 
   return session.client_secret
 }

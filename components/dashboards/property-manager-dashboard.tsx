@@ -51,9 +51,9 @@ const shiftNotes = [
 export function PropertyManagerDashboard({ user }: PropertyManagerDashboardProps) {
   // Example initial amenities
   const initialAmenities = [
-    { id: "1", name: "Party Room", status: "available" },
-    { id: "2", name: "Conference Room", status: "booked" },
-    { id: "3", name: "BBQ Area", status: "maintenance" }
+    { id: "1", name: "Party Room", status: "available" as const, policy: "auto_approve" as const },
+    { id: "2", name: "Conference Room", status: "booked" as const, policy: "manager_approval" as const },
+    { id: "3", name: "BBQ Area", status: "maintenance" as const, policy: "manager_approval" as const }
   ]
   return (
     <main className="relative min-h-screen bg-background">
