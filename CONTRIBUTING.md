@@ -19,6 +19,22 @@ Thank you for your interest in contributing! This project is partly open source.
 4. **Open a pull request** with a clear description of your changes.
 5. **Participate in code review** and address feedback.
 
+## Multi-Repository Routing (Mandatory)
+
+All contributors must route changes to the correct repository:
+
+- Development website: `https://github.com/BuildingAi-Cloud/super-octo-rotary-phone.git`
+- Beta testing website: `https://github.com/BuildingAi-Cloud/Website-Beta.git`
+- Mobile app (Android APK track): `https://github.com/BuildingAi-Cloud/symmetrical-palm-tree.git`
+
+Required checks before any push:
+
+1. `npm run build`
+2. `npm run lint`
+3. `npm test`
+
+Review the full process in `README-MULTI-REPO.md`.
+
 ## Plugin/Extension Contributions
 
 - Add new plugins, themes, or integrations in the `/contrib` directory.
