@@ -4,6 +4,8 @@ import { useState } from "react"
 import Link from "next/link"
 import { BackButton } from "@/components/back-button"
 
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+
 export default function ContactPage() {
   const [formData, setFormData] = useState({
     name: "",
@@ -14,6 +16,8 @@ export default function ContactPage() {
   })
   const [submitted, setSubmitted] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
+  const [formError, setFormError] = useState("")
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({})
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target
@@ -22,12 +26,30 @@ export default function ContactPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    setFormError("")
+
+    const nextErrors: Record<string, string> = {}
+    if (!formData.name.trim()) nextErrors.name = "Full name is required."
+    if (!formData.email.trim()) {
+      nextErrors.email = "Email is required."
+    } else if (!EMAIL_REGEX.test(formData.email.trim())) {
+      nextErrors.email = "Enter a valid email address."
+    }
+    if (!formData.message.trim()) nextErrors.message = "Message is required."
+
+    setFieldErrors(nextErrors)
+    if (Object.keys(nextErrors).length > 0) {
+      setFormError("Please fix the highlighted fields and try again.")
+      return
+    }
+
     setIsLoading(true)
 
     // Simulate form submission
     setTimeout(() => {
       setSubmitted(true)
       setIsLoading(false)
+      setFieldErrors({})
       setFormData({ name: "", email: "", company: "", phone: "", message: "" })
       setTimeout(() => setSubmitted(false), 4000)
     }, 1000)
@@ -63,7 +85,8 @@ export default function ContactPage() {
         )}
 
         {/* Contact form */}
-        <form onSubmit={handleSubmit} className="space-y-6">
+        <form noValidate onSubmit={handleSubmit} className="space-y-6">
+          {formError && <div role="alert" className="rounded-lg border border-red-500/30 bg-red-500/10 px-4 py-3 text-red-600 text-sm">{formError}</div>}
           {/* Name field */}
           <div>
             <label htmlFor="name" className="block text-sm font-medium text-foreground mb-2">
@@ -74,11 +97,17 @@ export default function ContactPage() {
               type="text"
               name="name"
               value={formData.name}
-              onChange={handleChange}
+              onChange={(e) => {
+                handleChange(e)
+                setFieldErrors((prev) => ({ ...prev, name: "" }))
+              }}
               required
-              className="w-full border border-border bg-background rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent"
+              aria-invalid={Boolean(fieldErrors.name)}
+              aria-describedby={fieldErrors.name ? "contact-name-error" : undefined}
+              className={`w-full border bg-background rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-1 ${fieldErrors.name ? "border-red-500 focus:border-red-500 focus:ring-red-500" : "border-border focus:border-accent focus:ring-accent"}`}
               placeholder="Your name"
             />
+            {fieldErrors.name && <p id="contact-name-error" className="mt-1 text-xs text-red-600">{fieldErrors.name}</p>}
           </div>
 
           {/* Email field */}
@@ -91,11 +120,17 @@ export default function ContactPage() {
               type="email"
               name="email"
               value={formData.email}
-              onChange={handleChange}
+              onChange={(e) => {
+                handleChange(e)
+                setFieldErrors((prev) => ({ ...prev, email: "" }))
+              }}
               required
-              className="w-full border border-border bg-background rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent"
+              aria-invalid={Boolean(fieldErrors.email)}
+              aria-describedby={fieldErrors.email ? "contact-email-error" : undefined}
+              className={`w-full border bg-background rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-1 ${fieldErrors.email ? "border-red-500 focus:border-red-500 focus:ring-red-500" : "border-border focus:border-accent focus:ring-accent"}`}
               placeholder="you@company.com"
             />
+            {fieldErrors.email && <p id="contact-email-error" className="mt-1 text-xs text-red-600">{fieldErrors.email}</p>}
           </div>
 
           {/* Company field */}
@@ -139,12 +174,18 @@ export default function ContactPage() {
               id="message"
               name="message"
               value={formData.message}
-              onChange={handleChange}
+              onChange={(e) => {
+                handleChange(e)
+                setFieldErrors((prev) => ({ ...prev, message: "" }))
+              }}
               required
               rows={5}
-              className="w-full border border-border bg-background rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent resize-none"
+              aria-invalid={Boolean(fieldErrors.message)}
+              aria-describedby={fieldErrors.message ? "contact-message-error" : undefined}
+              className={`w-full border bg-background rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-1 resize-none ${fieldErrors.message ? "border-red-500 focus:border-red-500 focus:ring-red-500" : "border-border focus:border-accent focus:ring-accent"}`}
               placeholder="Tell us about your project and specific needs..."
             />
+            {fieldErrors.message && <p id="contact-message-error" className="mt-1 text-xs text-red-600">{fieldErrors.message}</p>}
           </div>
 
           {/* Submit button */}

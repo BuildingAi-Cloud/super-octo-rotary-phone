@@ -25,6 +25,22 @@ Buildings.com is built with privacy and security as core principles:
 - See `docs/api-reference.md` for API Reference (auto-updated)
 - See `docs/security.md` for security details
 
+## Multi-Repository Policy (Required)
+
+This project is operated across three repositories and every developer must use the correct target for each change:
+
+- Development website (primary): `https://github.com/BuildingAi-Cloud/super-octo-rotary-phone.git`
+- Beta testing website: `https://github.com/BuildingAi-Cloud/Website-Beta.git`
+- Mobile app track (Android APK): `https://github.com/BuildingAi-Cloud/symmetrical-palm-tree.git`
+
+Before pushing any branch, confirm destination repository and run CI checks:
+
+1. `npm run build`
+2. `npm run lint`
+3. `npm test`
+
+For full remote/branch workflow, see `README-MULTI-REPO.md`.
+
 ## Mobile Apps (Android and iOS)
 
 This repository supports user-facing Android and iOS apps through Capacitor.

@@ -16,15 +16,23 @@ export default function WorkOrdersPage() {
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState({ issue: "", unit: "", status: "Open", vendor: "" });
   const [error, setError] = useState("");
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     setForm({ ...form, [e.target.name]: e.target.value });
+    setFieldErrors((prev) => ({ ...prev, [e.target.name]: "" }));
   };
 
   const handleAddWorkOrder = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!form.issue || !form.unit || !form.vendor) {
-      setError("All fields are required.");
+    const nextErrors: Record<string, string> = {};
+    if (!form.issue.trim()) nextErrors.issue = "Issue is required.";
+    if (!form.unit.trim()) nextErrors.unit = "Unit is required.";
+    if (!form.vendor.trim()) nextErrors.vendor = "Vendor is required.";
+
+    setFieldErrors(nextErrors);
+    if (Object.keys(nextErrors).length > 0) {
+      setError("Please fix the highlighted fields and try again.");
       return;
     }
     setOrders([
@@ -69,14 +77,17 @@ export default function WorkOrdersPage() {
             </DialogTrigger>
             <DialogContent>
               <DialogTitle>New Work Order</DialogTitle>
-              <form onSubmit={handleAddWorkOrder} className="space-y-4">
+              <form noValidate onSubmit={handleAddWorkOrder} className="space-y-4">
+                {error && <div role="alert" className="rounded border border-red-500/30 bg-red-500/10 px-3 py-2 text-red-600 text-xs">{error}</div>}
                 <div>
                   <label className="block text-xs font-semibold mb-1" htmlFor="issue">Issue</label>
-                  <input id="issue" name="issue" value={form.issue} onChange={handleInputChange} className="w-full border p-2 rounded" required />
+                  <input id="issue" name="issue" value={form.issue} onChange={handleInputChange} className={`w-full border p-2 rounded ${fieldErrors.issue ? "border-red-500" : ""}`} required aria-invalid={Boolean(fieldErrors.issue)} aria-describedby={fieldErrors.issue ? "workorder-issue-error" : undefined} />
+                  {fieldErrors.issue && <p id="workorder-issue-error" className="mt-1 text-[11px] text-red-600">{fieldErrors.issue}</p>}
                 </div>
                 <div>
                   <label className="block text-xs font-semibold mb-1" htmlFor="unit">Unit</label>
-                  <input id="unit" name="unit" value={form.unit} onChange={handleInputChange} className="w-full border p-2 rounded" required />
+                  <input id="unit" name="unit" value={form.unit} onChange={handleInputChange} className={`w-full border p-2 rounded ${fieldErrors.unit ? "border-red-500" : ""}`} required aria-invalid={Boolean(fieldErrors.unit)} aria-describedby={fieldErrors.unit ? "workorder-unit-error" : undefined} />
+                  {fieldErrors.unit && <p id="workorder-unit-error" className="mt-1 text-[11px] text-red-600">{fieldErrors.unit}</p>}
                 </div>
                 <div>
                   <label className="block text-xs font-semibold mb-1" htmlFor="status">Status</label>
@@ -88,9 +99,9 @@ export default function WorkOrdersPage() {
                 </div>
                 <div>
                   <label className="block text-xs font-semibold mb-1" htmlFor="vendor">Vendor</label>
-                  <input id="vendor" name="vendor" value={form.vendor} onChange={handleInputChange} className="w-full border p-2 rounded" required />
+                  <input id="vendor" name="vendor" value={form.vendor} onChange={handleInputChange} className={`w-full border p-2 rounded ${fieldErrors.vendor ? "border-red-500" : ""}`} required aria-invalid={Boolean(fieldErrors.vendor)} aria-describedby={fieldErrors.vendor ? "workorder-vendor-error" : undefined} />
+                  {fieldErrors.vendor && <p id="workorder-vendor-error" className="mt-1 text-[11px] text-red-600">{fieldErrors.vendor}</p>}
                 </div>
-                {error && <div className="text-red-500 text-xs">{error}</div>}
                 <div className="flex justify-end gap-2">
                   <Button type="button" variant="outline" onClick={() => setOpen(false)}>Cancel</Button>
                   <Button type="submit" variant="default">Create</Button>
