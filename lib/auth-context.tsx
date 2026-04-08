@@ -47,15 +47,6 @@ interface AuthContextType {
   requestPasswordResetMfa: (email: string) => Promise<{ success: boolean; error?: string; devCode?: string }>
   resetPasswordWithMfa: (email: string, code: string, newPassword: string) => Promise<{ success: boolean; error?: string }>
   signUp: (data: SignUpData) => Promise<{ success: boolean; error?: string }>
-  requestPasswordResetChallenge: (
-    email: string,
-    method: "mfa_code" | "rsa_token",
-  ) => Promise<{ success: boolean; error?: string; devCode?: string; devRsaToken?: string }>
-  resetPasswordWithSecondFactor: (
-    email: string,
-    newPassword: string,
-    payload: { method: "mfa_code" | "rsa_token"; mfaCode?: string; rsaToken?: string },
-  ) => Promise<{ success: boolean; error?: string }>
   signOut: () => void
   switchRole: (nextRole: UserRole) => void
 }
@@ -175,6 +166,50 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
       }
     })
+
+    // Seed a single QA account with full role coverage so every dashboard can
+    // be tested from one login using the role switcher.
+    const allAccessEmail = "test_all_access@example.com"
+    const allAccessIndex = storedUsers.findIndex((u: User) => u.email === allAccessEmail)
+    const allAccessRoles = [...VALID_ROLES]
+
+    if (allAccessIndex === -1) {
+      storedUsers.push({
+        id: crypto.randomUUID(),
+        email: allAccessEmail,
+        password: "12345678",
+        rsaResetToken: "RSA-ALL-ACCESS-2026",
+        name: "QA All Access",
+        role: "admin",
+        accessRoles: allAccessRoles,
+        company: "TestCo",
+      })
+      changed = true
+    } else {
+      const existingUser = storedUsers[allAccessIndex]
+      const normalizedRoles = normalizeAccessRoles({
+        ...existingUser,
+        role: "admin",
+        accessRoles: allAccessRoles,
+      })
+
+      const shouldUpdateRole = existingUser.role !== "admin"
+      const shouldUpdateRoles = JSON.stringify(existingUser.accessRoles || []) !== JSON.stringify(normalizedRoles)
+      const shouldUpdateRsa = existingUser.rsaResetToken !== "RSA-ALL-ACCESS-2026"
+      const shouldUpdatePassword = existingUser.password !== "12345678"
+
+      if (shouldUpdateRole || shouldUpdateRoles || shouldUpdateRsa || shouldUpdatePassword) {
+        storedUsers[allAccessIndex] = {
+          ...existingUser,
+          role: "admin",
+          accessRoles: normalizedRoles,
+          rsaResetToken: "RSA-ALL-ACCESS-2026",
+          password: "12345678",
+        }
+        changed = true
+      }
+    }
+
     if (changed) {
       localStorage.setItem("buildsync_users", JSON.stringify(storedUsers))
     }
@@ -202,7 +237,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const signIn = async (email: string, password: string): Promise<{ success: boolean; error?: string }> => {
     // Demo authentication - in production, this would call an API
     const storedUsers = JSON.parse(localStorage.getItem("buildsync_users") || "[]")
-    const foundUser = storedUsers.find((u: User & { password: string }) => u.email === email && u.password === password)
+    const normalizedEmail = email.trim().toLowerCase()
+    const foundUser = storedUsers.find(
+      (u: User & { password: string }) => u.email.toLowerCase() === normalizedEmail && u.password === password,
+    )
     
     if (foundUser) {
       // Sign-in writes the active role and the full access set so downstream UI
@@ -379,47 +417,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return { success: true }
   }
 
-  const requestPasswordResetChallenge = async (
-    email: string,
-    method: "mfa_code" | "rsa_token",
-  ): Promise<{ success: boolean; error?: string; devCode?: string; devRsaToken?: string }> => {
-    const storedUsers = JSON.parse(localStorage.getItem("buildsync_users") || "[]")
-    const foundUser = storedUsers.find((u: User & { password: string }) => u.email === email)
-    if (!foundUser) {
-      return { success: false, error: "Account not found" }
-    }
-
-    if (method === "mfa_code") {
-      return { success: true, devCode: "123456" }
-    }
-
-    return { success: true, devRsaToken: "654321" }
-  }
-
-  const resetPasswordWithSecondFactor = async (
-    email: string,
-    newPassword: string,
-    payload: { method: "mfa_code" | "rsa_token"; mfaCode?: string; rsaToken?: string },
-  ): Promise<{ success: boolean; error?: string }> => {
-    const storedUsers = JSON.parse(localStorage.getItem("buildsync_users") || "[]") as Array<User & { password: string }>
-    const index = storedUsers.findIndex((u) => u.email === email)
-    if (index === -1) {
-      return { success: false, error: "Account not found" }
-    }
-
-    if (payload.method === "mfa_code" && (!payload.mfaCode || payload.mfaCode.length < 6)) {
-      return { success: false, error: "Invalid verification code" }
-    }
-
-    if (payload.method === "rsa_token" && (!payload.rsaToken || payload.rsaToken.length < 6)) {
-      return { success: false, error: "Invalid RSA token" }
-    }
-
-    storedUsers[index] = { ...storedUsers[index], password: newPassword }
-    localStorage.setItem("buildsync_users", JSON.stringify(storedUsers))
-    return { success: true }
-  }
-
   const signOut = () => {
     logAudit("signOut", {}, user?.email || null)
     setUser(null)
@@ -476,7 +473,6 @@ export function getRoleDisplayName(role: UserRole): string {
     facility_manager: "Facility Manager",
     building_manager: "Building Manager",
     building_owner: "Building Owner",
-    building_manager: "Building Manager",
     property_manager: "Property Manager",
     resident: "Resident",
     tenant: "Tenant",
