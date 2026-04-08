@@ -22,6 +22,7 @@ Buildings.com is built with privacy and security as core principles:
 
 - See `ON_PREMISE_DOCKER.md` for Docker build/run instructions
 - See `docs/overview.md` for full documentation
+- See `docs/pre-deployment-checklist.md` for launch readiness (Supabase + SMTP)
 - See `docs/api-reference.md` for API Reference (auto-updated)
 - See `docs/security.md` for security details
 

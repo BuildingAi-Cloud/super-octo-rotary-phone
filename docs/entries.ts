@@ -222,6 +222,14 @@ export const markdownDocs: MarkdownDocEntry[] = [
   },
   {
     kind: "page",
+    slug: "pre-deployment-checklist",
+    title: "Pre-Deployment Checklist",
+    summary: "Production go-live checklist for Supabase tenancy/scaling and SMTP readiness.",
+    keywords: ["deployment", "supabase", "smtp", "go-live", "checklist"],
+    category: "Reference",
+  },
+  {
+    kind: "page",
     slug: "ai-brand-voice-guide",
     title: "AI Brand Voice Guide",
     summary: "Silent Architect persona, vocabulary guardrails, and predictive transparency UX rules.",
