@@ -127,7 +127,7 @@ export const ROLE_TEMPLATES: Record<UserRole, RoleTemplate> = {
     canManageUsers: true,
     canAccessSettings: false,
     canViewAuditLog: true,
-    dashboardSections: ["dashboard", "work_orders", "preventative_maintenance", "equipment_directory", "alerts", "vendors", "compliance", "assets", "space", "reports", "documents", "workflows", "vendor_database", "integrations", "audit_log"],
+    dashboardSections: ["dashboard", "work_orders", "preventative_maintenance", "equipment_directory", "alerts", "vendors", "compliance", "assets", "space", "reports", "documents", "workflows", "vendor_database", "incidents", "visitors", "packages", "access_control", "communication", "integrations", "audit_log"],
   },
   property_manager: {
     level: "manager",

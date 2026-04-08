@@ -17,6 +17,11 @@ import { ReportsTab } from "./fm-tabs/reports-tab";
 import { DocumentsTab } from "./fm-tabs/documents-tab";
 import { WorkflowsTab } from "./fm-tabs/workflows-tab";
 import { VendorDatabaseTab } from "./fm-tabs/vendor-database-tab";
+import { KeysAccessTab } from "./fm-tabs/keys-access-tab";
+import { InboxTab } from "./fm-tabs/inbox-tab";
+import { IncidentsTab } from "./fm-tabs/incidents-tab";
+import { VisitorsTab } from "./fm-tabs/visitors-tab";
+import { PackagesTab } from "./fm-tabs/packages-tab";
 import IntegrationsHub from "./integrations-hub";
 import { CommandCenterChrome } from "./command-center-chrome";
 import { useStarterPlan } from "@/hooks/use-starter-plan";
@@ -76,9 +81,14 @@ const TABS = [
   { key: "space", label: "Space", section: "Operations" },
   { key: "workflows", label: "Workflows", section: "Operations" },
   { key: "vendor_database", label: "Vendor DB", section: "Operations" },
+  { key: "incidents", label: "Incidents", section: "Operations" },
+  { key: "visitors", label: "Visitors", section: "Operations" },
+  { key: "packages", label: "Packages", section: "Operations" },
+  { key: "access_control", label: "Access Control", section: "Access" },
   { key: "compliance", label: "Compliance", section: "Admin" },
   { key: "reports", label: "Reports", section: "Admin" },
   { key: "documents", label: "Documents", section: "Admin" },
+  { key: "communication", label: "Communication", section: "Communications" },
   { key: "integrations", label: "Integrations", section: "Systems" },
   { key: "audit_log", label: "Audit Log", section: "Systems" },
 ] as const;
@@ -1198,6 +1208,11 @@ export function FacilityManagerDashboard({ user }: { user: User }) {
           {activeTab === "documents" && <DocumentsTab />}
           {activeTab === "workflows" && <WorkflowsTab />}
           {activeTab === "vendor_database" && <VendorDatabaseTab />}
+          {activeTab === "incidents" && <IncidentsTab />}
+          {activeTab === "visitors" && <VisitorsTab />}
+          {activeTab === "packages" && <PackagesTab />}
+          {activeTab === "access_control" && <KeysAccessTab />}
+          {activeTab === "communication" && <InboxTab />}
           {activeTab === "integrations" && <IntegrationsHub />}
 
           {activeTab === "audit_log" && (
