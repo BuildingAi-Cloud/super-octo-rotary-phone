@@ -61,6 +61,43 @@ const communityPosts = [
   { author: "Building Team", tag: "Update", content: "Parcel lockers will be upgraded next week. Pickup access remains unchanged.", time: "1d ago", replies: 1 },
 ]
 
+type ListingCategory = "For Sale" | "Free / Giveaway" | "Services" | "Lost & Found" | "Housing Swap"
+
+interface MarketplaceListing {
+  id: number
+  category: ListingCategory
+  title: string
+  suite: string
+  posted: string
+  price: string | null
+  isFree: boolean
+  interests: number
+}
+
+interface BuildingDeal {
+  id: number
+  title: string
+  partner: string
+  instructions: string
+  expiresAt: string
+  active: boolean
+}
+
+const marketplaceListings: MarketplaceListing[] = [
+  { id: 1, category: "For Sale", title: "IKEA KALLAX shelf unit — white, 4×2", suite: "Suite 204", posted: "2h ago", price: "$45", isFree: false, interests: 3 },
+  { id: 2, category: "Free / Giveaway", title: "Box of moving supplies — bubble wrap & tape rolls", suite: "Suite 512", posted: "5h ago", price: null, isFree: true, interests: 7 },
+  { id: 3, category: "Services", title: "Dog walking — mornings, $20/walk", suite: "Suite 318", posted: "1d ago", price: "$20/walk", isFree: false, interests: 2 },
+  { id: 4, category: "Lost & Found", title: "Found: Set of keys near elevator bank, Floor 3", suite: "Suite 301", posted: "3h ago", price: null, isFree: false, interests: 0 },
+  { id: 5, category: "For Sale", title: "Standing desk — electric, adjustable height", suite: "Suite 710", posted: "2d ago", price: "$220", isFree: false, interests: 5 },
+  { id: 6, category: "Housing Swap", title: "Seeking 1BR swap for June — have 2BR available", suite: "Suite 408", posted: "4d ago", price: null, isFree: false, interests: 1 },
+]
+
+const buildingDeals: BuildingDeal[] = [
+  { id: 1, title: "20% off at Pressed Juicery", partner: "Pressed Juicery", instructions: "Show your resident ID at checkout. Valid in-store only.", expiresAt: "May 31, 2025", active: true },
+  { id: 2, title: "Free first month — GoodLife Fitness", partner: "GoodLife Fitness", instructions: "Mention promo code BUILDSYNC at sign-up or front desk.", expiresAt: "Apr 30, 2025", active: true },
+  { id: 3, title: "$10 off first FreshPrep delivery", partner: "FreshPrep", instructions: "Apply code BSYNC10 at checkout on freshprep.ca.", expiresAt: "Mar 31, 2025", active: false },
+]
+
 export function TenantDashboard({ user }: TenantDashboardProps) {
   const leaseInfo = useMemo(() => getLeaseProfileForUser(user) || fallbackLeaseInfo, [user])
   const paymentVisibility = resolveTenantPaymentVisibility(leaseInfo)
@@ -68,11 +105,12 @@ export function TenantDashboard({ user }: TenantDashboardProps) {
     { id: "overview", label: "Overview" },
     { id: "amenities", label: "Amenities" },
     { id: "community", label: "Community" },
+    { id: "marketplace", label: "Marketplace" },
     ...(paymentVisibility.showPaymentsTab ? [{ id: "payments", label: paymentVisibility.canManagePaymentSetup ? "Payments & Setup" : "Payments" }] : []),
     { id: "requests", label: "Requests" },
     { id: "documents", label: "Documents" },
   ] as const
-  const [activeTab, setActiveTab] = useState<"overview" | "amenities" | "community" | "payments" | "requests" | "documents">("overview")
+  const [activeTab, setActiveTab] = useState<"overview" | "amenities" | "community" | "marketplace" | "payments" | "requests" | "documents">("overview")
   const [bookingAmenity, setBookingAmenity] = useState("")
   const [bookingDate, setBookingDate] = useState("")
   const [bookingTime, setBookingTime] = useState("")
@@ -83,6 +121,15 @@ export function TenantDashboard({ user }: TenantDashboardProps) {
   const [bookingStatus, setBookingStatus] = useState("")
   const amenities = amenityStore
   const [myBookings, setMyBookings] = useState<Booking[]>([])
+  const [marketplaceFilter, setMarketplaceFilter] = useState<"All" | ListingCategory>("All")
+  const [showPostModal, setShowPostModal] = useState(false)
+  const [postCategory, setPostCategory] = useState<ListingCategory>("For Sale")
+  const [postTitle, setPostTitle] = useState("")
+  const [postDescription, setPostDescription] = useState("")
+  const [postPrice, setPostPrice] = useState("")
+  const [postIsFree, setPostIsFree] = useState(false)
+  const [postContact, setPostContact] = useState<"in_app" | "show_email" | "show_phone">("in_app")
+  const [postError, setPostError] = useState("")
   const paymentHistory = leaseInfo.paymentHistory || []
   const commercialBilling = leaseInfo.commercialBilling
   const showCommercialBilling = leaseInfo.buildingType === "commercial" || Boolean(commercialBilling)
@@ -695,6 +742,249 @@ export function TenantDashboard({ user }: TenantDashboardProps) {
                   </div>
                 ))}
               </div>
+            </div>
+          )}
+
+          {activeTab === "marketplace" && (
+            <div>
+              {/* Page header */}
+              <div className="mb-6">
+                <h2 className="font-[var(--font-bebas)] text-2xl tracking-wide">MARKETPLACE</h2>
+                <p className="mt-1 font-mono text-xs text-muted-foreground">
+                  Buy, sell, and trade with your neighbors.{" "}
+                  <span className="text-accent">All listings are visible only to verified residents.</span>
+                </p>
+              </div>
+
+              {/* Filter chips */}
+              <div className="flex flex-wrap gap-2 mb-6">
+                {(["All", "For Sale", "Free / Giveaway", "Services", "Lost & Found", "Housing Swap"] as const).map((chip) => (
+                  <button
+                    key={chip}
+                    onClick={() => setMarketplaceFilter(chip)}
+                    className={`px-3 py-1 font-mono text-[10px] uppercase tracking-widest border transition-colors ${
+                      marketplaceFilter === chip
+                        ? "border-accent text-accent"
+                        : "border-border/40 text-muted-foreground hover:border-accent/50 hover:text-foreground"
+                    }`}
+                  >
+                    {chip}
+                  </button>
+                ))}
+              </div>
+
+              {/* Two-panel layout */}
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+
+                {/* LEFT PANEL — Recent Listings */}
+                <div className="border border-border/40 bg-card/30">
+                  <div className="p-5 border-b border-border/30">
+                    <h3 className="font-[var(--font-bebas)] text-lg tracking-wide">RECENT LISTINGS</h3>
+                  </div>
+                  <div className="divide-y divide-border/20">
+                    {marketplaceListings
+                      .filter((l) => marketplaceFilter === "All" || l.category === marketplaceFilter)
+                      .map((listing) => (
+                        <div key={listing.id} className="flex items-start justify-between p-5 hover:bg-accent/5 transition-colors">
+                          <div className="flex-1 min-w-0 pr-4">
+                            <span className="font-mono text-[10px] uppercase tracking-widest text-accent">{listing.category}</span>
+                            <p className="mt-1 font-mono text-[13px] text-foreground leading-snug">{listing.title}</p>
+                            <p className="mt-1 font-mono text-[11px] text-muted-foreground">{listing.suite} · {listing.posted}</p>
+                          </div>
+                          <div className="text-right flex-shrink-0">
+                            <p className="font-mono text-sm text-foreground font-semibold">
+                              {listing.isFree ? "Free" : listing.price ?? "—"}
+                            </p>
+                            {listing.interests > 0 && (
+                              <p className="font-mono text-[10px] text-muted-foreground mt-0.5">{listing.interests} interested</p>
+                            )}
+                            <button className="mt-2 px-2 py-1 border border-accent/40 font-mono text-[10px] uppercase tracking-widest text-accent hover:bg-accent/10 transition-colors">
+                              I&apos;m Interested
+                            </button>
+                          </div>
+                        </div>
+                      ))}
+                    {marketplaceListings.filter((l) => marketplaceFilter === "All" || l.category === marketplaceFilter).length === 0 && (
+                      <div className="p-6">
+                        <p className="font-mono text-xs text-muted-foreground">No listings in this category yet.</p>
+                      </div>
+                    )}
+                  </div>
+                  <div className="p-4 border-t border-border/30">
+                    <button
+                      onClick={() => { setShowPostModal(true); setPostError("") }}
+                      className="w-full py-3 bg-accent font-mono text-[10px] uppercase tracking-widest text-accent-foreground hover:bg-accent/90 transition-colors"
+                    >
+                      + Post a Listing
+                    </button>
+                  </div>
+                </div>
+
+                {/* RIGHT PANEL — Building Deals & Perks */}
+                <div className="border border-border/40 bg-card/30">
+                  <div className="p-5 border-b border-border/30">
+                    <h3 className="font-[var(--font-bebas)] text-lg tracking-wide">BUILDING DEALS &amp; PERKS</h3>
+                  </div>
+                  <div className="divide-y divide-border/20">
+                    {buildingDeals.map((deal) => (
+                      <div key={deal.id} className="flex items-start justify-between p-5">
+                        <div className="flex-1 min-w-0 pr-4">
+                          <span className="font-mono text-[10px] uppercase tracking-widest text-accent">Partner Offer</span>
+                          <p className="mt-1 font-mono text-[13px] text-foreground leading-snug">{deal.title}</p>
+                          <p className="mt-1 font-mono text-[11px] text-muted-foreground">{deal.instructions}</p>
+                          <p className="mt-1 font-mono text-[10px] text-muted-foreground">Expires {deal.expiresAt}</p>
+                        </div>
+                        <div className="flex-shrink-0">
+                          {deal.active ? (
+                            <span className="inline-block px-3 py-1 rounded-full bg-accent/20 font-mono text-[10px] uppercase tracking-widest text-accent">Active</span>
+                          ) : (
+                            <span className="inline-block px-3 py-1 rounded-full bg-border/40 font-mono text-[10px] uppercase tracking-widest text-muted-foreground">Expired</span>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                  <div className="p-4 border-t border-border/30">
+                    <button className="w-full py-3 border border-accent/40 font-mono text-[10px] uppercase tracking-widest text-accent hover:bg-accent/10 transition-colors">
+                      Suggest a Partner →
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              {/* Post a Listing Modal */}
+              {showPostModal && (
+                <div
+                  className="fixed inset-0 z-50 flex items-center justify-center bg-black/60"
+                  role="dialog"
+                  aria-modal="true"
+                  aria-label="Post a listing"
+                >
+                  <div className="bg-background border border-border/60 w-full max-w-lg mx-4 p-6">
+                    <div className="flex items-center justify-between mb-5">
+                      <h3 className="font-[var(--font-bebas)] text-xl tracking-wide">POST A LISTING</h3>
+                      <button
+                        onClick={() => setShowPostModal(false)}
+                        className="font-mono text-xs text-muted-foreground hover:text-foreground"
+                        aria-label="Close modal"
+                      >
+                        ✕
+                      </button>
+                    </div>
+                    <form
+                      onSubmit={(e) => {
+                        e.preventDefault()
+                        if (!postTitle.trim()) { setPostError("Title is required."); return }
+                        if (!postDescription.trim()) { setPostError("Description is required."); return }
+                        if (!postIsFree && !postPrice.trim()) { setPostError("Enter a price or mark as free."); return }
+                        setPostError("")
+                        setShowPostModal(false)
+                        setPostTitle("")
+                        setPostDescription("")
+                        setPostPrice("")
+                        setPostIsFree(false)
+                        setPostContact("in_app")
+                        setPostCategory("For Sale")
+                      }}
+                      className="space-y-4"
+                    >
+                      {/* Category */}
+                      <label className="block">
+                        <span className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">Category</span>
+                        <select
+                          value={postCategory}
+                          onChange={(e) => setPostCategory(e.target.value as ListingCategory)}
+                          className="mt-1 w-full border border-border/40 bg-background px-3 py-2 font-mono text-xs text-foreground"
+                        >
+                          {(["For Sale", "Free / Giveaway", "Services", "Lost & Found", "Housing Swap"] as const).map((c) => (
+                            <option key={c} value={c}>{c}</option>
+                          ))}
+                        </select>
+                      </label>
+                      {/* Title */}
+                      <label className="block">
+                        <span className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">Title</span>
+                        <input
+                          type="text"
+                          value={postTitle}
+                          onChange={(e) => setPostTitle(e.target.value)}
+                          placeholder="e.g. IKEA desk, brown leather sofa…"
+                          className="mt-1 w-full border border-border/40 bg-background px-3 py-2 font-mono text-xs text-foreground placeholder:text-muted-foreground/50"
+                          maxLength={80}
+                        />
+                      </label>
+                      {/* Description */}
+                      <label className="block">
+                        <span className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">Description</span>
+                        <textarea
+                          value={postDescription}
+                          onChange={(e) => setPostDescription(e.target.value)}
+                          placeholder="Condition, dimensions, pick-up details…"
+                          rows={3}
+                          className="mt-1 w-full border border-border/40 bg-background px-3 py-2 font-mono text-xs text-foreground placeholder:text-muted-foreground/50 resize-none"
+                          maxLength={400}
+                        />
+                      </label>
+                      {/* Price / Free toggle */}
+                      <div>
+                        <span className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">Price</span>
+                        <div className="mt-1 flex items-center gap-3">
+                          <input
+                            type="text"
+                            value={postIsFree ? "" : postPrice}
+                            onChange={(e) => setPostPrice(e.target.value)}
+                            disabled={postIsFree}
+                            placeholder="$0.00"
+                            className="flex-1 border border-border/40 bg-background px-3 py-2 font-mono text-xs text-foreground placeholder:text-muted-foreground/50 disabled:opacity-40"
+                          />
+                          <label className="flex items-center gap-2 font-mono text-[10px] uppercase tracking-widest text-muted-foreground cursor-pointer select-none">
+                            <input
+                              type="checkbox"
+                              checked={postIsFree}
+                              onChange={(e) => setPostIsFree(e.target.checked)}
+                              className="accent-accent"
+                            />
+                            Free
+                          </label>
+                        </div>
+                      </div>
+                      {/* Contact preference */}
+                      <label className="block">
+                        <span className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">Contact preference</span>
+                        <select
+                          value={postContact}
+                          onChange={(e) => setPostContact(e.target.value as typeof postContact)}
+                          className="mt-1 w-full border border-border/40 bg-background px-3 py-2 font-mono text-xs text-foreground"
+                        >
+                          <option value="in_app">In-app message only</option>
+                          <option value="show_email">Show my email</option>
+                          <option value="show_phone">Show my phone</option>
+                        </select>
+                      </label>
+                      {/* Error */}
+                      {postError && (
+                        <p className="font-mono text-[10px] text-accent">{postError}</p>
+                      )}
+                      {/* Actions */}
+                      <div className="flex gap-3 pt-2">
+                        <button
+                          type="submit"
+                          className="flex-1 py-3 bg-accent font-mono text-[10px] uppercase tracking-widest text-accent-foreground hover:bg-accent/90 transition-colors"
+                        >
+                          Submit Listing
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setShowPostModal(false)}
+                          className="px-6 py-3 border border-border/40 font-mono text-[10px] uppercase tracking-widest text-muted-foreground hover:text-foreground transition-colors"
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                    </form>
+                  </div>
+                </div>
+              )}
             </div>
           )}
 
