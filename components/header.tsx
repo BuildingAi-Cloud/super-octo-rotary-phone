@@ -136,7 +136,7 @@ export function Header() {
             {user && (
               <button
                 aria-label="Notifications"
-                className="relative group flex items-center justify-center w-9 h-9 border border-border hover:border-accent focus-visible:ring-2 focus-visible:ring-accent transition-colors duration-200 bg-background"
+                className="relative group flex items-center justify-center w-9 h-9 focus-visible:ring-2 focus-visible:ring-accent transition-colors duration-200 bg-background hover:bg-accent/10 rounded-md"
                 onClick={openNotifications}
                 type="button"
                 title="Notifications"
@@ -188,7 +188,7 @@ export function Header() {
                 </Link>
                 <Link
                   href="/settings"
-                  className="inline-flex items-center justify-center w-9 h-9 border border-muted text-muted-foreground hover:border-accent hover:text-accent transition-all duration-200"
+                  className="inline-flex items-center justify-center w-9 h-9 text-muted-foreground hover:text-accent transition-all duration-200 hover:bg-accent/10 rounded-md"
                   aria-label={t("settings") as string}
                   title={t("settings") as string}
                 >

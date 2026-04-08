@@ -13,12 +13,18 @@ export interface ChatMessage {
   isError?: boolean;
 }
 
-// A selection of small, fast models suitable for a demo widget
+// Model IDs follow the MLC WebLLM catalog style.
+// Reference: https://github.com/mlc-ai/web-llm-chat
 export const AVAILABLE_MODELS = [
   { id: "Llama-3.2-1B-Instruct-q4f32_1-MLC", label: "Llama 3.2 1B (Fast)" },
   { id: "Llama-3.2-3B-Instruct-q4f32_1-MLC", label: "Llama 3.2 3B (Balanced)" },
+  { id: "Llama-3.1-8B-Instruct-q4f32_1-MLC", label: "Llama 3.1 8B (High Quality)" },
   { id: "Phi-3.5-mini-instruct-q4f16_1-MLC", label: "Phi 3.5 Mini (Efficient)" },
+  { id: "Qwen2.5-1.5B-Instruct-q4f16_1-MLC", label: "Qwen2.5 1.5B (Fast)" },
+  { id: "Qwen2.5-7B-Instruct-q4f16_1-MLC", label: "Qwen2.5 7B (Balanced)" },
   { id: "gemma-2-2b-it-q4f16_1-MLC", label: "Gemma 2 2B" },
+  { id: "gemma-2-9b-it-q4f16_1-MLC", label: "Gemma 2 9B (High Quality)" },
+  { id: "Mistral-7B-Instruct-v0.3-q4f16_1-MLC", label: "Mistral 7B Instruct" },
   { id: "SmolLM2-1.7B-Instruct-q4f16_1-MLC", label: "SmolLM2 1.7B (Tiny)" },
 ] as const;
 

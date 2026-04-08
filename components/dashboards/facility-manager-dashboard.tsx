@@ -1029,7 +1029,8 @@ function AuditLogTab({ entries: initialEntries }: { entries: AuditEntry[] }) {
 
 export function FacilityManagerDashboard({ user }: { user: User }) {
   const plan = useStarterPlan();
-  const isProfessional = plan === "professional";
+  const isEssentialPlan = plan === "essential";
+  const hasAdvancedPlan = !isEssentialPlan;
   const iotEnabled = (user as User & { iotEnabled?: boolean }).iotEnabled !== false;
   const [activeTab, setActiveTab] = useState<TabKey>("dashboard");
   const tabRefs = useRef<Array<HTMLButtonElement | null>>([]);
@@ -1038,11 +1039,11 @@ export function FacilityManagerDashboard({ user }: { user: User }) {
     return TABS.filter((tab) => {
       if (tab.key === "alerts" && !iotEnabled) return false;
       if (["vendor_database", "integrations", "audit_log", "reports"].includes(tab.key)) {
-        return isProfessional;
+        return hasAdvancedPlan;
       }
       return true;
     });
-  }, [iotEnabled, isProfessional]);
+  }, [iotEnabled, hasAdvancedPlan]);
 
   useEffect(() => {
     if (!enabledTabs.some((tab) => tab.key === activeTab)) {
@@ -1098,9 +1099,11 @@ export function FacilityManagerDashboard({ user }: { user: User }) {
       <div className="grid-bg fixed inset-0 opacity-20 pointer-events-none" aria-hidden="true" />
 
       <div className="relative z-10">
-        <div className="max-w-screen-2xl mx-auto p-4 md:p-6 lg:p-8 pb-0">
-          <CommandCenterChrome title="Facility Command Center" />
-        </div>
+        {!isEssentialPlan && (
+          <div className="max-w-screen-2xl mx-auto p-4 md:p-6 lg:p-8 pb-0">
+            <CommandCenterChrome title="Facility Command Center" />
+          </div>
+        )}
 
         {/* Sticky Tab Bar */}
         <div className="sticky top-14 md:top-16 z-40 border-b border-border/30 bg-background/95 backdrop-blur-md">
