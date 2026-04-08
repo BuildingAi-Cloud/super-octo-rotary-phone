@@ -36,6 +36,11 @@ Set `CAP_SERVER_URL` to the web endpoint the app should load:
 - Development example: `http://10.0.2.2:3000` (Android emulator)
 - Production example: `https://your-domain.example.com`
 
+To launch the mobile-first login and dashboard shell, point to `/mobile`:
+
+- Development shell: `http://10.0.2.2:3000/mobile`
+- Production shell: `https://your-domain.example.com/mobile`
+
 Capacitor reads this value from `capacitor.config.ts`.
 
 ### 2) Create native projects
