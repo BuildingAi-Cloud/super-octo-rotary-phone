@@ -123,6 +123,7 @@
     text-size-adjust: 100%;
     overscroll-behavior-y: none;
     -webkit-tap-highlight-color: transparent;
+    scroll-padding-top: calc(var(--app-header-height) + var(--safe-area-top) + 1rem);
     /* Apply scrollbar styles to html element */
     scrollbar-width: thin;
     scrollbar-color: hsl(0, 0%, 76%) hsl(0, 0%, 96%);
@@ -327,6 +328,10 @@ body.accessibility-reduced-motion *::after {
 }
 
 @media (min-width: 768px) {
+  html {
+    scroll-padding-top: calc(var(--app-header-height-desktop) + var(--safe-area-top) + 1rem);
+  }
+
   main,
   section[id] {
     scroll-margin-top: calc(var(--app-header-height-desktop) + var(--safe-area-top) + 1rem);

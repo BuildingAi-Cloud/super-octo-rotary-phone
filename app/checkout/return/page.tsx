@@ -7,6 +7,14 @@ import { AnimatedNoise } from "@/components/animated-noise"
 import { BitmapChevron } from "@/components/bitmap-chevron"
 import { ScrambleText } from "@/components/scramble-text"
 import { resolveStarterPlan } from "@/lib/rollout"
+import {
+  DEFAULT_ESSENTIAL_COST_ASSUMPTIONS,
+  ESSENTIAL_COST_ASSUMPTIONS_STORAGE_KEY,
+  getEssentialQuote,
+  parseEssentialCustomerType,
+  sanitizeEssentialCostAssumptions,
+  type EssentialCostAssumptions,
+} from "@/lib/essential-pricing"
 
 function ReturnContent() {
   const searchParams = useSearchParams()
@@ -14,6 +22,11 @@ function ReturnContent() {
   const plan = resolveStarterPlan(searchParams.get("plan"))
   const interval = (searchParams.get("interval") || "monthly") as "monthly" | "yearly"
   const units = Number.parseInt(searchParams.get("units") || "50", 10)
+  const customerType = parseEssentialCustomerType(searchParams.get("customerType"))
+  const tenancyName = searchParams.get("tenancyName") || ""
+  const buildingCount = Number.parseInt(searchParams.get("buildingCount") || "1", 10)
+  const featureCount = Number.parseInt(searchParams.get("featureCount") || "1", 10)
+  const siteCount = Number.parseInt(searchParams.get("siteCount") || "1", 10)
   const [status, setStatus] = useState<"loading" | "success" | "error">("loading")
 
   useEffect(() => {
@@ -30,6 +43,24 @@ function ReturnContent() {
           if (interval === "monthly") next.setMonth(next.getMonth() + 1)
           else next.setFullYear(next.getFullYear() + 1)
 
+          let assumptions: EssentialCostAssumptions = DEFAULT_ESSENTIAL_COST_ASSUMPTIONS
+          try {
+            const raw = localStorage.getItem(ESSENTIAL_COST_ASSUMPTIONS_STORAGE_KEY)
+            if (raw) {
+              assumptions = sanitizeEssentialCostAssumptions(JSON.parse(raw) as Partial<EssentialCostAssumptions>)
+            }
+          } catch {
+            assumptions = DEFAULT_ESSENTIAL_COST_ASSUMPTIONS
+          }
+
+          const essentialQuote = getEssentialQuote({
+            customerType,
+            tenancyName,
+            buildingCount,
+            selectedFeatures: customerType === "building_manager" ? Array.from({ length: Math.max(1, featureCount) }, (_, i) => `bundle-${i}`) : undefined,
+            siteCount,
+          }, assumptions)
+
           localStorage.setItem(storeKey, JSON.stringify({
             plan,
             interval,
@@ -38,6 +69,14 @@ function ReturnContent() {
             startedAt: now.toISOString(),
             nextBillingAt: next.toISOString(),
             source: "checkout",
+            customerType,
+            tenancyName: tenancyName || undefined,
+            buildingCount: Math.max(1, buildingCount || 1),
+            featureCount: Math.max(1, featureCount || 1),
+            siteCount: Math.max(1, siteCount || 1),
+            estimatedMonthly: essentialQuote.monthly,
+            estimatedYearly: essentialQuote.yearly,
+            pricingModel: essentialQuote.pricingModel,
           }))
         } catch {
           // Non-blocking in demo flow
@@ -47,7 +86,7 @@ function ReturnContent() {
     } else {
       requestAnimationFrame(() => setStatus("error"))
     }
-  }, [sessionId])
+  }, [sessionId, interval, units, customerType, tenancyName, buildingCount, featureCount, siteCount, plan])
 
   if (status === "loading") {
     return (

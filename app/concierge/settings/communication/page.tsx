@@ -16,6 +16,8 @@ export default function CommunicationSettingsPage() {
   const [smtpPort, setSmtpPort] = useState("");
   const [smtpUser, setSmtpUser] = useState("");
   const [smtpPass, setSmtpPass] = useState("");
+  const [smtpFormError, setSmtpFormError] = useState<string | null>(null);
+  const [smtpFieldErrors, setSmtpFieldErrors] = useState<Record<string, string>>({});
 
   if (isLoading) {
     return (
@@ -58,14 +60,43 @@ export default function CommunicationSettingsPage() {
   // Placeholder handlers for integration actions
   const handleConnectSlack = () => setSlackConnected(true);
   const handleConnectDiscord = () => setDiscordConnected(true);
+  const validateSmtp = () => {
+    const nextErrors: Record<string, string> = {};
+
+    if (!smtpHost.trim()) nextErrors.smtpHost = "SMTP host is required.";
+    if (!smtpPort.trim()) {
+      nextErrors.smtpPort = "SMTP port is required.";
+    } else {
+      const parsed = Number(smtpPort);
+      if (!Number.isFinite(parsed) || parsed <= 0 || parsed > 65535) {
+        nextErrors.smtpPort = "Enter a valid SMTP port (1-65535).";
+      }
+    }
+    if (!smtpUser.trim()) nextErrors.smtpUser = "SMTP username is required.";
+    if (!smtpPass.trim()) nextErrors.smtpPass = "SMTP password is required.";
+
+    setSmtpFieldErrors(nextErrors);
+    return Object.keys(nextErrors).length === 0;
+  };
+
   const handleConfigureSmtp = (e?: React.FormEvent) => {
     if (e) e.preventDefault();
+    setSmtpFormError(null);
+    if (!validateSmtp()) {
+      setSmtpFormError("Please fix the highlighted SMTP fields and try again.");
+      return;
+    }
     setSmtpConfigured(true);
     setSmtpTestStatus(null);
   };
 
   const handleTestSmtp = (e?: React.FormEvent) => {
     if (e) e.preventDefault();
+    setSmtpFormError(null);
+    if (!validateSmtp()) {
+      setSmtpFormError("Please fix the highlighted SMTP fields before testing.");
+      return;
+    }
     setSmtpTestStatus("Testing SMTP connection...");
     setTimeout(() => {
       // Simulate test result
@@ -134,30 +165,47 @@ export default function CommunicationSettingsPage() {
             {smtpMode === "default" ? (
               <div className="font-mono text-xs text-green-600 mb-2">Default SMTP will be used for all emails.</div>
             ) : (
-              <form onSubmit={handleConfigureSmtp} className="space-y-3">
+              <form noValidate onSubmit={handleConfigureSmtp} className="space-y-3">
+                {smtpFormError && <div role="alert" className="rounded border border-red-500/30 bg-red-500/10 px-3 py-2 font-mono text-xs text-red-600">{smtpFormError}</div>}
                 <div>
                   <label className="font-mono text-xs flex items-center gap-2">SMTP Host
                     <span title="e.g. smtp.sendgrid.net, smtp.gmail.com" className="ml-1 text-muted-foreground cursor-help">?</span>
                   </label>
-                  <input type="text" value={smtpHost} onChange={e => setSmtpHost(e.target.value)} className="w-full border border-border px-2 py-1 rounded" required />
+                  <input type="text" value={smtpHost} onChange={e => {
+                    setSmtpHost(e.target.value)
+                    setSmtpFieldErrors((prev) => ({ ...prev, smtpHost: "" }))
+                  }} className={`w-full border px-2 py-1 rounded ${smtpFieldErrors.smtpHost ? "border-red-500" : "border-border"}`} required aria-invalid={Boolean(smtpFieldErrors.smtpHost)} aria-describedby={smtpFieldErrors.smtpHost ? "smtp-host-error" : undefined} />
+                  {smtpFieldErrors.smtpHost && <p id="smtp-host-error" className="mt-1 font-mono text-[10px] text-red-600">{smtpFieldErrors.smtpHost}</p>}
                 </div>
                 <div>
                   <label className="font-mono text-xs flex items-center gap-2">SMTP Port
                     <span title="465 (SSL), 587 (TLS), or as required by your provider" className="ml-1 text-muted-foreground cursor-help">?</span>
                   </label>
-                  <input type="number" value={smtpPort} onChange={e => setSmtpPort(e.target.value)} className="w-full border border-border px-2 py-1 rounded" required />
+                  <input type="number" value={smtpPort} onChange={e => {
+                    setSmtpPort(e.target.value)
+                    setSmtpFieldErrors((prev) => ({ ...prev, smtpPort: "" }))
+                  }} className={`w-full border px-2 py-1 rounded ${smtpFieldErrors.smtpPort ? "border-red-500" : "border-border"}`} required aria-invalid={Boolean(smtpFieldErrors.smtpPort)} aria-describedby={smtpFieldErrors.smtpPort ? "smtp-port-error" : undefined} />
+                  {smtpFieldErrors.smtpPort && <p id="smtp-port-error" className="mt-1 font-mono text-[10px] text-red-600">{smtpFieldErrors.smtpPort}</p>}
                 </div>
                 <div>
                   <label className="font-mono text-xs flex items-center gap-2">SMTP Username
                     <span title="Usually your email address or API user" className="ml-1 text-muted-foreground cursor-help">?</span>
                   </label>
-                  <input type="text" value={smtpUser} onChange={e => setSmtpUser(e.target.value)} className="w-full border border-border px-2 py-1 rounded" required />
+                  <input type="text" value={smtpUser} onChange={e => {
+                    setSmtpUser(e.target.value)
+                    setSmtpFieldErrors((prev) => ({ ...prev, smtpUser: "" }))
+                  }} className={`w-full border px-2 py-1 rounded ${smtpFieldErrors.smtpUser ? "border-red-500" : "border-border"}`} required aria-invalid={Boolean(smtpFieldErrors.smtpUser)} aria-describedby={smtpFieldErrors.smtpUser ? "smtp-user-error" : undefined} />
+                  {smtpFieldErrors.smtpUser && <p id="smtp-user-error" className="mt-1 font-mono text-[10px] text-red-600">{smtpFieldErrors.smtpUser}</p>}
                 </div>
                 <div>
                   <label className="font-mono text-xs flex items-center gap-2">SMTP Password
                     <span title="App password or API key. Never share this." className="ml-1 text-muted-foreground cursor-help">?</span>
                   </label>
-                  <input type="password" value={smtpPass} onChange={e => setSmtpPass(e.target.value)} className="w-full border border-border px-2 py-1 rounded" required autoComplete="new-password" />
+                  <input type="password" value={smtpPass} onChange={e => {
+                    setSmtpPass(e.target.value)
+                    setSmtpFieldErrors((prev) => ({ ...prev, smtpPass: "" }))
+                  }} className={`w-full border px-2 py-1 rounded ${smtpFieldErrors.smtpPass ? "border-red-500" : "border-border"}`} required autoComplete="new-password" aria-invalid={Boolean(smtpFieldErrors.smtpPass)} aria-describedby={smtpFieldErrors.smtpPass ? "smtp-pass-error" : undefined} />
+                  {smtpFieldErrors.smtpPass && <p id="smtp-pass-error" className="mt-1 font-mono text-[10px] text-red-600">{smtpFieldErrors.smtpPass}</p>}
                 </div>
                 <div className="flex gap-4 mt-2">
                   <button type="button" onClick={handleTestSmtp} className="bg-muted text-foreground px-4 py-2 rounded font-mono text-xs uppercase tracking-widest hover:bg-accent/20">Send Test Email</button>

@@ -11,7 +11,7 @@ const plans = [
     name: "Essential",
     price: "$2.50",
     period: "/unit/month",
-    description: "For small buildings and HOAs",
+    description: "Per-unit pricing with role-based onboarding setup",
     features: [
       "Resident portal & mobile app",
       "Amenity booking system",
@@ -40,7 +40,7 @@ const plans = [
       "Priority support",
     ],
     highlight: true,
-    cta: "Subscribe Now",
+    cta: "Coming Soon",
   },
   {
     id: "enterprise",
@@ -59,7 +59,7 @@ const plans = [
       "Tailored onboarding & training",
     ],
     highlight: false,
-    cta: "Contact Sales",
+    cta: "Coming Soon",
   },
 ]
 
@@ -82,7 +82,16 @@ export function PricingSection() {
   }
 
   const visiblePlans = PHASE_ONE_ESSENTIAL_ONLY
-    ? plans.filter((plan) => plan.id === "essential")
+    ? plans.map((plan) => {
+        if (plan.id === "essential") {
+          return plan
+        }
+
+        return {
+          ...plan,
+          cta: "Coming Soon",
+        }
+      })
     : plans
 
   return (
@@ -172,9 +181,9 @@ export function PricingSection() {
             
             {/* CTA Button with inverse hover - text becomes background, background becomes text */}
             <Link
-              href={plan.cta === "Contact Sales" ? "/contact" : plan.cta === "Phase 2" ? "#" : `/signup?plan=${plan.id}`}
+              href={plan.cta === "Contact Sales" ? "/contact" : plan.cta === "Coming Soon" ? "#" : `/signup?plan=${plan.id}`}
               onClick={(event) => {
-                if (plan.cta === "Phase 2") {
+                if (plan.cta === "Coming Soon") {
                   event.preventDefault()
                 }
               }}
