@@ -1,3 +1,5 @@
+/** @jest-environment jsdom */
+
 import { render, screen, waitFor } from "@testing-library/react"
 import { beforeEach, describe, expect, it, jest } from "@jest/globals"
 import DashboardPage from "@/app/dashboard/page"
@@ -93,7 +95,7 @@ describe("dashboard phase 1 wiring", () => {
 
     render(<DashboardPage />)
 
-    expect(screen.getByText("facility-manager-dashboard")).toBeInTheDocument()
+    expect(screen.queryByText("facility-manager-dashboard")).not.toBeNull()
   })
 
   it("renders building manager dashboard", () => {
@@ -101,7 +103,7 @@ describe("dashboard phase 1 wiring", () => {
 
     render(<DashboardPage />)
 
-    expect(screen.getByText("building-manager-dashboard")).toBeInTheDocument()
+    expect(screen.queryByText("building-manager-dashboard")).not.toBeNull()
   })
 
   it("renders building owner dashboard", () => {
@@ -109,6 +111,6 @@ describe("dashboard phase 1 wiring", () => {
 
     render(<DashboardPage />)
 
-    expect(screen.getByText("building-owner-dashboard")).toBeInTheDocument()
+    expect(screen.queryByText("building-owner-dashboard")).not.toBeNull()
   })
 })
