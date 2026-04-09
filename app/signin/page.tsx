@@ -62,7 +62,7 @@ export default function SignInPage() {
                 ? [parsed.role]
                 : [];
 
-            if (roles.length > 1) {
+            if (roles.length > 0) {
               setRequiresAccountSelection(true);
               setSelectedRole(parsed.role || roles[0] || "");
               setShowReset(false);
