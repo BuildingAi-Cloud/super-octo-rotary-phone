@@ -83,7 +83,7 @@ interface BuildingDeal {
   active: boolean
 }
 
-const marketplaceListings: MarketplaceListing[] = [
+const fallbackMarketplaceListings: MarketplaceListing[] = [
   { id: 1, category: "For Sale", title: "IKEA KALLAX shelf unit — white, 4×2", suite: "Suite 204", posted: "2h ago", price: "$45", isFree: false, interests: 3 },
   { id: 2, category: "Free / Giveaway", title: "Box of moving supplies — bubble wrap & tape rolls", suite: "Suite 512", posted: "5h ago", price: null, isFree: true, interests: 7 },
   { id: 3, category: "Services", title: "Dog walking — mornings, $20/walk", suite: "Suite 318", posted: "1d ago", price: "$20/walk", isFree: false, interests: 2 },
@@ -121,8 +121,12 @@ export function TenantDashboard({ user }: TenantDashboardProps) {
   const [bookingStatus, setBookingStatus] = useState("")
   const amenities = amenityStore
   const [myBookings, setMyBookings] = useState<Booking[]>([])
+  const [marketplaceListings, setMarketplaceListings] = useState<MarketplaceListing[]>(fallbackMarketplaceListings)
+  const [isMarketplaceLoading, setIsMarketplaceLoading] = useState(false)
+  const [marketplaceStatus, setMarketplaceStatus] = useState("")
   const [marketplaceFilter, setMarketplaceFilter] = useState<"All" | ListingCategory>("All")
   const [showPostModal, setShowPostModal] = useState(false)
+  const [isPostingListing, setIsPostingListing] = useState(false)
   const [postCategory, setPostCategory] = useState<ListingCategory>("For Sale")
   const [postTitle, setPostTitle] = useState("")
   const [postDescription, setPostDescription] = useState("")
@@ -157,6 +161,41 @@ export function TenantDashboard({ user }: TenantDashboardProps) {
       active = false
     }
   }, [user.id])
+
+  useEffect(() => {
+    let active = true
+
+    async function loadMarketplaceListings() {
+      setIsMarketplaceLoading(true)
+      setMarketplaceStatus("")
+
+      try {
+        const response = await fetch("/api/marketplace?limit=100", { cache: "no-store" })
+        if (!response.ok) {
+          throw new Error("Unable to load marketplace listings")
+        }
+
+        const payload = (await response.json()) as { listings?: MarketplaceListing[] }
+        if (!active || !Array.isArray(payload.listings)) return
+
+        setMarketplaceListings(payload.listings)
+      } catch {
+        if (!active) return
+        setMarketplaceStatus("Marketplace API unavailable. Showing local fallback listings.")
+        setMarketplaceListings(fallbackMarketplaceListings)
+      } finally {
+        if (active) {
+          setIsMarketplaceLoading(false)
+        }
+      }
+    }
+
+    void loadMarketplaceListings()
+
+    return () => {
+      active = false
+    }
+  }, [])
 
   async function startBooking(amenityId: string) {
     setBookingStatus("")
@@ -221,6 +260,68 @@ export function TenantDashboard({ user }: TenantDashboardProps) {
       setBookingStatus("Booking submission failed. Please retry.")
     } finally {
       setIsBookingSubmitting(false)
+    }
+  }
+
+  async function submitMarketplaceListing(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault()
+
+    if (!postTitle.trim()) {
+      setPostError("Title is required.")
+      return
+    }
+
+    if (!postDescription.trim()) {
+      setPostError("Description is required.")
+      return
+    }
+
+    if (!postIsFree && !postPrice.trim()) {
+      setPostError("Enter a price or mark as free.")
+      return
+    }
+
+    setIsPostingListing(true)
+    setPostError("")
+
+    try {
+      const response = await fetch("/api/marketplace", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          category: postCategory,
+          title: postTitle.trim(),
+          description: postDescription.trim(),
+          price: postIsFree ? null : postPrice.trim(),
+          isFree: postIsFree,
+          contactPreference: postContact,
+          postedByUserId: user.id,
+          postedByName: user.name,
+          suite: user.unit || "Unassigned",
+        }),
+      })
+
+      const payload = (await response.json()) as { error?: string; listing?: MarketplaceListing }
+      if (!response.ok || !payload.listing) {
+        setPostError(payload.error || "Unable to submit listing. Please try again.")
+        return
+      }
+
+      setMarketplaceListings((prev) => [payload.listing as MarketplaceListing, ...prev.filter((listing) => listing.id !== payload.listing?.id)])
+      setShowPostModal(false)
+      setPostTitle("")
+      setPostDescription("")
+      setPostPrice("")
+      setPostIsFree(false)
+      setPostContact("in_app")
+      setPostCategory("For Sale")
+      setMarketplaceStatus("Listing submitted successfully.")
+    } catch {
+      setPostError("Unable to submit listing. Please try again.")
+    } finally {
+      setIsPostingListing(false)
     }
   }
 
@@ -754,6 +855,9 @@ export function TenantDashboard({ user }: TenantDashboardProps) {
                   Buy, sell, and trade with your neighbors.{" "}
                   <span className="text-accent">All listings are visible only to verified residents.</span>
                 </p>
+                {marketplaceStatus && (
+                  <p className="mt-2 font-mono text-[10px] text-accent">{marketplaceStatus}</p>
+                )}
               </div>
 
               {/* Filter chips */}
@@ -782,6 +886,11 @@ export function TenantDashboard({ user }: TenantDashboardProps) {
                     <h3 className="font-[var(--font-bebas)] text-lg tracking-wide">RECENT LISTINGS</h3>
                   </div>
                   <div className="divide-y divide-border/20">
+                    {isMarketplaceLoading && (
+                      <div className="p-6">
+                        <p className="font-mono text-xs text-muted-foreground">Loading marketplace listings...</p>
+                      </div>
+                    )}
                     {marketplaceListings
                       .filter((l) => marketplaceFilter === "All" || l.category === marketplaceFilter)
                       .map((listing) => (
@@ -872,20 +981,7 @@ export function TenantDashboard({ user }: TenantDashboardProps) {
                       </button>
                     </div>
                     <form
-                      onSubmit={(e) => {
-                        e.preventDefault()
-                        if (!postTitle.trim()) { setPostError("Title is required."); return }
-                        if (!postDescription.trim()) { setPostError("Description is required."); return }
-                        if (!postIsFree && !postPrice.trim()) { setPostError("Enter a price or mark as free."); return }
-                        setPostError("")
-                        setShowPostModal(false)
-                        setPostTitle("")
-                        setPostDescription("")
-                        setPostPrice("")
-                        setPostIsFree(false)
-                        setPostContact("in_app")
-                        setPostCategory("For Sale")
-                      }}
+                      onSubmit={submitMarketplaceListing}
                       className="space-y-4"
                     >
                       {/* Category */}
@@ -969,9 +1065,10 @@ export function TenantDashboard({ user }: TenantDashboardProps) {
                       <div className="flex gap-3 pt-2">
                         <button
                           type="submit"
+                          disabled={isPostingListing}
                           className="flex-1 py-3 bg-accent font-mono text-[10px] uppercase tracking-widest text-accent-foreground hover:bg-accent/90 transition-colors"
                         >
-                          Submit Listing
+                          {isPostingListing ? "Submitting..." : "Submit Listing"}
                         </button>
                         <button
                           type="button"
