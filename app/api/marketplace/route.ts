@@ -27,9 +27,10 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: "Invalid marketplace category" }, { status: 400 })
   }
 
+  const category: ListingCategory | undefined = categoryRaw && isListingCategory(categoryRaw) ? categoryRaw : undefined
   const limit = Number.isFinite(limitRaw) ? Math.min(Math.max(Math.floor(limitRaw), 1), 200) : 100
   const listings = await listMarketplaceListings({
-    category: categoryRaw ? categoryRaw : undefined,
+    category,
     limit,
   })
 
