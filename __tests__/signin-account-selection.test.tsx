@@ -85,7 +85,7 @@ describe("signin account selection", () => {
     expect(mockPush).toHaveBeenCalledWith("/dashboard")
   })
 
-  it("skips account selection for single-role signin", async () => {
+  it("shows account selection step for single-role signin before dashboard", async () => {
     mockSignIn.mockImplementation(async () => {
       localStorage.setItem(
         "buildsync_user",
@@ -114,9 +114,14 @@ describe("signin account selection", () => {
     fireEvent.click(screen.getByRole("button", { name: "Sign In" }))
 
     await waitFor(() => {
-      expect(mockPush).toHaveBeenCalledWith("/dashboard")
+      expect(screen.queryByText("Select Account")).not.toBeNull()
     })
 
-    expect(screen.queryByText("Select Account")).toBeNull()
+    expect(mockPush).not.toHaveBeenCalledWith("/dashboard")
+
+    fireEvent.click(screen.getByRole("button", { name: "Continue to Dashboard" }))
+
+    expect(mockSwitchRole).toHaveBeenCalledWith("admin")
+    expect(mockPush).toHaveBeenCalledWith("/dashboard")
   })
 })
