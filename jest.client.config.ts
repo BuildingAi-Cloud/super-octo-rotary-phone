@@ -3,6 +3,10 @@ import type { Config } from 'jest'
 const config: Config = {
   testEnvironment: 'jsdom',
   setupFilesAfterEnv: ['<rootDir>/tests/setup/jest.client.setup.ts'],
+  modulePathIgnorePatterns: [
+    '<rootDir>/.next/',
+    '<rootDir>/super-octo-rotary-phone/',
+  ],
   moduleNameMapper: {
     '^@/(.*)$': '<rootDir>/$1',
   },
@@ -11,8 +15,14 @@ const config: Config = {
   },
   testPathIgnorePatterns: [
     '<rootDir>/node_modules/',
+    '<rootDir>/.next/',
+    '<rootDir>/super-octo-rotary-phone/',
     '<rootDir>/tests/e2e/',
     '<rootDir>/tests/integration/',
+  ],
+  watchPathIgnorePatterns: [
+    '<rootDir>/.next/',
+    '<rootDir>/super-octo-rotary-phone/',
   ],
 }
 

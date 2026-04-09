@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { useAuth } from "@/lib/auth-context";
+import { getRoleDisplayName, type UserRole, useAuth } from "@/lib/auth-context";
 import Link from "next/link";
 import { AnimatedNoise } from "@/components/animated-noise";
 import { ScrambleText, ScrambleTextOnHover } from "@/components/scramble-text";
@@ -11,11 +11,21 @@ import { BitmapChevron } from "@/components/bitmap-chevron";
 
 export default function SignInPage() {
   const router = useRouter();
-  const { signIn, requestPasswordResetChallenge, resetPasswordWithSecondFactor, user, isLoading: authLoading } = useAuth();
+  const {
+    signIn,
+    requestPasswordResetChallenge,
+    resetPasswordWithSecondFactor,
+    switchRole,
+    availableRoles,
+    user,
+    isLoading: authLoading,
+  } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [requiresAccountSelection, setRequiresAccountSelection] = useState(false);
+  const [selectedRole, setSelectedRole] = useState<UserRole | "">("");
   const [showReset, setShowReset] = useState(false);
   const [resetMethod, setResetMethod] = useState<"mfa_code" | "rsa_token">("mfa_code");
   const [resetEmail, setResetEmail] = useState("");
@@ -29,10 +39,10 @@ export default function SignInPage() {
 
   // Redirect authenticated users to dashboard (pre-login page protection).
   useEffect(() => {
-    if (!authLoading && user) {
+    if (!authLoading && user && !isLoading && !requiresAccountSelection) {
       router.push("/dashboard")
     }
-  }, [user, authLoading, router])
+  }, [user, authLoading, isLoading, requiresAccountSelection, router])
 
   // Actually call signIn from useAuth and check credentials
   const handleSignIn = async (e: React.FormEvent) => {
@@ -42,14 +52,47 @@ export default function SignInPage() {
     try {
       const result = await signIn(email, password);
       if (result.success) {
+        const rawSessionUser = localStorage.getItem("buildsync_user");
+        if (rawSessionUser) {
+          try {
+            const parsed = JSON.parse(rawSessionUser) as { role?: UserRole; accessRoles?: UserRole[] };
+            const roles = Array.isArray(parsed.accessRoles) && parsed.accessRoles.length > 0
+              ? parsed.accessRoles
+              : parsed.role
+                ? [parsed.role]
+                : [];
+
+            if (roles.length > 1) {
+              setRequiresAccountSelection(true);
+              setSelectedRole(parsed.role || roles[0] || "");
+              setShowReset(false);
+              return;
+            }
+          } catch {
+            // Fall through to dashboard when session payload can't be parsed.
+          }
+        }
+
         router.push("/dashboard");
       } else {
         setError(result.error || "Invalid email or password");
       }
     } catch {
       setError("Failed to sign in");
+    } finally {
+      setIsLoading(false);
     }
-    setIsLoading(false);
+  };
+
+  const handleAccountContinue = () => {
+    if (!selectedRole) {
+      setError("Select an account before continuing.");
+      return;
+    }
+
+    switchRole(selectedRole);
+    setRequiresAccountSelection(false);
+    router.push("/dashboard");
   };
 
   const handleRequestResetCode = async () => {
@@ -125,65 +168,99 @@ export default function SignInPage() {
         </div>
         {/* Step indicator for visual consistency */}
         <div className="mb-8 flex items-center justify-center gap-4">
-          <div className="flex items-center gap-2 text-accent">
-            <span className="h-2 w-2 bg-accent" />
+          <div className={`flex items-center gap-2 ${requiresAccountSelection ? "text-muted-foreground" : "text-accent"}`}>
+            <span className={`h-2 w-2 ${requiresAccountSelection ? "bg-muted" : "bg-accent"}`} />
             <span className="font-mono text-[10px] uppercase tracking-widest">Sign In</span>
           </div>
           <div className="h-px w-8 bg-border" />
-          <div className="flex items-center gap-2 text-muted-foreground">
-            <span className="h-2 w-2 bg-muted" />
+          <div className={`flex items-center gap-2 ${requiresAccountSelection ? "text-accent" : "text-muted-foreground"}`}>
+            <span className={`h-2 w-2 ${requiresAccountSelection ? "bg-accent" : "bg-muted"}`} />
             <span className="font-mono text-[10px] uppercase tracking-widest">Account</span>
           </div>
         </div>
-        <form onSubmit={handleSignIn} className="space-y-6 bg-card/30 border border-border/40 p-8 rounded-lg w-full max-w-md flex flex-col gap-6 shadow-md mx-auto">
-          <div className="space-y-2">
-            <label htmlFor="email" className="font-mono text-[10px] uppercase tracking-[0.3em] text-muted-foreground">Email</label>
-            <Input
-              id="email"
-              type="email"
-              placeholder="you@email.com"
-              value={email}
-              onChange={e => setEmail(e.target.value)}
-              required
-            />
-          </div>
-          <div className="space-y-2">
-            <label htmlFor="password" className="font-mono text-[10px] uppercase tracking-[0.3em] text-muted-foreground">Password</label>
-            <Input
-              id="password"
-              type="password"
-              placeholder="Min 8 characters"
-              value={password}
-              onChange={e => setPassword(e.target.value)}
-              required
-              minLength={8}
-            />
-          </div>
-          {error && <div className="text-red-600 font-mono text-xs mt-2">{error}</div>}
-          <button
-            type="submit"
-            disabled={isLoading}
-            className="group w-full inline-flex items-center justify-center gap-3 bg-accent px-6 py-4 font-mono text-xs uppercase tracking-widest text-accent-foreground hover:bg-accent/90 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            <ScrambleTextOnHover text={isLoading ? "Signing in..." : "Sign In"} as="span" duration={0.5} />
-            {!isLoading && <BitmapChevron className="transition-transform duration-[400ms] ease-in-out group-hover:translate-x-1" />}
-          </button>
+        {!requiresAccountSelection ? (
+          <form onSubmit={handleSignIn} className="space-y-6 bg-card/30 border border-border/40 p-8 rounded-lg w-full max-w-md flex flex-col gap-6 shadow-md mx-auto">
+            <div className="space-y-2">
+              <label htmlFor="email" className="font-mono text-[10px] uppercase tracking-[0.3em] text-muted-foreground">Email</label>
+              <Input
+                id="email"
+                type="email"
+                placeholder="you@email.com"
+                value={email}
+                onChange={e => setEmail(e.target.value)}
+                required
+              />
+            </div>
+            <div className="space-y-2">
+              <label htmlFor="password" className="font-mono text-[10px] uppercase tracking-[0.3em] text-muted-foreground">Password</label>
+              <Input
+                id="password"
+                type="password"
+                placeholder="Min 8 characters"
+                value={password}
+                onChange={e => setPassword(e.target.value)}
+                required
+                minLength={8}
+              />
+            </div>
+            {error && <div className="text-red-600 font-mono text-xs mt-2">{error}</div>}
+            <button
+              type="submit"
+              disabled={isLoading}
+              className="group w-full inline-flex items-center justify-center gap-3 bg-accent px-6 py-4 font-mono text-xs uppercase tracking-widest text-accent-foreground hover:bg-accent/90 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <ScrambleTextOnHover text={isLoading ? "Signing in..." : "Sign In"} as="span" duration={0.5} />
+              {!isLoading && <BitmapChevron className="transition-transform duration-[400ms] ease-in-out group-hover:translate-x-1" />}
+            </button>
 
-          <button
-            type="button"
-            onClick={() => {
-              setShowReset((prev) => !prev);
-              setResetError("");
-              setResetMessage("");
-              if (!showReset) {
-                setResetEmail(email);
-              }
-            }}
-            className="self-start font-mono text-[10px] uppercase tracking-[0.24em] text-accent hover:underline"
-          >
-            {showReset ? "Hide Forgot Password" : "Forgot Password"}
-          </button>
-        </form>
+            <button
+              type="button"
+              onClick={() => {
+                setShowReset((prev) => !prev);
+                setResetError("");
+                setResetMessage("");
+                if (!showReset) {
+                  setResetEmail(email);
+                }
+              }}
+              className="self-start font-mono text-[10px] uppercase tracking-[0.24em] text-accent hover:underline"
+            >
+              {showReset ? "Hide Forgot Password" : "Forgot Password"}
+            </button>
+          </form>
+        ) : (
+          <div className="space-y-4 bg-card/30 border border-border/40 p-8 rounded-lg w-full max-w-md flex flex-col shadow-md mx-auto">
+            <p className="font-mono text-[10px] uppercase tracking-[0.3em] text-muted-foreground">Select Account</p>
+            <p className="text-sm text-muted-foreground">Choose the account role you want to continue with.</p>
+
+            <div className="space-y-2">
+              <label htmlFor="account-role" className="font-mono text-[10px] uppercase tracking-[0.3em] text-muted-foreground">Account Role</label>
+              <select
+                id="account-role"
+                value={selectedRole}
+                onChange={(e) => setSelectedRole(e.target.value as UserRole)}
+                className="w-full rounded-md border border-border/35 bg-background px-3 py-2 text-sm"
+              >
+                {availableRoles.map((role) => (
+                  <option key={role} value={role}>
+                    {getRoleDisplayName(role)}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {error && <div className="text-red-600 font-mono text-xs">{error}</div>}
+
+            <button
+              type="button"
+              onClick={handleAccountContinue}
+              className="group w-full inline-flex items-center justify-center gap-3 bg-accent px-6 py-4 font-mono text-xs uppercase tracking-widest text-accent-foreground hover:bg-accent/90 transition-all duration-200"
+            >
+              <ScrambleTextOnHover text="Continue to Dashboard" as="span" duration={0.5} />
+              <BitmapChevron className="transition-transform duration-[400ms] ease-in-out group-hover:translate-x-1" />
+            </button>
+          </div>
+        )}
 
         {showReset && (
           <form
