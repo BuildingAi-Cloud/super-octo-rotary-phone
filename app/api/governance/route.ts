@@ -63,13 +63,21 @@ export async function POST(req: Request) {
       )
     }
 
+    const createdBy = (body.createdBy as string || "").trim()
+    if (!createdBy) {
+      return NextResponse.json(
+        { error: "INVALID_CREATOR", message: "createdBy is required." },
+        { status: 400 },
+      )
+    }
+
     const input: VoteCreateInput = {
       type: type as VoteCreateInput["type"],
       title,
       description,
       deadline,
       quorum,
-      createdBy: (body.createdBy as string) || "",
+      createdBy,
       buildingId: (body.buildingId as string) || undefined,
     }
 

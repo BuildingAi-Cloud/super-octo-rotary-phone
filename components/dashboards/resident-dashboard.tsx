@@ -75,7 +75,7 @@ export default function ResidentDashboard({ user }: ResidentDashboardProps) {
     { author: "Mike R.", unit: "Unit 812", content: "Found a set of keys near the mailroom. Contact front desk.", time: "1d ago", replies: 2 },
   ]
 
-  const [activeTab, setActiveTab] = useState<"home" | "amenities" | "maintenance" | "community" | "marketplace">("home")
+  const [activeTab, setActiveTab] = useState<"home" | "amenities" | "maintenance" | "community" | "marketplace" | "governance">("home")
   const [bookingDate, setBookingDate] = useState("")
   const [bookingTime, setBookingTime] = useState("")
   const [bookingAmenity, setBookingAmenity] = useState("")
@@ -285,6 +285,7 @@ export default function ResidentDashboard({ user }: ResidentDashboardProps) {
               { id: "maintenance", label: t("requests", "Requests") },
               { id: "community", label: t("community", "Community") },
               { id: "marketplace", label: t("marketplace", "Marketplace") },
+              { id: "governance", label: t("governance", "Governance") },
             ].map((tab) => (
               <button
                 key={tab.id}
@@ -390,10 +391,6 @@ export default function ResidentDashboard({ user }: ResidentDashboardProps) {
                 </div>
               </div>
 
-              {/* Governance & E-Voting */}
-              <div className="mt-6">
-                <GovernancePanel />
-              </div>
             </>
           )}
 
@@ -739,6 +736,11 @@ export default function ResidentDashboard({ user }: ResidentDashboardProps) {
                   </div>
                 </div>
               )}
+            </div>
+          )}
+          {activeTab === "governance" && (
+            <div>
+              <GovernancePanel />
             </div>
           )}
         </div>

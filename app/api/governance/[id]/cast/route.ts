@@ -1,9 +1,25 @@
 import { NextResponse } from "next/server"
-import { castVoteRecord } from "../../_storage"
+import { castVoteRecord, hasVoterCast } from "../../_storage"
 import { canCastVote } from "@/lib/governance"
 
 interface RouteContext {
   params: Promise<{ id: string }>
+}
+
+export async function GET(req: Request, context: RouteContext) {
+  const { id } = await context.params
+  if (!id) {
+    return NextResponse.json({ error: "Vote id is required" }, { status: 400 })
+  }
+
+  const { searchParams } = new URL(req.url)
+  const voterId = searchParams.get("voterId")
+  if (!voterId) {
+    return NextResponse.json({ error: "voterId query param is required" }, { status: 400 })
+  }
+
+  const voted = await hasVoterCast(id, voterId)
+  return NextResponse.json({ voted })
 }
 
 export async function POST(req: Request, context: RouteContext) {

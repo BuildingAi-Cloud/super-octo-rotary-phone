@@ -63,6 +63,23 @@ export default function VoteDetail({ vote, userId, userRole, onBack, onUpdated }
     loadResults()
   }, [vote.id, showResults])
 
+  // Check if user has already voted
+  useEffect(() => {
+    if (vote.type !== "E-VOTE" || vote.status !== "ACTIVE" || !canCastVote(userRole)) return
+
+    async function checkVoted() {
+      try {
+        const res = await fetch(`/api/governance/${vote.id}/cast?voterId=${encodeURIComponent(userId)}`, { cache: "no-store" })
+        if (!res.ok) return
+        const data = (await res.json()) as { voted: boolean }
+        if (data.voted) setHasVoted(true)
+      } catch {
+        // Silent fallback
+      }
+    }
+    checkVoted()
+  }, [vote.id, vote.type, vote.status, userId, userRole])
+
   async function handleCast() {
     if (!selectedOption) {
       toast.error("Please select an option.")
