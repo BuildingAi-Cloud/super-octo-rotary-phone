@@ -7,7 +7,6 @@ const config: CapacitorConfig = {
   appId: 'com.buildsync.app',
   appName: 'BuildSyncApp',
   webDir,
-  bundledWebRuntime: false,
   server: serverUrl
     ? {
         url: serverUrl,

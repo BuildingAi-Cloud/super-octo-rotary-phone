@@ -4,7 +4,7 @@ export interface InlineDocEntry {
   title: string;
   keywords: string[];
   summary: string;
-  category: "Account" | "Roles & Access" | "Operations" | "Platform";
+  category: "Account" | "Roles & Access" | "Operations" | "Platform" | "Security";
   html: string;
 }
 
@@ -91,10 +91,10 @@ export const docsIntegrations: InlineDocEntry = {
   kind: "inline",
   slug: "integrations",
   title: "Integrations & Interoperability",
-  keywords: ["integration", "API", "ERP", "Yardi", "MRI", "AppFolio", "access control", "Brivo", "HID", "Salto", "BMS", "IoT", "BACnet", "Modbus", "MQTT", "vendor portal", "magic link", "CSV importer", "webhook", "open ecosystem"],
-  summary: "How BuildSync connects with ERPs, access control, BMS/IoT, and vendor workflows.",
+  keywords: ["integration", "API", "ERP", "Yardi", "MRI", "AppFolio", "access control", "Brivo", "HID", "Salto", "BMS", "IoT", "BACnet", "Modbus", "MQTT", "vendor portal", "magic link", "CSV importer", "webhook", "open ecosystem", "aware sensor network", "offline"],
+  summary: "How BuildSync connects with ERPs, access control, BMS/IoT, vendor workflows, and offline-aware sensor operations.",
   category: "Operations",
-  html: `<p>BuildSync's Open Ecosystem connects to four integration layers:</p><ol><li><strong>Financial & Accounting (ERP)</strong> — Yardi, MRI Software, AppFolio, QuickBooks, Sage Intacct, Rent Manager via REST APIs and webhooks. Bi-directional sync for leases, invoices, and GL entries.</li><li><strong>Physical Access Control</strong> — Brivo, HID, Salto, Verkada, LiftMaster via cloud-to-cloud APIs. Grant/revoke credentials, audit access events in real time.</li><li><strong>BMS & IoT</strong> — BACnet/IP, Modbus TCP/RTU, MQTT protocol gateways, Schneider EcoStruxure, Johnson Controls Metasys, Honeywell Forge. Ingest sensor telemetry for HVAC, lighting, metering.</li><li><strong>Vendor Portals</strong> — Magic Links (zero-install, token-based task completion), QR Codes, CSV Importers, Slack and Gmail notifications. Vendors complete work orders without creating accounts.</li></ol><p>Connection strategy: Software→Software (REST/GraphQL), Software→Hardware (Cloud APIs/SDKs), Software→Building (Protocol Gateways), Software→Human (Magic Links/QR).</p>`
+  html: `<p>BuildSync's Open Ecosystem connects to four integration layers:</p><ol><li><strong>Financial & Accounting (ERP)</strong> — Yardi, MRI Software, AppFolio, QuickBooks, Sage Intacct, Rent Manager via REST APIs and webhooks. Bi-directional sync for leases, invoices, and GL entries.</li><li><strong>Physical Access Control</strong> — Brivo, HID, Salto, Verkada, LiftMaster via cloud-to-cloud APIs. Grant/revoke credentials, audit access events in real time.</li><li><strong>BMS & IoT</strong> — BACnet/IP, Modbus TCP/RTU, MQTT protocol gateways, Schneider EcoStruxure, Johnson Controls Metasys, Honeywell Forge. Ingest sensor telemetry for HVAC, lighting, metering.</li><li><strong>Vendor Portals</strong> — Magic Links (zero-install, token-based task completion), QR Codes, CSV Importers, Slack and Gmail notifications. Vendors complete work orders without creating accounts.</li></ol><p>Connection strategy: Software→Software (REST/GraphQL), Software→Hardware (Cloud APIs/SDKs), Software→Building (Protocol Gateways), Software→Human (Magic Links/QR).</p><p><strong>Aware Sensor Network guidance:</strong> prefer certified device SKUs, verify compatibility with existing providers before rollout, and enable offline queue + replay for sites with unstable internet.</p>`
 };
 
 export const docsUserHierarchy: InlineDocEntry = {
@@ -105,6 +105,46 @@ export const docsUserHierarchy: InlineDocEntry = {
   summary: "Understand the four-tier operating model and what each role can see and do.",
   category: "Roles & Access",
   html: `<p>BuildSync organises users into a four-tier operational hierarchy:</p><ol><li><strong>Property Owner (Tier 1)</strong> — Strategic oversight ("Investor"). Sees the building as a business unit. Dashboard: Pulse indicator, financials, asset health, occupancy, risk, smart insights, team panel (6 tabs, view-only). Key question: "Is my money safe and growing?"</li><li><strong>Facility Manager (Tier 2)</strong> — Technical lead. Manages infrastructure, HVAC, electrical, plumbing, IoT sensors, and technical vendors. Dashboard: 15 tabs covering work orders, preventative maintenance, equipment, compliance, assets, space, vendor database, integrations. Key question: "Is the equipment running and compliant?"</li><li><strong>Building Manager (Tier 3)</strong> — Daily operator and platform super-user. Manages tenants, staff, amenities, governance, and front-of-house. Dashboard: 17 tabs with full platform access including Overview (leasing pipeline, renewals), Governance, Integrations, and all operational modules. Key question: "Are the tenants happy and is the building orderly?"</li><li><strong>Support Staff & Vendors (Tier 4)</strong> — Task execution. Mobile-first work order views. Key question: "What do I need to do right now?"</li></ol><p>Data flows upward: Tier 4 closes tickets → Tier 2/3 reviews and updates records → Tier 1 sees aggregated KPIs and alerts.</p><p><em>Note: The Property Manager role has been merged into Building Manager. Existing PM users are automatically routed to the BM dashboard.</em></p>`
+};
+
+export const docsHierarchyVisual: InlineDocEntry = {
+  kind: "inline",
+  slug: "hierarchy-visual",
+  title: "Hierarchy Visual and Access Planes",
+  keywords: ["hierarchy", "control plane", "role ladder", "strategic", "building policy", "operational settings"],
+  summary: "Visual role ladder and practical page-access rules across strategic, building, and operational planes.",
+  category: "Roles & Access",
+  html: `<p>BuildSync uses layered access planes with a clear hierarchy ladder:</p><ul><li><strong>L1 Company Owner</strong> → strategic authority</li><li><strong>L2 Global Admin</strong> → governance execution</li><li><strong>L3 Building Owner</strong> → building governance authority</li><li><strong>L4 Building Manager / Property Manager</strong> → operational super-user control</li><li><strong>L5 Facility Manager</strong> → day-to-day settings and workflow control</li><li><strong>L6 Staff / Security / Concierge / Vendor</strong> → scoped execution</li><li><strong>L7 Resident / Tenant / Guest</strong> → self-service only</li></ul><p><strong>Practical rules:</strong></p><ul><li>Strategic pages: Company Owner + Global Admin</li><li>Building policy pages: Building Owner + Building Manager</li><li>Operational settings: Facility Manager and above</li></ul>`
+};
+
+export const docsPrivacyMasking: InlineDocEntry = {
+  kind: "inline",
+  slug: "privacy-masking",
+  title: "Resident and Tenant Privacy Masking",
+  keywords: ["privacy", "masking", "resident", "tenant", "pii", "contact masking"],
+  summary: "How residents and tenants can mask personal info in staff-facing workflows.",
+  category: "Security",
+  html: `<p>Residents and tenants can enable privacy masking from profile settings. When enabled, staff-facing workflows show masked identity values.</p><ul><li><strong>Name</strong>: initials only</li><li><strong>Contact</strong>: masked email pattern</li><li><strong>Unit</strong>: optional masked display</li></ul><p>Masking applies in operational surfaces such as guest approvals and concierge resident directory records where email-linked identity is available.</p>`
+};
+
+export const docsConciergeOperations: InlineDocEntry = {
+  kind: "inline",
+  slug: "concierge-operations-command-center",
+  title: "Concierge Operations Command Center",
+  keywords: ["concierge", "command center", "guest approvals", "amenity approvals", "vendor invites"],
+  summary: "Concierge dashboard model with inline approvals and cross-workflow operational queues.",
+  category: "Operations",
+  html: `<p>The concierge dashboard is reworked as an operations command center:</p><ul><li>Live queue metrics: guest approvals, amenity approvals, vendor invite backlog</li><li>Inline decisions: approve/reject guest requests and amenity bookings</li><li>Vendor coordination: approve invites for building/location scope</li><li>Policy visibility: safety snapshot and building controls status</li></ul><p>This keeps concierge users in one control surface for triage and execution.</p>`
+};
+
+export const docsVendorLocationAccess: InlineDocEntry = {
+  kind: "inline",
+  slug: "vendor-location-access",
+  title: "Location-Wise Vendor Access and Opt-Out",
+  keywords: ["vendor", "location", "building approval", "magic link", "opt out"],
+  summary: "Building/location vendor approvals with magic-link onboarding and policy opt-out support.",
+  category: "Operations",
+  html: `<p>Vendor onboarding is now location-aware:</p><ul><li>Facility teams define vendor policy per building and location</li><li>Building can opt out from vendor program entirely</li><li>Vendors receive invite code / magic link for onboarding</li><li>Vendor dashboard access is blocked unless building policy allows and approval exists</li></ul><p>This ensures vendor access stays scoped to explicit building authorization.</p>`
 };
 
 export const markdownDocs: MarkdownDocEntry[] = [
@@ -130,6 +170,14 @@ export const markdownDocs: MarkdownDocEntry[] = [
     title: "Features",
     summary: "Feature catalog and integration-oriented product capabilities.",
     keywords: ["features", "modules", "integrations"],
+    category: "Guides",
+  },
+  {
+    kind: "page",
+    slug: "aware-sensor-network",
+    title: "Aware Sensor Network",
+    summary: "Device compatibility, connectivity patterns, and offline-first operating guidance for sensor ecosystems.",
+    keywords: ["aware sensor network", "device compatibility", "offline", "connectivity", "ecosystem"],
     category: "Guides",
   },
   {
@@ -218,6 +266,14 @@ export const markdownDocs: MarkdownDocEntry[] = [
     title: "Hybrid Architecture Map",
     summary: "Diagram and handshake flow for SaaS plus local-agent on-prem data processing.",
     keywords: ["architecture", "handshake", "local-first", "agent"],
+    category: "Reference",
+  },
+  {
+    kind: "page",
+    slug: "ai-provider-failover",
+    title: "AI Provider Failover",
+    summary: "Primary and fallback AI provider routing policy for SaaS reliability.",
+    keywords: ["ai", "failover", "openai", "anthropic", "ollama", "saas"],
     category: "Reference",
   },
   {
