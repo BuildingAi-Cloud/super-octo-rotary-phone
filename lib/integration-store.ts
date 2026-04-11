@@ -95,6 +95,7 @@ export const INTEGRATION_CATALOG: IntegrationCatalogEntry[] = [
   { provider: "QR Code Check-in", layer: "vendor", protocol: "QR Code / NFC", description: "Vendor site check-in/out with location and time stamping", dataPoints: ["check_in", "check_out", "location", "duration"], icon: "📎" },
   { provider: "CSV/Excel Importer", layer: "vendor", protocol: "File Upload", description: "Bulk upload vendor service logs, invoices, and reports", dataPoints: ["service_logs", "invoices", "reports"], icon: "📄" },
   { provider: "Slack", layer: "vendor", protocol: "REST API / Webhooks", description: "Team notifications, work order alerts, escalation channels", dataPoints: ["notifications", "channels", "messages"], icon: "💬" },
+  { provider: "Discord", layer: "vendor", protocol: "Webhooks / Bot API", description: "Community channels, incident broadcasts, and concierge communication", dataPoints: ["notifications", "channels", "messages"], icon: "🎮" },
   { provider: "Gmail / SMTP", layer: "vendor", protocol: "SMTP / REST API", description: "Email notifications, tenant communications, vendor dispatch", dataPoints: ["emails", "templates", "delivery_status"], icon: "✉️" },
 ];
 
