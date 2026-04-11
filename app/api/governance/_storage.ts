@@ -352,6 +352,19 @@ export async function deleteVoteRecord(id: string, performedBy: string): Promise
 // CAST VOTE
 // ---------------------------------------------------------------------------
 
+export async function hasVoterCast(voteId: string, voterId: string): Promise<boolean> {
+  try {
+    const existing = await supabaseRequest(
+      `governance_casts?vote_id=eq.${encodeURIComponent(voteId)}&voter_id=eq.${encodeURIComponent(voterId)}&select=id`,
+    )
+    if (Array.isArray(existing) && existing.length > 0) return true
+  } catch {
+    // Fallback to in-memory store
+  }
+  const casts = listGovernanceCasts()
+  return casts.some((c) => c.voteId === voteId && c.voterId === voterId)
+}
+
 export interface CastVoteInput {
   voteId: string
   optionId: string
@@ -365,6 +378,7 @@ export async function castVoteRecord(
   if (!vote) return { cast: null, error: "VOTE_NOT_FOUND" }
   if (vote.type !== "E-VOTE") return { cast: null, error: "NOT_AN_EVOTE" }
   if (vote.status === "COMPLETED") return { cast: null, error: "VOTE_CLOSED" }
+  if (vote.status !== "ACTIVE") return { cast: null, error: "VOTE_CLOSED" }
   if (new Date(vote.deadline).getTime() <= Date.now()) return { cast: null, error: "VOTE_EXPIRED" }
 
   // Validate optionId exists
