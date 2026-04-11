@@ -42,6 +42,8 @@ next-env.d.ts
 # build artifacts
 build-out.txt
 build-stderr.txt
+build-log.txt
+build-result.txt
 
 # test output
 /coverage
