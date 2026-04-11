@@ -1,12 +1,13 @@
 "use client";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useAuth } from "@/lib/auth-context";
-
-const CONCIERGE_SETTINGS_ROLES = ["admin", "building_owner", "building_manager", "property_manager", "concierge"] as const;
+import { useRouter } from "next/navigation";
+import { hasRoleAccess, OPERATIONAL_SETTINGS_ROLES } from "@/lib/access-architecture";
 
 export default function CommunicationSettingsPage() {
   const { user, isLoading } = useAuth();
+  const router = useRouter();
   const [slackConnected, setSlackConnected] = useState(false);
   const [discordConnected, setDiscordConnected] = useState(false);
   const [smtpMode, setSmtpMode] = useState<"default" | "custom">("default");
@@ -18,6 +19,15 @@ export default function CommunicationSettingsPage() {
   const [smtpPass, setSmtpPass] = useState("");
   const [smtpFormError, setSmtpFormError] = useState<string | null>(null);
   const [smtpFieldErrors, setSmtpFieldErrors] = useState<Record<string, string>>({});
+
+  const canManageConciergeIntegrations = hasRoleAccess(user, OPERATIONAL_SETTINGS_ROLES);
+
+  useEffect(() => {
+    if (isLoading || !user) return;
+    if (!canManageConciergeIntegrations) {
+      router.replace("/dashboard");
+    }
+  }, [canManageConciergeIntegrations, isLoading, router, user]);
 
   if (isLoading) {
     return (
@@ -37,8 +47,6 @@ export default function CommunicationSettingsPage() {
       </main>
     );
   }
-
-  const canManageConciergeIntegrations = CONCIERGE_SETTINGS_ROLES.includes(user.role as (typeof CONCIERGE_SETTINGS_ROLES)[number]);
 
   if (!canManageConciergeIntegrations) {
     return (

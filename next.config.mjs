@@ -1,7 +1,10 @@
+const strictTypecheck = process.env.RELEASE_STRICT_TYPES === "true" || process.env.CI === "true"
+
 const nextConfig = {
   output: "standalone",
   typescript: {
-    ignoreBuildErrors: true,
+    // Keep local iteration fast, but enforce strict types in CI/release.
+    ignoreBuildErrors: !strictTypecheck,
   },
   images: {
     unoptimized: true,

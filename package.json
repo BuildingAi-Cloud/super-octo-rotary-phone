@@ -31,6 +31,7 @@
     "mobile:open:ios": "npx cap open ios",
     "mobile:run:android": "npx cap run android",
     "mobile:run:ios": "npx cap run ios",
+    "release:check": "node scripts/release-readiness-check.mjs",
     "onprem:up": "docker compose -f apps/on-prem-app/docker-compose.yml --env-file apps/on-prem-app/.env.example up -d",
     "onprem:down": "docker compose -f apps/on-prem-app/docker-compose.yml down",
     "env:cloud": "cp .env.example .env && sed -i 's/^AI_MODE=.*/AI_MODE=cloud/' .env",
@@ -106,6 +107,7 @@
     "stripe": "^22.0.0",
     "tailwind-merge": "^3.3.1",
     "tailwindcss-animate": "^1.0.7",
+    "tesseract.js": "^5.1.1",
     "three": "0.183.2",
     "vaul": "^1.1.2",
     "zod": "3.25.76"
