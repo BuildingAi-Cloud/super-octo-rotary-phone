@@ -1,0 +1,109 @@
+name: Check All Repos
+
+on:
+  schedule:
+    # Run daily at 08:00 UTC
+    - cron: "0 8 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  check-repos:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check all org repositories
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const org = context.repo.owner;
+
+            // Fetch all repositories in the organisation
+            const repos = await github.paginate(github.rest.repos.listForOrg, {
+              org,
+              per_page: 100,
+            });
+
+            core.summary.addHeading(`Repository health report — ${org}`, 1);
+            core.summary.addRaw(`**Total repositories:** ${repos.length}\n\n`);
+
+            const rows = [];
+
+            for (const repo of repos) {
+              const repoName = repo.name;
+
+              // Latest workflow runs (first page, sorted by newest)
+              let ciStatus = "—";
+              try {
+                const { data: runs } = await github.rest.actions.listWorkflowRunsForRepo({
+                  owner: org,
+                  repo: repoName,
+                  per_page: 1,
+                });
+                if (runs.total_count > 0) {
+                  const latest = runs.workflow_runs[0];
+                  const conclusion = latest.conclusion ?? latest.status;
+                  const emoji =
+                    conclusion === "success"
+                      ? "✅"
+                      : conclusion === "failure"
+                      ? "❌"
+                      : conclusion === "in_progress" || conclusion === "queued"
+                      ? "🔄"
+                      : "⚠️";
+                  ciStatus = `${emoji} ${conclusion}`;
+                }
+              } catch {
+                ciStatus = "⚠️ unavailable";
+              }
+
+              // Open pull requests (paginate to handle repos with > 100 open PRs)
+              let openPRs = "—";
+              let prCount = 0;
+              try {
+                const prs = await github.paginate(github.rest.pulls.list, {
+                  owner: org,
+                  repo: repoName,
+                  state: "open",
+                  per_page: 100,
+                });
+                prCount = prs.length;
+                openPRs = String(prCount);
+              } catch {
+                openPRs = "—";
+              }
+
+              // Open issues — repo.open_issues_count includes PRs, so subtract PR count
+              const openIssues =
+                openPRs === "—"
+                  ? String(repo.open_issues_count)
+                  : String(Math.max(0, repo.open_issues_count - prCount));
+
+              const repoLink = `[${repoName}](${repo.html_url})`;
+              const defaultBranch = repo.default_branch;
+              const lastPush = repo.pushed_at
+                ? new Date(repo.pushed_at).toISOString().slice(0, 10)
+                : "—";
+              const archived = repo.archived ? "🗄 archived" : "";
+
+              rows.push([repoLink, defaultBranch, lastPush, ciStatus, openIssues, openPRs, archived]);
+
+              core.info(`${repoName}: CI=${ciStatus}, issues=${openIssues}, PRs=${openPRs}`);
+            }
+
+            core.summary.addTable([
+              [
+                { data: "Repository", header: true },
+                { data: "Default branch", header: true },
+                { data: "Last push", header: true },
+                { data: "Latest CI", header: true },
+                { data: "Open issues", header: true },
+                { data: "Open PRs", header: true },
+                { data: "Notes", header: true },
+              ],
+              ...rows,
+            ]);
+
+            await core.summary.write();
