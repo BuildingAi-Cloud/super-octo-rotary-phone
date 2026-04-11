@@ -102,7 +102,7 @@ export function BuildingManagerDashboard({ user: __user }: { user: User }) {
   const enabledTabs = useMemo(
     () =>
       TABS.filter((tab) => {
-        if (["keys", "access-control", "analytics", "governance", "integrations"].includes(tab.id)) {
+        if (["keys", "access-control", "analytics", "integrations"].includes(tab.id)) {
           return isProfessional;
         }
         return true;
